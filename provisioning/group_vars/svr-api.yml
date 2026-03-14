@@ -1,0 +1,16 @@
+---
+# =============================================================================
+# SIMCOMP — Variables específicas de svr-api (192.168.100.3)
+# Todos los 5 microservicios corren en esta VM
+# Se comunican entre sí por localhost
+# =============================================================================
+
+# Configuración extra de PostgreSQL
+pg_max_connections: 100
+pg_shared_buffers: "256MB"
+
+# PM2 ecosystem file path
+pm2_ecosystem: "{{ app_base_dir }}/ecosystem.config.js"
+
+# Node environment
+node_env: production

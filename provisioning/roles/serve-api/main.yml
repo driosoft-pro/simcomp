@@ -1,0 +1,610 @@
+---
+# =============================================================================
+# SIMCOMP — Rol: serve-api  (svr-api 192.168.100.3)
+# Instala PostgreSQL 14, Node.js 20 y PM2.
+# Crea 5 bases de datos y levanta 5 microservicios con PM2:
+#
+#   auth-service         :3001  usuarios_db
+#   personas-service     :3002  personas_db
+#   vehiculos-service    :3003  vehiculos_db
+#   infracciones-service :3004  infracciones_db
+#   comparendos-service  :3005  comparendos_db
+#
+# Los 5 servicios se comunican entre sí por localhost.
+#
+# PREREQUISITO:
+#   backend/ debe existir en la raíz del proyecto con los 5 servicios.
+#   Vagrant la comparte como /vagrant/backend/ dentro de svr-api.
+#   NO incluir node_modules ni .env — este rol los genera dentro de la VM.
+# =============================================================================
+
+# ── 1. Sistema base ───────────────────────────────────────────────────────────
+- name: Actualizar caché apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Instalar dependencias del sistema
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - build-essential
+      - python3-psycopg2
+      - acl
+      - ufw
+    state: present
+
+# ── 2. PostgreSQL 14 ──────────────────────────────────────────────────────────
+- name: Instalar PostgreSQL y librerías
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - libpq-dev
+    state: present
+
+- name: Iniciar y habilitar PostgreSQL
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Establecer contraseña del rol postgres
+  ansible.builtin.command: >
+    psql -c "ALTER USER postgres WITH PASSWORD '{{ pg_password }}';"
+  become: true
+  become_user: postgres
+  changed_when: false
+  no_log: true
+
+- name: Crear usuarios_db (auth-service)
+  community.postgresql.postgresql_db:
+    name: usuarios_db
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Crear personas_db
+  community.postgresql.postgresql_db:
+    name: personas_db
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Crear vehiculos_db
+  community.postgresql.postgresql_db:
+    name: vehiculos_db
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Crear infracciones_db
+  community.postgresql.postgresql_db:
+    name: infracciones_db
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Crear comparendos_db
+  community.postgresql.postgresql_db:
+    name: comparendos_db
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+
+- name: Configurar autenticación md5 en pg_hba.conf
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/14/main/pg_hba.conf
+    regexp: '^local\s+all\s+all\s+'
+    line: "local   all             all                                     md5"
+  notify: Recargar PostgreSQL
+
+# ── 3. Node.js 20 ─────────────────────────────────────────────────────────────
+- name: Verificar si Node.js ya está instalado
+  ansible.builtin.command: node --version
+  register: node_check
+  failed_when: false
+  changed_when: false
+
+- name: Descargar script NodeSource 20.x
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/setup_20.x
+    dest: /tmp/nodesource_setup.sh
+    mode: "0755"
+  when: node_check.rc != 0
+
+- name: Ejecutar script NodeSource
+  ansible.builtin.command: bash /tmp/nodesource_setup.sh
+  when: node_check.rc != 0
+  changed_when: true
+
+- name: Instalar Node.js 20
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Confirmar versión de Node.js
+  ansible.builtin.command: node --version
+  register: node_ver
+  changed_when: false
+
+- name: Mostrar versión Node.js
+  ansible.builtin.debug:
+    msg: "Node.js instalado: {{ node_ver.stdout }}"
+
+# ── 4. PM2 ────────────────────────────────────────────────────────────────────
+- name: Instalar PM2 globalmente
+  community.general.npm:
+    name: pm2
+    global: true
+    state: present
+
+# ── 5. Directorios ────────────────────────────────────────────────────────────
+- name: Crear /opt/simcomp
+  ansible.builtin.file:
+    path: /opt/simcomp
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: "0755"
+
+- name: Crear directorio por servicio
+  ansible.builtin.file:
+    path: "/opt/simcomp/{{ item }}"
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: "0755"
+  loop:
+    - auth-service
+    - personas-service
+    - vehiculos-service
+    - infracciones-service
+    - comparendos-service
+
+- name: Crear /var/log/simcomp
+  ansible.builtin.file:
+    path: /var/log/simcomp
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: "0755"
+
+# ── 6. Verificar carpeta compartida ───────────────────────────────────────────
+- name: Comprobar existencia de /vagrant/backend
+  ansible.builtin.stat:
+    path: /vagrant/backend
+  register: backend_check
+
+- name: Fallar si /vagrant/backend no existe
+  ansible.builtin.fail:
+    msg: >
+      No se encontró /vagrant/backend en la carpeta compartida.
+      Verifica que backend/ existe en la raíz de tu proyecto local
+      con los 5 microservicios antes de aprovisionar.
+  when: not backend_check.stat.exists
+
+# ── 7. Copiar código fuente desde /vagrant/backend/ ──────────────────────────
+- name: Copiar auth-service
+  ansible.builtin.copy:
+    src: /vagrant/backend/auth-service/
+    dest: /opt/simcomp/auth-service/
+    owner: vagrant
+    group: vagrant
+    mode: preserve
+    force: true
+
+- name: Copiar personas-service
+  ansible.builtin.copy:
+    src: /vagrant/backend/personas-service/
+    dest: /opt/simcomp/personas-service/
+    owner: vagrant
+    group: vagrant
+    mode: preserve
+    force: true
+
+- name: Copiar vehiculos-service
+  ansible.builtin.copy:
+    src: /vagrant/backend/vehiculos-service/
+    dest: /opt/simcomp/vehiculos-service/
+    owner: vagrant
+    group: vagrant
+    mode: preserve
+    force: true
+
+- name: Copiar infracciones-service
+  ansible.builtin.copy:
+    src: /vagrant/backend/infracciones-service/
+    dest: /opt/simcomp/infracciones-service/
+    owner: vagrant
+    group: vagrant
+    mode: preserve
+    force: true
+
+- name: Copiar comparendos-service
+  ansible.builtin.copy:
+    src: /vagrant/backend/comparendos-service/
+    dest: /opt/simcomp/comparendos-service/
+    owner: vagrant
+    group: vagrant
+    mode: preserve
+    force: true
+
+# ── 8. Limpiar node_modules locales ──────────────────────────────────────────
+- name: Eliminar node_modules de auth-service
+  ansible.builtin.file:
+    path: /opt/simcomp/auth-service/node_modules
+    state: absent
+
+- name: Eliminar node_modules de personas-service
+  ansible.builtin.file:
+    path: /opt/simcomp/personas-service/node_modules
+    state: absent
+
+- name: Eliminar node_modules de vehiculos-service
+  ansible.builtin.file:
+    path: /opt/simcomp/vehiculos-service/node_modules
+    state: absent
+
+- name: Eliminar node_modules de infracciones-service
+  ansible.builtin.file:
+    path: /opt/simcomp/infracciones-service/node_modules
+    state: absent
+
+- name: Eliminar node_modules de comparendos-service
+  ansible.builtin.file:
+    path: /opt/simcomp/comparendos-service/node_modules
+    state: absent
+
+# ── 9. Generar archivos .env de producción ────────────────────────────────────
+- name: .env — auth-service
+  ansible.builtin.copy:
+    dest: /opt/simcomp/auth-service/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      NODE_ENV=production
+      PORT=3001
+      DB_HOST=localhost
+      DB_PORT=5432
+      DB_NAME=usuarios_db
+      DB_USER=postgres
+      DB_PASSWORD={{ pg_password }}
+      JWT_SECRET={{ jwt_secret }}
+      JWT_ACCESS_EXPIRY={{ jwt_access_expiry }}
+      JWT_REFRESH_EXPIRY={{ jwt_refresh_expiry }}
+  no_log: true
+
+- name: .env — personas-service
+  ansible.builtin.copy:
+    dest: /opt/simcomp/personas-service/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      NODE_ENV=production
+      PORT=3002
+      DB_HOST=localhost
+      DB_PORT=5432
+      DB_NAME=personas_db
+      DB_USER=postgres
+      DB_PASSWORD={{ pg_password }}
+      JWT_SECRET={{ jwt_secret }}
+  no_log: true
+
+- name: .env — vehiculos-service
+  ansible.builtin.copy:
+    dest: /opt/simcomp/vehiculos-service/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      NODE_ENV=production
+      PORT=3003
+      DB_HOST=localhost
+      DB_PORT=5432
+      DB_NAME=vehiculos_db
+      DB_USER=postgres
+      DB_PASSWORD={{ pg_password }}
+      JWT_SECRET={{ jwt_secret }}
+      PERSONAS_SERVICE_URL=http://localhost:3002
+  no_log: true
+
+- name: .env — infracciones-service
+  ansible.builtin.copy:
+    dest: /opt/simcomp/infracciones-service/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      NODE_ENV=production
+      PORT=3004
+      DB_HOST=localhost
+      DB_PORT=5432
+      DB_NAME=infracciones_db
+      DB_USER=postgres
+      DB_PASSWORD={{ pg_password }}
+      JWT_SECRET={{ jwt_secret }}
+  no_log: true
+
+- name: .env — comparendos-service
+  ansible.builtin.copy:
+    dest: /opt/simcomp/comparendos-service/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      NODE_ENV=production
+      PORT=3005
+      DB_HOST=localhost
+      DB_PORT=5432
+      DB_NAME=comparendos_db
+      DB_USER=postgres
+      DB_PASSWORD={{ pg_password }}
+      JWT_SECRET={{ jwt_secret }}
+      PERSONAS_SERVICE_URL=http://localhost:3002
+      VEHICULOS_SERVICE_URL=http://localhost:3003
+      INFRACCIONES_SERVICE_URL=http://localhost:3004
+  no_log: true
+
+# ── 10. npm install en la VM ──────────────────────────────────────────────────
+- name: npm install — auth-service
+  community.general.npm:
+    path: /opt/simcomp/auth-service
+    state: present
+    production: true
+
+- name: npm install — personas-service
+  community.general.npm:
+    path: /opt/simcomp/personas-service
+    state: present
+    production: true
+
+- name: npm install — vehiculos-service
+  community.general.npm:
+    path: /opt/simcomp/vehiculos-service
+    state: present
+    production: true
+
+- name: npm install — infracciones-service
+  community.general.npm:
+    path: /opt/simcomp/infracciones-service
+    state: present
+    production: true
+
+- name: npm install — comparendos-service
+  community.general.npm:
+    path: /opt/simcomp/comparendos-service
+    state: present
+    production: true
+
+# ── 11. ecosystem.config.js para PM2 ─────────────────────────────────────────
+- name: Crear /opt/simcomp/ecosystem.config.js
+  ansible.builtin.copy:
+    dest: /opt/simcomp/ecosystem.config.js
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+    content: |
+      // ============================================================
+      // SIMCOMP — PM2 Ecosystem Config  (svr-api 192.168.100.3)
+      //
+      // auth-service arranca primero — valida JWT de todos los demás
+      //
+      // Comandos útiles:
+      //   pm2 list
+      //   pm2 logs <nombre>
+      //   pm2 restart <nombre>
+      //   pm2 reload all     ← recarga sin downtime
+      // ============================================================
+      module.exports = {
+        apps: [
+          {
+            name:               'auth-service',
+            script:             '/opt/simcomp/auth-service/src/server.js',
+            cwd:                '/opt/simcomp/auth-service',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 3001 },
+            error_file:      '/var/log/simcomp/auth-error.log',
+            out_file:        '/var/log/simcomp/auth-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          },
+          {
+            name:               'personas-service',
+            script:             '/opt/simcomp/personas-service/src/server.js',
+            cwd:                '/opt/simcomp/personas-service',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 3002 },
+            error_file:      '/var/log/simcomp/personas-error.log',
+            out_file:        '/var/log/simcomp/personas-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          },
+          {
+            name:               'vehiculos-service',
+            script:             '/opt/simcomp/vehiculos-service/src/server.js',
+            cwd:                '/opt/simcomp/vehiculos-service',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 3003 },
+            error_file:      '/var/log/simcomp/vehiculos-error.log',
+            out_file:        '/var/log/simcomp/vehiculos-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          },
+          {
+            name:               'infracciones-service',
+            script:             '/opt/simcomp/infracciones-service/src/server.js',
+            cwd:                '/opt/simcomp/infracciones-service',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 3004 },
+            error_file:      '/var/log/simcomp/infracciones-error.log',
+            out_file:        '/var/log/simcomp/infracciones-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          },
+          {
+            name:               'comparendos-service',
+            script:             '/opt/simcomp/comparendos-service/src/server.js',
+            cwd:                '/opt/simcomp/comparendos-service',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 3005 },
+            error_file:      '/var/log/simcomp/comparendos-error.log',
+            out_file:        '/var/log/simcomp/comparendos-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          }
+        ]
+      };
+
+# ── 12. Levantar servicios con PM2 ────────────────────────────────────────────
+- name: Detener procesos PM2 anteriores (re-aprovisionamiento)
+  ansible.builtin.command: pm2 delete all
+  become: false
+  become_user: vagrant
+  ignore_errors: true
+  changed_when: false
+
+- name: Iniciar los 5 microservicios con PM2
+  ansible.builtin.command: pm2 start /opt/simcomp/ecosystem.config.js
+  become: false
+  become_user: vagrant
+  changed_when: true
+
+- name: Guardar configuración PM2
+  ansible.builtin.command: pm2 save
+  become: false
+  become_user: vagrant
+  changed_when: true
+
+- name: Generar startup systemd para PM2
+  ansible.builtin.command: pm2 startup systemd -u vagrant --hp /home/vagrant
+  register: pm2_startup
+  changed_when: true
+
+- name: Activar servicio systemd de PM2
+  ansible.builtin.shell: "{{ pm2_startup.stdout_lines | last }}"
+  when: pm2_startup.stdout_lines | length > 0
+  changed_when: true
+
+# ── 13. Firewall ──────────────────────────────────────────────────────────────
+- name: Permitir SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: "Permitir puerto {{ item }} (microservicio)"
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: ["3001", "3002", "3003", "3004", "3005"]
+
+- name: Habilitar UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+# ── 14. DNS en svr-api ────────────────────────────────────────────────────────
+- name: Usar svr-dns para resolución de nombres
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      search simcomp.co
+      nameserver 192.168.100.2
+      nameserver 8.8.8.8
+    mode: "0644"
+
+# ── 15. Health checks finales ─────────────────────────────────────────────────
+- name: Esperar a que auth-service arranque en :3001
+  ansible.builtin.wait_for:
+    port: 3001
+    host: localhost
+    delay: 5
+    timeout: 60
+
+- name: Health check — auth-service :3001
+  ansible.builtin.uri:
+    url: http://localhost:3001/api/health
+    status_code: 200
+  retries: 5
+  delay: 5
+  register: h0
+  until: h0.status == 200
+
+- name: Health check — personas-service :3002
+  ansible.builtin.uri:
+    url: http://localhost:3002/api/health
+    status_code: 200
+  retries: 5
+  delay: 3
+
+- name: Health check — vehiculos-service :3003
+  ansible.builtin.uri:
+    url: http://localhost:3003/api/health
+    status_code: 200
+  retries: 5
+  delay: 3
+
+- name: Health check — infracciones-service :3004
+  ansible.builtin.uri:
+    url: http://localhost:3004/api/health
+    status_code: 200
+  retries: 5
+  delay: 3
+
+- name: Health check — comparendos-service :3005
+  ansible.builtin.uri:
+    url: http://localhost:3005/api/health
+    status_code: 200
+  retries: 5
+  delay: 3
+
+- name: Estado final PM2
+  ansible.builtin.command: pm2 list
+  become: false
+  become_user: vagrant
+  register: pm2_final
+  changed_when: false
+
+- name: Resumen final svr-api
+  ansible.builtin.debug:
+    msg:
+      - "PostgreSQL activo con 5 bases de datos"
+      - "auth-service         corriendo en :3001  (usuarios_db)"
+      - "personas-service     corriendo en :3002  (personas_db)"
+      - "vehiculos-service    corriendo en :3003  (vehiculos_db)"
+      - "infracciones-service corriendo en :3004  (infracciones_db)"
+      - "comparendos-service  corriendo en :3005  (comparendos_db)"
+      - "PM2 con reinicio automático al boot"
+
+# ── Handlers ──────────────────────────────────────────────────────────────────
+handlers:
+  - name: Recargar PostgreSQL
+    ansible.builtin.systemd:
+      name: postgresql
+      state: reloaded

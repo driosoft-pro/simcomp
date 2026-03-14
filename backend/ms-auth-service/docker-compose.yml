@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  postgres:
+    #image: postgres:16                     # Usar para docker
+    image: docker.io/library/postgres:16    # Usar para podman
+    container_name: auth-db
+    restart: always
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db/auth_db.sql:/docker-entrypoint-initdb.d/auth_db.sql
+
+volumes:
+  auth_db_data:

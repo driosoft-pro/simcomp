@@ -1,0 +1,83 @@
+# ─── Node.js / npm ────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# ─── Variables de entorno (NUNCA subir al repo) ───────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# ─── Logs ─────────────────────────────────────────────────────────────────
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ─── Build / Dist ─────────────────────────────────────────────────────────
+dist/
+build/
+out/
+
+# ─── Cobertura de tests ───────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ─── Caché y temporales ───────────────────────────────────────────────────
+.cache/
+.tmp/
+tmp/
+temp/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ─── Docker (locales) ─────────────────────────────────────────────────────
+# No ignorar docker-compose.yml — es parte del proyecto
+# Solo ignorar overrides locales
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ─── Vagrant ──────────────────────────────────────────────────────────────
+.vagrant/
+
+# ─── IDEs y editores ──────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Sequelize ────────────────────────────────────────────────────────────
+# No ignorar las migraciones — son importantes
+# Solo ignorar archivos generados automáticamente
+.sequelizerc.local
+
+# ─── Tests ────────────────────────────────────────────────────────────────
+__tests__/
+*.test.js.snap
+
+# ─── Archivos de sistema ──────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

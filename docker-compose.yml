@@ -13,8 +13,17 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - auth_db_data:/var/lib/postgresql/data
-      - ./db/auth_db.sql:/docker-entrypoint-initdb.d/auth_db.sql
+      - postgres_auth_data:/var/lib/postgresql/data
+
+  ms-auth-service:
+    build: ./ms-auth-service
+    container_name: ms-auth-service
+    env_file:
+      - ./ms-auth-service/.env
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres-auth
 
 volumes:
   auth_db_data:

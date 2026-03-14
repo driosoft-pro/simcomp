@@ -201,7 +201,7 @@ ansible-playbook provisioning/verify.yml -i provisioning/hosts.ini
 
 ---
 
-## 🌐 URLs de Acceso
+## URLs de Acceso
 
 | URL                                      | Auth    | Descripción                  |
 |------------------------------------------|---------|------------------------------|

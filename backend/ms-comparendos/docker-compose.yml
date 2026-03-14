@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db-ms-comparendos:
+    #image: postgres:16                     # Usar para docker
+    image: docker.io/library/postgres:16    # Usar para podman
+    container_name: db-ms-comparendos
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${COMPRENDOS_DB_USER:-comparendos_user}
+      POSTGRES_PASSWORD: ${COMPRENDOS_DB_PASSWORD:-comparendos_pass}
+      POSTGRES_DB: ${COMPRENDOS_DB_NAME:-comparendos_db}
+    ports:
+      - "${COMPRENDOS_DB_PORT:-5436}:5432"
+    volumes:
+      - comparendos_data:/var/lib/postgresql/data
+      - ./db/ms-comparendos/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${COMPRENDOS_DB_USER:-comparendos_user} -d ${COMPRENDOS_DB_NAME:-comparendos_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
+
+  adminer:
+    image: adminer:4
+    container_name: adminer-microservices
+    restart: unless-stopped
+    depends_on:
+      - db-ms-personas
+      - db-ms-automotores
+      - db-ms-infracciones
+      - db-ms-comparendos
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  comparendos_data:      

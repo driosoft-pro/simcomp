@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db-ms-infracciones:
+    #image: postgres:16                     # Usar para docker
+    image: docker.io/library/postgres:16    # Usar para podman
+    container_name: db-ms-infracciones
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${INFRACCIONES_DB_USER:-infracciones_user}
+      POSTGRES_PASSWORD: ${INFRACCIONES_DB_PASSWORD:-infracciones_pass}
+      POSTGRES_DB: ${INFRACCIONES_DB_NAME:-infracciones_db}
+    ports:
+      - "${INFRACCIONES_DB_PORT:-5435}:5432"
+    volumes:
+      - infracciones_data:/var/lib/postgresql/data
+      - ./db/ms-infracciones/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INFRACCIONES_DB_USER:-infracciones_user} -d ${INFRACCIONES_DB_NAME:-infracciones_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
+
+volumes:
+  infracciones_data:

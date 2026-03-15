@@ -1,9 +1,6 @@
-version: '3.8'
-
 services:
   db-ms-automotores:
-    #image: postgres:16                     # Usar para docker
-    image: docker.io/library/postgres:16    # Usar para podman
+    image: docker.io/library/postgres:16
     container_name: db-ms-automotores
     restart: unless-stopped
     environment:
@@ -14,7 +11,7 @@ services:
       - "${AUTOMOTORES_DB_PORT:-5434}:5432"
     volumes:
       - automotores_data:/var/lib/postgresql/data
-      - ./db/ms-automotores/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./db/ms-automotores:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${AUTOMOTORES_DB_USER:-automotores_user} -d ${AUTOMOTORES_DB_NAME:-automotores_db}"]
       interval: 10s
@@ -25,3 +22,7 @@ services:
 
 volumes:
   automotores_data:
+
+networks:
+  microservices-net:
+    driver: bridge

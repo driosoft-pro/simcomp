@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS automotores (
   propietario_id UUID NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   CONSTRAINT chk_automotores_tipo CHECK (tipo IN ('MOTO', 'CARRO', 'BUS', 'BUSETA', 'CAMION', 'TRACTOMULA', 'CUATRIMOTO')),
   CONSTRAINT chk_automotores_estado CHECK (estado IN ('LEGAL', 'REPORTADO_ROBO', 'RECUPERADO', 'EMBARGADO')),
   CONSTRAINT chk_automotores_anio CHECK (anio >= 1900 AND anio <= 2100),

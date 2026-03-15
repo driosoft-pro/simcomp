@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import automotoresRoutes from "./routes/automotores.routes.js";
+import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 
 const app = express();
 
@@ -21,5 +22,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/automotores", automotoresRoutes);
+
+/* Swagger documentation */
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

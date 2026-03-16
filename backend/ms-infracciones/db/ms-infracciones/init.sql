@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS infracciones (
   vigente BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deletet_at TIMESTAMP NULL,
   CONSTRAINT chk_infracciones_tipo_sancion CHECK (tipo_sancion IN ('MONETARIA', 'SUSPENSION_LICENCIA', 'INMOVILIZACION', 'MIXTA')),
   CONSTRAINT chk_infracciones_dias_suspension CHECK (dias_suspension IS NULL OR dias_suspension >= 0),
   CONSTRAINT chk_infracciones_valor_multa CHECK (valor_multa >= 0)

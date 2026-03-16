@@ -20,9 +20,6 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      express-validator:
-        specifier: ^7.3.1
-        version: 7.3.1
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
@@ -261,10 +258,6 @@ packages:
   etag@1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
-
-  express-validator@7.3.1:
-    resolution: {integrity: sha512-IGenaSf+DnWc69lKuqlRE9/i/2t5/16VpH5bXoqdxWz1aCpRvEdrBuu1y95i/iL5QP8ZYVATiwLFhwk3EDl5vg==}
-    engines: {node: '>= 8.0.0'}
 
   express@5.2.1:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
@@ -979,11 +972,6 @@ snapshots:
   esutils@2.0.3: {}
 
   etag@1.8.1: {}
-
-  express-validator@7.3.1:
-    dependencies:
-      lodash: 4.17.23
-      validator: 13.15.26
 
   express@5.2.1:
     dependencies:

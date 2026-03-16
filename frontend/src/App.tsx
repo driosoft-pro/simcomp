@@ -7,8 +7,8 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PersonasList from './pages/personas/PersonasList'
 import PersonaDetail from './pages/personas/PersonaDetail'
-import VehiculosList from './pages/vehiculos/VehiculosList'
-import VehiculoDetail from './pages/vehiculos/VehiculoDetail'
+import AutomotoresList from './pages/automotores/AutomotoresList'
+import AutomotorDetail from './pages/automotores/AutomotorDetail'
 import InfraccionesList from './pages/infracciones/InfraccionesList'
 import ComparendosList from './pages/comparendos/ComparendosList'
 import ComparendoDetail from './pages/comparendos/ComparendoDetail'
@@ -82,7 +82,7 @@ function App() {
           element={
             <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
-                <VehiculosList />
+                <AutomotoresList />
               </Layout>
             </ProtectedRoute>
           }
@@ -93,7 +93,7 @@ function App() {
           element={
             <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
-                <VehiculoDetail />
+                <AutomotorDetail />
               </Layout>
             </ProtectedRoute>
           }

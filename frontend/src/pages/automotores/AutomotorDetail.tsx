@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { useVehiculo } from '../../hooks/useVehiculos'
+import { useAutomotor } from '../../hooks/useAutomotores'
 import type { Automotor } from '../../types'
 import { ArrowLeft, Car, Tag, Palette, Calendar, Gauge, Hash, User } from 'lucide-react'
 
@@ -30,10 +30,10 @@ function Field({ icon, label, value }: FieldProps) {
   )
 }
 
-function VehiculoDetail() {
+function AutomotorDetail() {
   const { id } = useParams()
   const automotorId = id ?? ''
-  const { data, isLoading, isError, error } = useVehiculo(automotorId)
+  const { data, isLoading, isError, error } = useAutomotor(automotorId)
 
   if (isLoading) {
     return (
@@ -122,4 +122,4 @@ function VehiculoDetail() {
   )
 }
 
-export default VehiculoDetail
+export default AutomotorDetail

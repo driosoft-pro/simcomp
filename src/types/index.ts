@@ -124,3 +124,30 @@ export interface Comparendo {
   created_at?: string
   updated_at?: string
 }
+
+export interface CreateInfraccionPayload {
+  codigo: string
+  descripcion: string
+  articulo_codigo: string
+  tipo_sancion: 'MONETARIA' | 'SUSPENSION_LICENCIA' | 'INMOVILIZACION' | 'MIXTA'
+  valor_multa: number
+  dias_suspension?: number | null
+  aplica_descuento: boolean
+  vigente: boolean
+}
+
+export interface UpdateInfraccionPayload extends Partial<CreateInfraccionPayload> {}
+
+export interface CreateAutomotorPayload {
+  placa: string
+  tipo: 'MOTO' | 'CARRO' | 'BUS' | 'BUSETA' | 'CAMION' | 'TRACTOMULA' | 'CUATRIMOTO'
+  marca: string
+  modelo: string
+  anio: number
+  color: string
+  cilindraje: number
+  estado: 'LEGAL' | 'REPORTADO_ROBO' | 'RECUPERADO' | 'EMBARGADO'
+  propietario_id: UUID
+}
+
+export interface UpdateAutomotorPayload extends Partial<CreateAutomotorPayload> {}

@@ -42,7 +42,7 @@ export async function createComparendo(
     numero_comparendo: string
     fecha_hora: string
     automotor_id: UUID
-    persona_id: UUID
+    persona_id?: UUID
     infraccion_id: UUID
     direccion_exacta: string
     observaciones?: string
@@ -65,6 +65,20 @@ export async function pagarComparendo(id: UUID): Promise<Comparendo> {
 export async function anularComparendo(id: UUID): Promise<Comparendo> {
   const response = await apiClient.patch<ApiResponse<Comparendo>>(
     `${API_URLS.comparendos}/comparendos/${id}/anular`,
+  )
+  return response.data.data
+}
+
+export async function revertirComparendo(id: UUID): Promise<Comparendo> {
+  const response = await apiClient.patch<ApiResponse<Comparendo>>(
+    `${API_URLS.comparendos}/comparendos/${id}/revertir`,
+  )
+  return response.data.data
+}
+
+export async function getComparendoHistorial(id: UUID): Promise<any[]> {
+  const response = await apiClient.get<ApiResponse<any[]>>(
+    `${API_URLS.comparendos}/comparendos/${id}/historial`,
   )
   return response.data.data
 }

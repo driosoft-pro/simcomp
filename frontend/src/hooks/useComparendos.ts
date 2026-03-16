@@ -8,6 +8,8 @@ import {
   getComparendosByAutomotor,
   getComparendosByPersona,
   pagarComparendo,
+  revertirComparendo,
+  getComparendoHistorial,
 } from '../api/comparendos.api'
 import type { Comparendo, UUID } from '../types'
 
@@ -58,7 +60,7 @@ export function useCreateComparendo() {
       numero_comparendo: string
       fecha_hora: string
       automotor_id: UUID
-      persona_id: UUID
+      persona_id?: UUID
       infraccion_id: UUID
       direccion_exacta: string
       observaciones?: string
@@ -88,5 +90,24 @@ export function useAnularComparendo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
     },
+  })
+}
+
+export function useRevertirComparendo() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: UUID) => revertirComparendo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+    },
+  })
+}
+
+export function useComparendoHistorial(id: UUID) {
+  return useQuery({
+    queryKey: ['comparendo-historial', id],
+    queryFn: () => getComparendoHistorial(id),
+    enabled: Boolean(id),
   })
 }

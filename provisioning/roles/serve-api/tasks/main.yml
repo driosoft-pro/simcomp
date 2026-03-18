@@ -110,11 +110,14 @@
   become_user: postgres
   loop: "{{ services }}"
 
-- name: Configurar autenticación md5 en todos los clusters
-  ansible.builtin.lineinfile:
+- name: Configurar autenticación md5 (local y host) en todos los clusters
+  ansible.builtin.blockinfile:
     path: "/etc/postgresql/{{ pg_version }}/{{ item.name | replace('-service', '') }}/pg_hba.conf"
-    regexp: '^local\s+all\s+all\s+'
-    line: "local   all             all                                     md5"
+    insertafter: '^# IPv4 local connections:'
+    block: |
+      local   all             all                                     md5
+      host    all             all             127.0.0.1/32            md5
+      host    all             all             ::1/128                 md5
   loop: "{{ services }}"
   become: true
   notify: restart all postgres clusters
@@ -172,6 +175,14 @@
   loop: "{{ services }}"
   changed_when: true
   become: true
+
+- name: Inicializar datos de bases de datos (init.sql)
+  ansible.builtin.shell: |
+    psql -p {{ item.db_port }} -d {{ item.db }} -f {{ app_base_dir }}/{{ item.name }}/db/init.sql
+  become: true
+  become_user: postgres
+  loop: "{{ services }}"
+  changed_when: true
 
 - name: Generar archivos .env
   ansible.builtin.template:

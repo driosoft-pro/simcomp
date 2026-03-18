@@ -43,6 +43,12 @@ export async function listarLicenciasPorPersonaController(req, res) {
       data: licencias,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos (ej: número de licencia)",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,

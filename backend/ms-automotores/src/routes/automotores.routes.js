@@ -87,7 +87,7 @@ const router = express.Router();
  *       400:
  *         description: Datos inválidos
  */
-router.post("/", createAutomotorController);
+router.post("/automotores", createAutomotorController);
 
 /**
  * @swagger
@@ -101,7 +101,7 @@ router.post("/", createAutomotorController);
  *       500:
  *         description: Error del servidor
  */
-router.get("/", getAutomotores);
+router.get("/automotores", getAutomotores);
 
 /**
  * @swagger
@@ -122,7 +122,7 @@ router.get("/", getAutomotores);
  *       404:
  *         description: Automotor no encontrado
  */
-router.get("/placa/:placa", getAutomotorByPlacaController);
+router.get("/automotores/placa/:placa", getAutomotorByPlacaController);
 
 /**
  * @swagger
@@ -144,7 +144,7 @@ router.get("/placa/:placa", getAutomotorByPlacaController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.get("/:id", getAutomotorByIdController);
+router.get("/automotores/:id", getAutomotorByIdController);
 
 /**
  * @swagger
@@ -200,7 +200,7 @@ router.get("/:id", getAutomotorByIdController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.put("/:id", updateAutomotorController);
+router.put("/automotores/:id", updateAutomotorController);
 
 /**
  * @swagger
@@ -221,7 +221,7 @@ router.put("/:id", updateAutomotorController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.delete("/:id", deleteAutomotorController);
+router.delete("/automotores/:id", deleteAutomotorController);
 
 /**
  * @swagger
@@ -255,6 +255,6 @@ router.delete("/:id", deleteAutomotorController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.patch("/:id/estado", changeAutomotorStatusController);
+router.patch("/automotores/:id/estado", changeAutomotorStatusController);
 
 export default router;

@@ -33,7 +33,7 @@ services:
     path: auth
     port: 8001
     gateway_port: 8001
-    db:   usuarios_db
+    db:   auth_db
     db_port: 5432
   - name: ms-personas
     path: personas

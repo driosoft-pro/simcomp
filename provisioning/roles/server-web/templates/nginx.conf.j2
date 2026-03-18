@@ -81,20 +81,83 @@ server {
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-{% for svc in services if svc.path != 'auth' %}
-    location /api/{{ svc.path }} {
+    location /api/usuarios {
         auth_request     /_auth_validate;
         auth_request_set $auth_user_id $upstream_http_x_user_id;
         auth_request_set $auth_role    $upstream_http_x_user_role;
         error_page 401 = @unauthorized;
 
-        proxy_pass         http://{{ svc.name | replace('-', '_') }}_backend;
+        proxy_pass         http://ms_auth_service_backend;
         proxy_http_version 1.1;
         proxy_set_header   Host            $host;
         proxy_set_header   X-User-ID       $auth_user_id;
         proxy_set_header   X-User-Role     $auth_role;
     }
-{% endfor %}
+
+    location /api/personas {
+        auth_request     /_auth_validate;
+        auth_request_set $auth_user_id $upstream_http_x_user_id;
+        auth_request_set $auth_role    $upstream_http_x_user_role;
+        error_page 401 = @unauthorized;
+
+        proxy_pass         http://ms_personas_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-User-ID       $auth_user_id;
+        proxy_set_header   X-User-Role     $auth_role;
+    }
+
+    location /api/licencias {
+        auth_request     /_auth_validate;
+        auth_request_set $auth_user_id $upstream_http_x_user_id;
+        auth_request_set $auth_role    $upstream_http_x_user_role;
+        error_page 401 = @unauthorized;
+
+        proxy_pass         http://ms_personas_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-User-ID       $auth_user_id;
+        proxy_set_header   X-User-Role     $auth_role;
+    }
+
+    location /api/automotores {
+        auth_request     /_auth_validate;
+        auth_request_set $auth_user_id $upstream_http_x_user_id;
+        auth_request_set $auth_role    $upstream_http_x_user_role;
+        error_page 401 = @unauthorized;
+
+        proxy_pass         http://ms_automotores_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-User-ID       $auth_user_id;
+        proxy_set_header   X-User-Role     $auth_role;
+    }
+
+    location /api/infracciones {
+        auth_request     /_auth_validate;
+        auth_request_set $auth_user_id $upstream_http_x_user_id;
+        auth_request_set $auth_role    $upstream_http_x_user_role;
+        error_page 401 = @unauthorized;
+
+        proxy_pass         http://ms_infracciones_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-User-ID       $auth_user_id;
+        proxy_set_header   X-User-Role     $auth_role;
+    }
+
+    location /api/comparendos {
+        auth_request     /_auth_validate;
+        auth_request_set $auth_user_id $upstream_http_x_user_id;
+        auth_request_set $auth_role    $upstream_http_x_user_role;
+        error_page 401 = @unauthorized;
+
+        proxy_pass         http://ms_comparendos_backend;
+        proxy_http_version 1.1;
+        proxy_set_header   Host            $host;
+        proxy_set_header   X-User-ID       $auth_user_id;
+        proxy_set_header   X-User-Role     $auth_role;
+    }
 
     # ── Swagger Docs (sin auth) ────────────────────────────────
 {% for svc in services %}

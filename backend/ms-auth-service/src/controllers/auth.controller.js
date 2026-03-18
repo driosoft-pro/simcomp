@@ -4,6 +4,7 @@ import {
   createRefreshToken,
   refreshAccessToken,
   revokeRefreshToken,
+  verifyAccessToken,
 } from "../services/auth.service.js";
 
 export async function login(req, res) {
@@ -78,5 +79,24 @@ export async function logout(req, res) {
       success: false,
       message: "Error interno del servidor",
     });
+  }
+}
+
+export async function validate(req, res) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).send();
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = await verifyAccessToken(token);
+
+    res.setHeader("X-User-ID", decoded.sub);
+    res.setHeader("X-User-Role", decoded.rol);
+
+    return res.status(200).send();
+  } catch (error) {
+    return res.status(401).send();
   }
 }

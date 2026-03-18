@@ -14,8 +14,8 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:8004",
-        description: "Servidor local",
+        url: process.env.SWAGGER_SERVER_URL || "http://localhost:8004",
+        description: "Servidor de API",
       },
     ],
 

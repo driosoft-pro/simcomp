@@ -40,7 +40,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/", listInfracciones);
+router.get("/infracciones", listInfracciones);
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ router.get("/", listInfracciones);
  *         description: Error consultando infracción
  */
 router.get(
-  "/:id",
+  "/infracciones/:id",
   idParamValidator,
   validateRequest,
   getInfraccion
@@ -112,7 +112,7 @@ router.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
-  "/",
+  "/infracciones",
   createInfraccionValidator,
   validateRequest,
   createInfraccionController
@@ -153,7 +153,7 @@ router.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
-  "/:id",
+  "/infracciones/:id",
   idParamValidator,
   updateInfraccionValidator,
   validateRequest,
@@ -189,7 +189,7 @@ router.put(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete(
-  "/:id",
+  "/infracciones/:id",
   idParamValidator,
   validateRequest,
   deleteInfraccionController
@@ -230,7 +230,7 @@ router.delete(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
-  "/:id/vigente",
+  "/infracciones/:id/vigente",
   idParamValidator,
   changeVigenciaValidator,
   validateRequest,

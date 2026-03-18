@@ -16,6 +16,7 @@ export async function listInfracciones(req, res) {
       data: infracciones,
     });
   } catch (error) {
+    console.error("Error in listInfracciones:", error);
     return res.status(500).json({
       success: false,
       message: "Error listando infracciones",
@@ -39,6 +40,7 @@ export async function getInfraccion(req, res) {
       data: infraccion,
     });
   } catch (error) {
+    console.error("Error in getInfraccion:", error);
     return res.status(500).json({
       success: false,
       message: "Error consultando infracción",

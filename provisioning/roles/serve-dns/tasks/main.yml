@@ -60,9 +60,9 @@
           file "/etc/bind/zones/db.simcomp.co";
       };
 
-      zone "56.168.192.in-addr.arpa" {
+      zone "100.168.192.in-addr.arpa" {
           type master;
-          file "/etc/bind/zones/db.56.168.192";
+          file "/etc/bind/zones/db.100.168.192";
       };
     owner: root
     group: bind
@@ -99,9 +99,9 @@
     group: bind
     mode: "0644"
 
-- name: Crear zona inversa db.56.168.192
+- name: Crear zona inversa db.100.168.192
   ansible.builtin.copy:
-    dest: /etc/bind/zones/db.56.168.192
+    dest: /etc/bind/zones/db.100.168.192
     content: |
       $TTL    604800
       @       IN  SOA  dns.simcomp.co. admin.simcomp.co. (
@@ -112,13 +112,13 @@
                         86400 )
 
       @   IN  NS   dns.simcomp.co.
-      10  IN  PTR  dns.simcomp.co.
-      11  IN  PTR  auth.simcomp.co.
-      12  IN  PTR  per.simcomp.co.
-      13  IN  PTR  veh.simcomp.co.
-      14  IN  PTR  inf.simcomp.co.
-      15  IN  PTR  cmp.simcomp.co.
-      20  IN  PTR  simcomp.co.
+      2  IN  PTR  dns.simcomp.co.
+      3  IN  PTR  auth.simcomp.co.
+      4  IN  PTR  per.simcomp.co.
+      5  IN  PTR  veh.simcomp.co.
+      6  IN  PTR  inf.simcomp.co.
+      7  IN  PTR  cmp.simcomp.co.
+      8  IN  PTR  simcomp.co.
     owner: root
     group: bind
     mode: "0644"

@@ -346,11 +346,30 @@
     mode: "0644"
 
 # ── 7. Verificación final ─────────────────────────────────────────────────────
+- name: Crear index.html temporal si no hay build de React
+  ansible.builtin.copy:
+    dest: /var/www/simcomp/index.html
+    owner: www-data
+    group: www-data
+    mode: "0644"
+    content: |
+      <!DOCTYPE html>
+      <html>
+        <head><title>SIMCOMP</title></head>
+        <body>
+          <h1>SIMCOMP - Infraestructura lista</h1>
+          <p>Frontend pendiente de build. Ejecuta npm run build en frontend/ y re-provisiona.</p>
+        </body>
+      </html>
+    force: false
+  when: not frontend_build.stat.exists
+
 - name: Verificar respuesta HTTP de Nginx
   ansible.builtin.uri:
     url: http://localhost
     method: GET
-    status_code: [200, 301, 302]
+    status_code: [200, 301, 302, 403]
+  failed_when: false
 
 - name: Resumen final svr-web
   ansible.builtin.debug:

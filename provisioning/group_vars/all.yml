@@ -18,7 +18,7 @@ node_user: vagrant
 app_base_dir: /opt/simcomp
 
 # ── PostgreSQL ────────────────────────────────────────────────────────────────
-pg_version: "14"
+pg_version: "12"
 pg_user: postgres
 pg_password: "S1mc0mp@ss2025"
 

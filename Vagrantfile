@@ -30,15 +30,28 @@ Vagrant.configure("2") do |config|
 
     dns.vm.provider "virtualbox" do |vb|
       vb.name   = "SIMCOMP-DNS"
-      vb.memory = 512
+      vb.memory = 1024
       vb.cpus   = 1
     end
 
+dns.vm.provision "shell", run: "always" do |sh|
+  sh.inline = <<-SHELL
+    mkdir -p /home/vagrant/.ssh/vagrant_keys
+
+    cp /vagrant/.vagrant/machines/svr-dns/virtualbox/private_key \
+       /home/vagrant/.ssh/vagrant_keys/svr-dns.key
+
+    chmod 600 /home/vagrant/.ssh/vagrant_keys/svr-dns.key
+    chown vagrant:vagrant /home/vagrant/.ssh/vagrant_keys/svr-dns.key
+  SHELL
+end
+
     dns.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/hosts.ini"
+      ansible.inventory_path = "provisioning/inventory/hosts.ini"
       ansible.limit          = "svr-dns"
-      ansible.verbose        = false
+      ansible.verbose        = "v"
+      
     end
   end
 
@@ -58,11 +71,21 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 2
     end
 
+    api.vm.provision "shell", run: "always" do |sh|
+      sh.inline = <<-SHELL
+        mkdir -p /home/vagrant/.ssh/vagrant_keys
+        cp /vagrant/.vagrant/machines/svr-api/virtualbox/private_key \
+           /home/vagrant/.ssh/vagrant_keys/svr-api.key
+        chmod 600 /home/vagrant/.ssh/vagrant_keys/svr-api.key
+        chown vagrant:vagrant /home/vagrant/.ssh/vagrant_keys/svr-api.key
+      SHELL
+    end
+
     api.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/hosts.ini"
+      ansible.inventory_path = "provisioning/inventory/hosts.ini"
       ansible.limit          = "svr-api"
-      ansible.verbose        = false
+      ansible.verbose        = "v"
     end
   end
 
@@ -82,11 +105,21 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 1
     end
 
+    web.vm.provision "shell", run: "always" do |sh|
+      sh.inline = <<-SHELL
+        mkdir -p /home/vagrant/.ssh/vagrant_keys
+        cp /vagrant/.vagrant/machines/svr-web/virtualbox/private_key \
+           /home/vagrant/.ssh/vagrant_keys/svr-web.key
+        chmod 600 /home/vagrant/.ssh/vagrant_keys/svr-web.key
+        chown vagrant:vagrant /home/vagrant/.ssh/vagrant_keys/svr-web.key
+      SHELL
+    end
+
     web.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/hosts.ini"
+      ansible.inventory_path = "provisioning/inventory/hosts.ini"
       ansible.limit          = "svr-web"
-      ansible.verbose        = false
+      ansible.verbose        = "v"
     end
   end
 

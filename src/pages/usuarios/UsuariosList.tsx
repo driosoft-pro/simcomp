@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { UserPlus, X } from 'lucide-react'
 import { useUsuarios, useCreateUsuario } from '../../hooks/useUsuarios'
+import { useAuth } from '../../hooks/useAuth'
 import type { UserRole } from '../../types'
 import axios from 'axios'
 
@@ -45,10 +46,16 @@ function extractError(err: unknown): string {
 
 function UsuariosList() {
   const { data, isLoading, isError, error } = useUsuarios()
+  const { user } = useAuth()
   const createMutation = useCreateUsuario()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
+
+  const isCiudadano = user?.rol === 'ciudadano'
+  const filteredData = isCiudadano 
+    ? data?.filter((u) => u.id === user?.id)
+    : data
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -81,14 +88,16 @@ function UsuariosList() {
             Gestión de cuentas de acceso al sistema.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((s) => !s)}
-          className="mt-1 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
-        >
-          {showForm ? <X size={16} /> : <UserPlus size={16} />}
-          {showForm ? 'Cancelar' : 'Nuevo usuario'}
-        </button>
+        {!isCiudadano && (
+          <button
+            type="button"
+            onClick={() => setShowForm((s) => !s)}
+            className="mt-1 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
+          >
+            {showForm ? <X size={16} /> : <UserPlus size={16} />}
+            {showForm ? 'Cancelar' : 'Nuevo usuario'}
+          </button>
+        )}
       </div>
 
       {/* Formulario nuevo usuario (Modal) */}
@@ -242,7 +251,7 @@ function UsuariosList() {
                   </tr>
                 ))}
 
-              {data?.map((usuario) => (
+              {filteredData?.map((usuario) => (
                 <tr
                   key={usuario.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -282,7 +291,7 @@ function UsuariosList() {
             </tbody>
           </table>
 
-          {!isLoading && data?.length === 0 && (
+          {!isLoading && filteredData?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay usuarios registrados.</p>
             </div>

@@ -4,7 +4,7 @@
 # Máquinas virtuales:
 #   srv-simcomp-dns  192.168.100.2  → DNS (BIND9) + dominio simcomp.co
 #   srv-simcomp-api  192.168.100.3  → Backend Node.js (8001-8005) + PostgreSQL (5432-5436)
-#   srv-simcomp-web  192.168.100.4  → Nginx API Gateway (3001-3005) + React SPA (Puerto 80)
+#   srv-simcomp-web  192.168.100.4  → Nginx API Gateway (8001-8005) + React SPA (Puerto 80)
 #
 # Servicios en srv-simcomp-api:
 #   ms-auth-service      :8001 (DB :5432)
@@ -15,8 +15,7 @@
 # =============================================================================
 
 Vagrant.configure("2") do |config|
-
-  config.vm.box = "ubuntu/focal64"
+  config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = false
   config.vm.synced_folder ".", "/vagrant", disabled: false
 
@@ -34,10 +33,15 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 1
     end
 
+    dns.vm.provider "libvirt" do |lv|
+      lv.memory = 1024
+      lv.cpus   = 1
+    end
+
     dns.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv-simcomp-dns"
+      ansible.limit          = "srv_simcomp_dns"
       ansible.verbose        = false
     end
   end
@@ -58,10 +62,15 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 2
     end
 
+    api.vm.provider "libvirt" do |lv|
+      lv.memory = 4096
+      lv.cpus   = 2
+    end
+
     api.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv-simcomp-api"
+      ansible.limit          = "srv_simcomp_api"
       ansible.verbose        = false
     end
   end
@@ -82,10 +91,15 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 1
     end
 
+    web.vm.provider "libvirt" do |lv|
+      lv.memory = 2048
+      lv.cpus   = 1
+    end
+
     web.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv-simcomp-web"
+      ansible.limit          = "srv_simcomp_web"
       ansible.verbose        = false
     end
   end

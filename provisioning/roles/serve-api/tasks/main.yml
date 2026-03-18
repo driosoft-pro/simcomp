@@ -18,55 +18,82 @@
       - ufw
       - gnupg2
       - rsync
+      - apt-transport-https
+      - ca-certificates
     state: present
 
 # ── PostgreSQL setup ──────────────────────────────────────────────────────────
-- name: Añadir llave GPG de PostgreSQL
-  ansible.builtin.apt_key:
-    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
-    state: present
+- name: Descargar y agregar llave GPG de PostgreSQL
+  ansible.builtin.shell: |
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      | gpg --dearmor --yes -o /usr/share/keyrings/postgresql.gpg
+  args:
+    creates: /usr/share/keyrings/postgresql.gpg
+  become: true
 
-- name: Añadir repositorio de PostgreSQL
+- name: Agregar repositorio oficial de PostgreSQL
   ansible.builtin.apt_repository:
-    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    repo: "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main"
     state: present
+    filename: pgdg
+  become: true
 
-- name: Instalar PostgreSQL {{ pg_version }}
+- name: Instalar PostgreSQL 16
   ansible.builtin.apt:
     name:
-      - "postgresql-{{ pg_version }}"
-      - "postgresql-contrib-{{ pg_version }}"
+      - postgresql-16
+      - postgresql-contrib-16
       - libpq-dev
     state: present
     update_cache: true
+  become: true
 
-- name: Detener cluster default si no es el deseado por algún servicio
-  ansible.builtin.systemd:
-    name: postgresql
-    state: stopped
-  # Detenemos el servicio manejado por systemd para controlarlos individualmente con pg_ctlcluster si es necesario
-  # o simplemente dejar que el cluster 'main' ruede si coincide con alguno.
+- name: Detener y eliminar cluster default (main) para liberar puerto 5432
+  ansible.builtin.shell: pg_dropcluster --stop {{ pg_version }} main 2>/dev/null || true
+  become: true
+  changed_when: false
 
-- name: Crear clusters de PostgreSQL para cada puerto (5432-5436)
-  ansible.builtin.command: >
-    pg_createcluster {{ pg_version }} {{ item.name | replace('-service', '') }} --port {{ item.db_port }} --start
+- name: Crear e iniciar cada cluster de PostgreSQL (Bypass systemd)
+  ansible.builtin.shell: |
+    set -e
+    CLUSTER="{{ item.name | replace('-service', '') }}"
+    PORT="{{ item.db_port }}"
+    PG_VER="{{ pg_version }}"
+    PGCONF="/etc/postgresql/$PG_VER/$CLUSTER"
+    PGDATA="/var/lib/postgresql/$PG_VER/$CLUSTER"
+    PGLOG="/var/log/postgresql/postgresql-$PG_VER-$CLUSTER.log"
+    PGBIN="/usr/lib/postgresql/$PG_VER/bin"
+
+    # 1. Crear cluster si no existe
+    if [ ! -d "$PGCONF" ]; then
+      pg_createcluster $PG_VER $CLUSTER --port=$PORT
+    fi
+
+    # 2. Configurar TCP listener (localhost)
+    sed -i "s/^#*listen_addresses\s*=.*/listen_addresses = 'localhost'/" "$PGCONF/postgresql.conf"
+
+    # 3. Arrancar el proceso directamente (como usuario postgres)
+    if ! "$PGBIN/pg_ctl" -D "$PGDATA" status 2>/dev/null | grep -q 'server is running'; then
+      su - postgres -c "$PGBIN/pg_ctl -D $PGDATA -o '-c config_file=$PGCONF/postgresql.conf' -l $PGLOG start -w -t 60"
+    fi
   args:
-    creates: "/etc/postgresql/{{ pg_version }}/{{ item.name | replace('-service', '') }}/postgresql.conf"
+    executable: /bin/bash
   loop: "{{ services }}"
   become: true
+  changed_when: true
 
-- name: Asegurar que todos los clusters estén iniciados
-  ansible.builtin.command: >
-    pg_ctlcluster {{ pg_version }} {{ item.name | replace('-service', '') }} start
+- name: Esperar a que los clusters acepten conexiones TCP
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ item.db_port }}"
+    state: started
+    timeout: 90
+    delay: 10
   loop: "{{ services }}"
-  become: true
-  register: cluster_start
-  failed_when: false
-  changed_when: "'already running' not in cluster_start.stderr"
 
 - name: Establecer contraseña del rol postgres en todos los clusters
   ansible.builtin.command: >
-    psql --port {{ item.db_port }} -c "ALTER USER postgres WITH PASSWORD '{{ pg_password }}';"
+    psql -p {{ item.db_port }} -d postgres -c "ALTER USER postgres WITH PASSWORD '{{ pg_password }}';"
   become: true
   become_user: postgres
   loop: "{{ services }}"
@@ -92,7 +119,7 @@
   become: true
   notify: restart all postgres clusters
 
-# ── Node.js & Tooling ──────────────────────────────────────────────────────────
+# ── Node.js & Tooling ─────────────────────────────────────────────────────────
 - name: Instalar Node.js {{ node_version }} vía NodeSource
   block:
     - name: Añadir llave NodeSource
@@ -154,7 +181,7 @@
     group: "{{ node_user }}"
     mode: "0600"
   loop: "{{ services }}"
-  no_log: true
+  # no_log: true
 
 - name: npm install en la VM
   community.general.npm:
@@ -177,8 +204,7 @@
   become_user: "{{ node_user }}"
   block:
     - name: Detener procesos anteriores
-      ansible.builtin.command: pm2 delete all
-      ignore_errors: true
+      ansible.builtin.shell: pm2 delete all || true
       changed_when: false
 
     - name: Iniciar servicios

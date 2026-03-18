@@ -1,6 +1,6 @@
 # Catálogo de Endpoints — SIMCOMP
 
-## 1. Auth & Usuarios (Puerto 8001)
+## 1. Auth & Usuarios (Puerto Externo 8001 / Interno 3001)
 ### Autenticación
 - **POST** `/api/auth/login` - Iniciar sesión (admin, agente, supervisor)
 - **POST** `/api/auth/refresh` - Renovar access token
@@ -16,7 +16,7 @@
 
 ---
 
-## 2. Personas & Licencias (Puerto 8002)
+## 2. Personas & Licencias (Puerto Externo 8002 / Interno 3002)
 ### Ciudadanos
 - **GET** `/api/personas` - Listar todas las personas
 - **POST** `/api/personas` - Registrar nueva persona
@@ -31,7 +31,7 @@
 
 ---
 
-## 3. Automotores (Puerto 8003)
+## 3. Automotores (Puerto Externo 8003 / Interno 3003)
 - **GET** `/api/automotores` - Listar todos los vehículos
 - **POST** `/api/automotores` - Registrar un automotor
 - **GET** `/api/automotores/{id}` - Detalle por ID
@@ -42,7 +42,7 @@
 
 ---
 
-## 4. Infracciones (Puerto 8004)
+## 4. Infracciones (Puerto Externo 8004 / Interno 3004)
 - **GET** `/api/infracciones` - Catálogo completo de infracciones
 - **POST** `/api/infracciones` - Crear nueva infracción
 - **GET** `/api/infracciones/{id}` - Detalle por ID
@@ -52,7 +52,7 @@
 
 ---
 
-## 5. Comparendos (Puerto 8005)
+## 5. Comparendos (Puerto Externo 8005 / Interno 3005)
 - **GET** `/api/comparendos` - Listar todos los comparendos registrados
 - **POST** `/api/comparendos` - **Registrar Comparendo** (Valida persona, vehículo e infracción)
 - **GET** `/api/comparendos/{id}` - Detalle completo
@@ -67,4 +67,4 @@
 ## Utilidades de Red
 - **Health Checks**: `GET /api/health` en todos los servicios.
 - **Documentación**: `GET /api/docs` (Swagger UI) en cada puerto.
-- **Gateway**: Todos los endpoints anteriores son accesibles vía `api.simcomp.co:300X` con validación JWT centralizada.
+- **Gateway**: Todos los endpoints anteriores son accesibles vía `api.simcomp.co:800X` con validación JWT centralizada.

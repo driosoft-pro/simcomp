@@ -73,7 +73,7 @@
         rule: allow
         port: "{{ item }}"
         proto: tcp
-      loop: [3001, 3002, 3003, 3004, 3005]
+      loop: [8001, 8002, 8003, 8004, 8005]
     - community.general.ufw:
         state: enabled
         policy: deny

@@ -5,19 +5,19 @@
 # =============================================================================
 
 - name: Aprovisionar srv-simcomp-dns (BIND9 + zona simcomp.co)
-  hosts: srv-simcomp-dns
+  hosts: srv_simcomp_dns
   become: true
   roles:
     - serve-dns
 
 - name: Aprovisionar srv-simcomp-api (PostgreSQL x5 + Node.js x5 + PM2)
-  hosts: srv-simcomp-api
+  hosts: srv_simcomp_api
   become: true
   roles:
     - serve-api
 
 - name: Aprovisionar srv-simcomp-web (Nginx API Gateway JWT + React SPA)
-  hosts: srv-simcomp-web
+  hosts: srv_simcomp_web
   become: true
   roles:
     - server-web

@@ -26,6 +26,12 @@ export async function crearPersonaController(req, res) {
       data: persona,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,
@@ -42,6 +48,12 @@ export async function listarPersonasController(req, res) {
       data: personas,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,
@@ -66,6 +78,12 @@ export async function obtenerPersonaPorIdController(req, res) {
       data: persona,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,
@@ -90,6 +108,12 @@ export async function obtenerPersonaPorDocumentoController(req, res) {
       data: persona,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,

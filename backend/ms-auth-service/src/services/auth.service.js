@@ -94,3 +94,12 @@ export async function revokeRefreshToken(refreshTokenValue) {
   savedToken.updated_at = new Date();
   await savedToken.save();
 }
+
+export async function verifyAccessToken(token) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (error) {
+    throw new Error("Token inválido o expirado");
+  }
+}

@@ -52,6 +52,11 @@
     - name: npm install y build
       ansible.builtin.shell: |
         npm install
+        VITE_AUTH_API=http://{{ domain }}/api/auth \
+        VITE_PERSONAS_API=http://{{ domain }}/api/personas \
+        VITE_AUTOMOTORES_API=http://{{ domain }}/api/automotores \
+        VITE_INFRACCIONES_API=http://{{ domain }}/api/infracciones \
+        VITE_COMPARENDOS_API=http://{{ domain }}/api/comparendos \
         npm run build
       args:
         chdir: "{{ frontend_dir }}/source"

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMCOMP — Panel de Comparendos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:       #0f1117;
+  --paper:     #f9f7f2;
+  --paper2:    #f1ede4;
+  --card:      #ffffff;
+  --stroke:    #d4cfc5;
+  --blue:      #1a3a6e;
+  --blueL:     #2d5fad;
+  --amber:     #c8720c;
+  --amberL:    #e8a020;
+  --green:     #1a6e3a;
+  --greenL:    #2aab5c;
+  --red:       #8b1a1a;
+  --redL:      #c0392b;
+  --muted:     #7a7468;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans', sans-serif;
+  --serif:     'Fraunces', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0 32px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-badge {
+  background: var(--amberL);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brand-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 0;
+}
+
+.topbar-nav a {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(249,247,242,0.55);
+  text-decoration: none;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.topbar-nav a:hover,
+.topbar-nav a.active {
+  color: var(--paper);
+  border-bottom-color: var(--amberL);
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--greenL);
+  letter-spacing: 0.08em;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--greenL);
+  border-radius: 50%;
+  animation: blink 2.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--ink);
+  padding: 32px 0;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  margin-bottom: 32px;
+}
+
+.sidebar-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(249,247,242,0.3);
+  padding: 0 24px;
+  margin-bottom: 8px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 24px;
+  font-size: 13px;
+  color: rgba(249,247,242,0.65);
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  text-decoration: none;
+}
+
+.sidebar-item:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--paper);
+}
+
+.sidebar-item.active {
+  background: rgba(232,160,32,0.1);
+  color: var(--amberL);
+  border-left-color: var(--amberL);
+}
+
+.sidebar-icon { font-size: 16px; width: 20px; flex-shrink: 0; }
+
+.sidebar-port {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(249,247,242,0.3);
+}
+
+/* MAIN CONTENT */
+.main {
+  padding: 40px 48px;
+  max-width: 1100px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.breadcrumb {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.page-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 38px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: var(--muted);
+  margin-top: 8px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  padding: 20px 24px;
+  border-top: 3px solid var(--stroke);
+  transition: border-top-color 0.2s;
+}
+
+.stat-card.blue  { border-top-color: var(--blue); }
+.stat-card.amber { border-top-color: var(--amber); }
+.stat-card.green { border-top-color: var(--green); }
+.stat-card.red   { border-top-color: var(--red); }
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* SECTION */
+.section { margin-bottom: 48px; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--stroke);
+}
+
+/* SERVICE CARDS */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.service-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  padding: 28px;
+  transition: box-shadow 0.2s;
+}
+
+.service-card:hover {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+.svc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.svc-emoji { font-size: 28px; }
+
+.svc-port {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--paper2);
+  border: 1px solid var(--stroke);
+  padding: 4px 10px;
+  color: var(--blue);
+  letter-spacing: 0.06em;
+}
+
+.svc-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.svc-db {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.svc-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-weight: 300;
+  margin-bottom: 16px;
+}
+
+.svc-routes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  background: var(--paper2);
+  color: var(--muted);
+}
+
+.method-tag {
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+}
+
+.m-get    { background: rgba(26,110,58,0.12); color: var(--green); }
+.m-post   { background: rgba(26,58,110,0.12); color: var(--blue); }
+.m-put    { background: rgba(200,114,12,0.12); color: var(--amber); }
+.m-patch  { background: rgba(100,50,150,0.12); color: #7c3aed; }
+.m-delete { background: rgba(139,26,26,0.12); color: var(--red); }
+
+/* ENTITIES TABLE */
+.entity-block {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.entity-title {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.entity-tag {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border: 1px solid;
+}
+
+.et-p { background: rgba(26,110,58,0.15); border-color: var(--greenL); color: var(--greenL); }
+.et-v { background: rgba(26,58,110,0.15); border-color: var(--blueL); color: var(--blueL); }
+.et-i { background: rgba(200,114,12,0.15); border-color: var(--amberL); color: var(--amberL); }
+.et-c { background: rgba(139,26,26,0.15); border-color: var(--redL); color: var(--redL); }
+
+.fields-table { width: 100%; border-collapse: collapse; }
+
+.fields-table th {
+  background: var(--paper2);
+  padding: 10px 16px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--stroke);
+  font-weight: 400;
+}
+
+.fields-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(212,207,197,0.4);
+  font-size: 13px;
+}
+
+.fields-table tr:last-child td { border-bottom: none; }
+.fields-table tr:hover td { background: var(--paper2); }
+
+.field-name-cell { font-family: var(--mono); font-size: 12px; color: var(--blue); font-weight: 500; }
+.field-type-cell { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+.field-desc-cell { color: var(--muted); font-weight: 300; font-size: 12px; }
+
+.constraint-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+}
+
+.cb-pk   { background: #fff3cd; color: #855700; border: 1px solid #e8a020; }
+.cb-fk   { background: #d0e8ff; color: #1a3a6e; border: 1px solid #4a7cc9; }
+.cb-uq   { background: #d4edda; color: #1a6e3a; border: 1px solid #28a745; }
+.cb-nn   { background: #f0f0f0; color: #555; border: 1px solid #ccc; }
+.cb-auto { background: #f5f0ff; color: #5b21b6; border: 1px solid #7c3aed; }
+.cb-null { background: #fff5f5; color: #8b1a1a; border: 1px solid #c0392b; }
+
+/* FLOW */
+.flow-timeline {
+  position: relative;
+  padding-left: 52px;
+}
+
+.flow-timeline::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--blue), var(--amber));
+  opacity: 0.4;
+}
+
+.flow-item {
+  position: relative;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.flow-item:last-child { border-bottom: none; }
+
+.flow-num {
+  position: absolute;
+  left: -52px;
+  top: 18px;
+  width: 38px;
+  height: 38px;
+  background: var(--ink);
+  border: 2px solid var(--stroke);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--amberL);
+}
+
+.flow-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.flow-desc { font-size: 13px; color: var(--muted); line-height: 1.6; font-weight: 300; }
+
+.flow-svc {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--blue);
+  background: rgba(26,58,110,0.08);
+  padding: 3px 8px;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(26,58,110,0.2);
+}
+
+/* TECH GRID */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tech-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tech-emoji { font-size: 24px; flex-shrink: 0; }
+.tech-name { font-family: var(--serif); font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.tech-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+
+/* CODE BLOCK */
+.code-block {
+  background: var(--ink);
+  padding: 24px 28px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  color: rgba(249,247,242,0.8);
+  overflow-x: auto;
+  border: 1px solid var(--stroke);
+  margin-top: 12px;
+}
+
+.ck  { color: #79b8ff; }  /* keyword */
+.cv  { color: #e8a020; }  /* value/string */
+.cc  { color: rgba(249,247,242,0.35); }  /* comment */
+.cs  { color: #b5d4a6; }  /* service name */
+
+/* FOOTER */
+.footer {
+  background: var(--ink);
+  color: rgba(249,247,242,0.4);
+  padding: 24px 48px;
+  font-family: var(--mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .services-grid, .stats-row, .tech-grid { grid-template-columns: 1fr; }
+  .main { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-badge">SIMCOMP</div>
+    <span class="brand-name">Sistema de Comparendos</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="#servicios" class="active">Servicios</a>
+    <a href="#entidades">Entidades</a>
+    <a href="#flujo">Flujo</a>
+    <a href="#api">API</a>
+    <a href="#infra">Infra</a>
+  </nav>
+  <div class="topbar-status">
+    <div class="status-dot"></div>
+    4 SERVICIOS ACTIVOS
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Microservicios</div>
+      <a class="sidebar-item active" href="#servicios">
+        <span class="sidebar-icon">👤</span> Personas
+        <span class="sidebar-port">:3001</span>
+      </a>
+      <a class="sidebar-item" href="#servicios">
+        <span class="sidebar-icon">🚗</span> Vehículos
+        <span class="sidebar-port">:3002</span>
+      </a>
+      <a class="sidebar-item" href="#servicios">
+        <span class="sidebar-icon">📋</span> Infracciones
+        <span class="sidebar-port">:3003</span>
+      </a>
+      <a class="sidebar-item" href="#servicios">
+        <span class="sidebar-icon">🚨</span> Comparendos
+        <span class="sidebar-port">:3004</span>
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Base de Datos</div>
+      <a class="sidebar-item" href="#entidades">
+        <span class="sidebar-icon">🗄️</span> Entidades
+      </a>
+      <a class="sidebar-item" href="#flujo">
+        <span class="sidebar-icon">🔄</span> Flujo del Sistema
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Documentación</div>
+      <a class="sidebar-item" href="#api">
+        <span class="sidebar-icon">🔗</span> Endpoints REST
+      </a>
+      <a class="sidebar-item" href="#infra">
+        <span class="sidebar-icon">🐳</span> Docker / Vagrant
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="breadcrumb">SIMCOMP · v1.0.0 · Node.js + PostgreSQL + Docker + Vagrant</div>
+      <h1 class="page-title">Sistema de<br>Comparendos de Tránsito</h1>
+      <p class="page-subtitle">Plataforma distribuida para la gestión de infracciones de tránsito. 4 microservicios independientes con bases de datos propias comunicados vía REST/HTTP.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card blue">
+        <div class="stat-label">Microservicios</div>
+        <div class="stat-num">4</div>
+        <div class="stat-sub">Node.js + Express</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Bases de Datos</div>
+        <div class="stat-num">4</div>
+        <div class="stat-sub">PostgreSQL 15</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Endpoints API</div>
+        <div class="stat-num">32+</div>
+        <div class="stat-sub">REST / OpenAPI</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Entidades BD</div>
+        <div class="stat-num">5</div>
+        <div class="stat-sub">Tablas totales</div>
+      </div>
+    </div>
+
+    <!-- MICROSERVICIOS -->
+    <div class="section" id="servicios">
+      <div class="section-head">
+        <h2 class="section-title">Microservicios</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="services-grid">
+
+        <div class="service-card">
+          <div class="svc-top">
+            <div class="svc-emoji">👤</div>
+            <div class="svc-port">PORT :3001</div>
+          </div>
+          <div class="svc-name">Personas Service</div>
+          <div class="svc-db">personas_db · PostgreSQL</div>
+          <div class="svc-desc">Gestiona ciudadanos y licencias de conducción. Permite registrar, consultar y actualizar datos personales.</div>
+          <div class="svc-routes">
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/personas</div>
+            <div class="route-pill"><span class="method-tag m-post">POST</span>/api/personas</div>
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/personas/:id/licencias</div>
+            <div class="route-pill"><span class="method-tag m-post">POST</span>/api/personas/:id/licencias</div>
+          </div>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-top">
+            <div class="svc-emoji">🚗</div>
+            <div class="svc-port">PORT :3002</div>
+          </div>
+          <div class="svc-name">Vehículos Service</div>
+          <div class="svc-db">vehiculos_db · PostgreSQL</div>
+          <div class="svc-desc">Administra el registro de vehículos y sus propietarios. Búsqueda por placa o propietario.</div>
+          <div class="svc-routes">
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/vehiculos</div>
+            <div class="route-pill"><span class="method-tag m-post">POST</span>/api/vehiculos</div>
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/vehiculos/placa/:placa</div>
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/vehiculos/propietario/:id</div>
+          </div>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-top">
+            <div class="svc-emoji">📋</div>
+            <div class="svc-port">PORT :3003</div>
+          </div>
+          <div class="svc-name">Infracciones Service</div>
+          <div class="svc-db">infracciones_db · PostgreSQL</div>
+          <div class="svc-desc">Catálogo oficial de infracciones con código, descripción y valor de multa según normativa vigente.</div>
+          <div class="svc-routes">
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/infracciones</div>
+            <div class="route-pill"><span class="method-tag m-post">POST</span>/api/infracciones</div>
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/infracciones/codigo/:cod</div>
+            <div class="route-pill"><span class="method-tag m-put">PUT</span>/api/infracciones/:id</div>
+          </div>
+        </div>
+
+        <div class="service-card" style="border-top: 3px solid var(--red);">
+          <div class="svc-top">
+            <div class="svc-emoji">🚨</div>
+            <div class="svc-port">PORT :3004</div>
+          </div>
+          <div class="svc-name">Comparendos Service ★</div>
+          <div class="svc-db">comparendos_db · CORE DEL SISTEMA</div>
+          <div class="svc-desc">Registra comparendos relacionando persona + vehículo + infracción. Gestiona el ciclo CREADO → PAGADO / ANULADO.</div>
+          <div class="svc-routes">
+            <div class="route-pill"><span class="method-tag m-post">POST</span>/api/comparendos</div>
+            <div class="route-pill"><span class="method-tag m-get">GET</span>/api/comparendos/persona/:id</div>
+            <div class="route-pill"><span class="method-tag m-patch">PATCH</span>/api/comparendos/:id/pagar</div>
+            <div class="route-pill"><span class="method-tag m-patch">PATCH</span>/api/comparendos/:id/anular</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ENTIDADES -->
+    <div class="section" id="entidades">
+      <div class="section-head">
+        <h2 class="section-title">Entidades de Base de Datos</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <!-- Persona -->
+      <div class="entity-block">
+        <div class="entity-title">
+          <span>tabla: personas</span>
+          <span class="entity-tag et-p">personas_db</span>
+        </div>
+        <table class="fields-table">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name-cell">id</td><td class="field-type-cell">SERIAL</td><td><span class="constraint-badge cb-pk">PK</span></td><td class="field-desc-cell">Identificador único autoincremental</td></tr>
+            <tr><td class="field-name-cell">numero_documento</td><td class="field-type-cell">VARCHAR(20)</td><td><span class="constraint-badge cb-uq">UNIQUE NN</span></td><td class="field-desc-cell">Cédula, Pasaporte o NIT</td></tr>
+            <tr><td class="field-name-cell">tipo_documento</td><td class="field-type-cell">ENUM</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">CC, CE, PASAPORTE, NIT</td></tr>
+            <tr><td class="field-name-cell">nombres</td><td class="field-type-cell">VARCHAR(100)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Nombres del ciudadano</td></tr>
+            <tr><td class="field-name-cell">apellidos</td><td class="field-type-cell">VARCHAR(100)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Apellidos del ciudadano</td></tr>
+            <tr><td class="field-name-cell">email</td><td class="field-type-cell">VARCHAR(150)</td><td><span class="constraint-badge cb-uq">UNIQUE</span></td><td class="field-desc-cell">Correo electrónico</td></tr>
+            <tr><td class="field-name-cell">telefono</td><td class="field-type-cell">VARCHAR(20)</td><td>—</td><td class="field-desc-cell">Número telefónico</td></tr>
+            <tr><td class="field-name-cell">activo</td><td class="field-type-cell">BOOLEAN</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Estado del registro</td></tr>
+            <tr><td class="field-name-cell">created_at</td><td class="field-type-cell">TIMESTAMP</td><td><span class="constraint-badge cb-auto">AUTO</span></td><td class="field-desc-cell">Fecha de creación</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Vehículo -->
+      <div class="entity-block">
+        <div class="entity-title">
+          <span>tabla: vehiculos</span>
+          <span class="entity-tag et-v">vehiculos_db</span>
+        </div>
+        <table class="fields-table">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name-cell">id</td><td class="field-type-cell">SERIAL</td><td><span class="constraint-badge cb-pk">PK</span></td><td class="field-desc-cell">Identificador único</td></tr>
+            <tr><td class="field-name-cell">placa</td><td class="field-type-cell">VARCHAR(10)</td><td><span class="constraint-badge cb-uq">UNIQUE NN</span></td><td class="field-desc-cell">Placa del vehículo (ej: ABC-123)</td></tr>
+            <tr><td class="field-name-cell">marca</td><td class="field-type-cell">VARCHAR(50)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Marca del fabricante</td></tr>
+            <tr><td class="field-name-cell">modelo</td><td class="field-type-cell">VARCHAR(50)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Línea del vehículo</td></tr>
+            <tr><td class="field-name-cell">anio</td><td class="field-type-cell">INTEGER</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Año de fabricación</td></tr>
+            <tr><td class="field-name-cell">tipo_vehiculo</td><td class="field-type-cell">ENUM</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">AUTO, MOTO, CAMION, BUS, OTRO</td></tr>
+            <tr><td class="field-name-cell">propietario_id</td><td class="field-type-cell">INTEGER</td><td><span class="constraint-badge cb-fk">FK*</span></td><td class="field-desc-cell">ID en personas-service (ref. externa)</td></tr>
+            <tr><td class="field-name-cell">activo</td><td class="field-type-cell">BOOLEAN</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Estado del registro</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Infracción -->
+      <div class="entity-block">
+        <div class="entity-title">
+          <span>tabla: infracciones</span>
+          <span class="entity-tag et-i">infracciones_db</span>
+        </div>
+        <table class="fields-table">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name-cell">id</td><td class="field-type-cell">SERIAL</td><td><span class="constraint-badge cb-pk">PK</span></td><td class="field-desc-cell">Identificador único</td></tr>
+            <tr><td class="field-name-cell">codigo</td><td class="field-type-cell">VARCHAR(10)</td><td><span class="constraint-badge cb-uq">UNIQUE NN</span></td><td class="field-desc-cell">Código oficial (ej: C01, D02)</td></tr>
+            <tr><td class="field-name-cell">descripcion</td><td class="field-type-cell">TEXT</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Descripción detallada de la infracción</td></tr>
+            <tr><td class="field-name-cell">valor_multa</td><td class="field-type-cell">DECIMAL(12,2)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Valor en pesos colombianos</td></tr>
+            <tr><td class="field-name-cell">tipo_infraccion</td><td class="field-type-cell">ENUM</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">LEVE, GRAVE, GRAVISIMA</td></tr>
+            <tr><td class="field-name-cell">puntos_licencia</td><td class="field-type-cell">INTEGER</td><td>DEF: 0</td><td class="field-desc-cell">Puntos descontados de la licencia</td></tr>
+            <tr><td class="field-name-cell">activa</td><td class="field-type-cell">BOOLEAN</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Disponibilidad en el catálogo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Comparendo -->
+      <div class="entity-block" style="border-top: 3px solid var(--red);">
+        <div class="entity-title">
+          <span>tabla: comparendos ★ CORE</span>
+          <span class="entity-tag et-c">comparendos_db</span>
+        </div>
+        <table class="fields-table">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name-cell">id</td><td class="field-type-cell">SERIAL</td><td><span class="constraint-badge cb-pk">PK</span></td><td class="field-desc-cell">Identificador único</td></tr>
+            <tr><td class="field-name-cell">numero_comparendo</td><td class="field-type-cell">VARCHAR(20)</td><td><span class="constraint-badge cb-uq">UNIQUE NN</span></td><td class="field-desc-cell">Generado automáticamente (CMP-YYYY-NNN)</td></tr>
+            <tr><td class="field-name-cell">persona_id</td><td class="field-type-cell">INTEGER</td><td><span class="constraint-badge cb-fk">FK*</span></td><td class="field-desc-cell">Ref. externa → personas-service</td></tr>
+            <tr><td class="field-name-cell">vehiculo_id</td><td class="field-type-cell">INTEGER</td><td><span class="constraint-badge cb-fk">FK*</span></td><td class="field-desc-cell">Ref. externa → vehiculos-service</td></tr>
+            <tr><td class="field-name-cell">infraccion_id</td><td class="field-type-cell">INTEGER</td><td><span class="constraint-badge cb-fk">FK*</span></td><td class="field-desc-cell">Ref. externa → infracciones-service</td></tr>
+            <tr><td class="field-name-cell">fecha_infraccion</td><td class="field-type-cell">TIMESTAMP</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Cuándo ocurrió la infracción</td></tr>
+            <tr><td class="field-name-cell">estado</td><td class="field-type-cell">ENUM</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">CREADO / PAGADO / ANULADO</td></tr>
+            <tr><td class="field-name-cell">valor_multa</td><td class="field-type-cell">DECIMAL(12,2)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Valor capturado al momento de crear</td></tr>
+            <tr><td class="field-name-cell">agente_id</td><td class="field-type-cell">VARCHAR(20)</td><td><span class="constraint-badge cb-nn">NOT NULL</span></td><td class="field-desc-cell">Identificación del agente de tránsito</td></tr>
+            <tr><td class="field-name-cell">fecha_pago</td><td class="field-type-cell">TIMESTAMP</td><td><span class="constraint-badge cb-null">NULLABLE</span></td><td class="field-desc-cell">Fecha de pago del comparendo</td></tr>
+            <tr><td class="field-name-cell">fecha_anulacion</td><td class="field-type-cell">TIMESTAMP</td><td><span class="constraint-badge cb-null">NULLABLE</span></td><td class="field-desc-cell">Fecha de anulación del comparendo</td></tr>
+            <tr><td class="field-name-cell">created_at</td><td class="field-type-cell">TIMESTAMP</td><td><span class="constraint-badge cb-auto">AUTO</span></td><td class="field-desc-cell">Fecha de creación</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FLUJO -->
+    <div class="section" id="flujo">
+      <div class="section-head">
+        <h2 class="section-title">Flujo del Sistema</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="flow-timeline">
+        <div class="flow-item">
+          <div class="flow-num">1</div>
+          <div class="flow-title">Registro de Persona</div>
+          <div class="flow-desc">El ciudadano o conductor es registrado con su documento de identidad y datos de contacto.</div>
+          <span class="flow-svc">→ personas-service :3001</span>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">2</div>
+          <div class="flow-title">Registro de Vehículo</div>
+          <div class="flow-desc">El vehículo se registra con su placa y se asocia al propietario por su ID de persona.</div>
+          <span class="flow-svc">→ vehiculos-service :3002</span>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">3</div>
+          <div class="flow-title">Configuración de Infracciones</div>
+          <div class="flow-desc">El administrador carga el catálogo de infracciones con códigos y valores de multa oficiales.</div>
+          <span class="flow-svc">→ infracciones-service :3003</span>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">4</div>
+          <div class="flow-title">Creación del Comparendo</div>
+          <div class="flow-desc">El agente envía persona_id + vehiculo_id + infraccion_id. El core valida cada uno consultando los otros servicios antes de persistir.</div>
+          <span class="flow-svc">→ comparendos-service :3004 (valida en :3001, :3002, :3003)</span>
+        </div>
+        <div class="flow-item">
+          <div class="flow-num">5</div>
+          <div class="flow-title">Consulta y Pago</div>
+          <div class="flow-desc">El ciudadano consulta sus comparendos activos y paga, cambiando el estado de CREADO a PAGADO.</div>
+          <span class="flow-svc">→ comparendos-service :3004</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TECH STACK -->
+    <div class="section" id="infra">
+      <div class="section-head">
+        <h2 class="section-title">Tecnologías</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card"><span class="tech-emoji">🟢</span><div><div class="tech-name">Node.js + Express</div><div class="tech-sub">Backend REST API</div></div></div>
+        <div class="tech-card"><span class="tech-emoji">🐘</span><div><div class="tech-name">PostgreSQL 15</div><div class="tech-sub">Base de datos relacional</div></div></div>
+        <div class="tech-card"><span class="tech-emoji">📦</span><div><div class="tech-name">Sequelize ORM</div><div class="tech-sub">Mapeo objeto-relacional</div></div></div>
+        <div class="tech-card"><span class="tech-emoji">🐳</span><div><div class="tech-name">Docker Compose</div><div class="tech-sub">Orquestación contenedores</div></div></div>
+        <div class="tech-card"><span class="tech-emoji">🖥️</span><div><div class="tech-name">Vagrant</div><div class="tech-sub">Máquinas virtuales</div></div></div>
+        <div class="tech-card"><span class="tech-emoji">📄</span><div><div class="tech-name">Swagger / OpenAPI</div><div class="tech-sub">Documentación de APIs</div></div></div>
+      </div>
+
+      <div style="margin-top: 28px;">
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.06em; text-transform: uppercase;">Docker Compose — puertos y servicios</div>
+        <div class="code-block">
+<span class="cc"># Sistema de Comparendos de Tránsito</span>
+<span class="ck">version</span>: <span class="cv">'3.8'</span>
+
+<span class="ck">services</span>:
+  <span class="cs">personas-service</span>:
+    <span class="ck">build</span>: <span class="cv">./personas-service</span>
+    <span class="ck">ports</span>: [<span class="cv">"3001:3001"</span>]
+    <span class="ck">depends_on</span>: [personas-db]
+
+  <span class="cs">vehiculos-service</span>:
+    <span class="ck">build</span>: <span class="cv">./vehiculos-service</span>
+    <span class="ck">ports</span>: [<span class="cv">"3002:3002"</span>]
+    <span class="ck">depends_on</span>: [vehiculos-db]
+
+  <span class="cs">infracciones-service</span>:
+    <span class="ck">build</span>: <span class="cv">./infracciones-service</span>
+    <span class="ck">ports</span>: [<span class="cv">"3003:3003"</span>]
+    <span class="ck">depends_on</span>: [infracciones-db]
+
+  <span class="cs">comparendos-service</span>:
+    <span class="ck">build</span>: <span class="cv">./comparendos-service</span>
+    <span class="ck">ports</span>: [<span class="cv">"3004:3004"</span>]
+    <span class="ck">environment</span>:
+      - <span class="cv">PERSONAS_URL=http://personas-service:3001</span>
+      - <span class="cv">VEHICULOS_URL=http://vehiculos-service:3002</span>
+      - <span class="cv">INFRACCIONES_URL=http://infracciones-service:3003</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <span>SIMCOMP — Sistema de Comparendos de Tránsito © 2025</span>
+  <span>Node.js 20 · PostgreSQL 15 · Docker · Vagrant · Swagger</span>
+</footer>
+
+</body>
+</html>

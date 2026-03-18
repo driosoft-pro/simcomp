@@ -9,7 +9,12 @@ import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  hsts: false,
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
+}));
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));

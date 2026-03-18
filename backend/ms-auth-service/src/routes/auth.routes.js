@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, refresh, logout } from "../controllers/auth.controller.js";
+import { login, refresh, logout, validate } from "../controllers/auth.controller.js";
 
 const router = Router();
 
@@ -46,5 +46,6 @@ router.post("/refresh", refresh);
  *         description: Logout exitoso
  */
 router.post("/logout", logout);
+router.post("/validate", validate);
 
 export default router;

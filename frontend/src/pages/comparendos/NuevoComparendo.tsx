@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCreateComparendo, useComparendos } from '../../hooks/useComparendos'
 import { getPersonaByDocumento } from '../../api/personas.api'
-import { getAutomotoresByPropietario } from '../../api/automotores.api'
+import { getAutomotoresByPropietario, searchAutomotorByPlaca } from '../../api/automotores.api'
 import { useInfracciones } from '../../hooks/useInfracciones'
-import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X, Car } from 'lucide-react'
 import PersonaForm from '../../components/forms/PersonaForm'
+import VehiculoForm from '../../components/forms/VehiculoForm'
 
 import { useAuth } from '../../hooks/useAuth'
 
@@ -90,6 +91,12 @@ function NuevoComparendo() {
   const [personaWarning, setPersonaWarning] = useState<string | null>(null)
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false)
 
+  // Vehicle Validation State
+  const [isValidatingVehiculo, setIsValidatingVehiculo] = useState(false)
+  const [vehiculoValido, setVehiculoValido] = useState<boolean | null>(null)
+  const [vehiculoWarning, setVehiculoWarning] = useState<string | null>(null)
+  const [isVehiculoModalOpen, setIsVehiculoModalOpen] = useState(false)
+
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
@@ -98,6 +105,10 @@ function NuevoComparendo() {
     if (name === 'ciudadano_documento') {
       setPersonaValida(null)
       setPersonaWarning(null)
+    }
+    if (name === 'placa_vehiculo') {
+      setVehiculoValido(null)
+      setVehiculoWarning(null)
     }
     if (name === 'infraccion_codigo') {
       const selected = infracciones?.find(i => i.codigo === value)
@@ -161,6 +172,48 @@ function NuevoComparendo() {
     }))
     setPersonaValida(true)
     setPersonaWarning(null)
+  }
+
+  const handleValidarVehiculo = async () => {
+    if (!formData.placa_vehiculo.trim()) {
+      setVehiculoWarning('Ingrese una placa para validar.')
+      return
+    }
+
+    setIsValidatingVehiculo(true)
+    setVehiculoWarning(null)
+    setVehiculoValido(null)
+
+    try {
+      const vehiculo = await searchAutomotorByPlaca(formData.placa_vehiculo.toUpperCase())
+      if (vehiculo) {
+        setVehiculoValido(true)
+        setFormData(prev => ({
+          ...prev,
+          tipo_vehiculo: vehiculo.clase,
+          placa_vehiculo: vehiculo.placa
+        }))
+      } else {
+        setVehiculoValido(false)
+        setVehiculoWarning('El vehículo no está registrado en el sistema.')
+      }
+    } catch (error) {
+      setVehiculoValido(false)
+      setVehiculoWarning('El vehículo no está registrado en el sistema.')
+    } finally {
+      setIsValidatingVehiculo(false)
+    }
+  }
+
+  const handleVehiculoCreated = (nuevoVehiculo: any) => {
+    setIsVehiculoModalOpen(false)
+    setFormData(prev => ({
+      ...prev,
+      placa_vehiculo: nuevoVehiculo.placa,
+      tipo_vehiculo: nuevoVehiculo.clase
+    }))
+    setVehiculoValido(true)
+    setVehiculoWarning(null)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -342,36 +395,80 @@ function NuevoComparendo() {
           </div>
 
           {/* Placa y Tipo de Vehículo */}
-          <div className="grid gap-5 md:grid-cols-2 md:col-span-2">
-            <div>
-              <label htmlFor="placa_vehiculo" className={labelClass}>
-                Placa del Vehículo <span className="font-mono text-xs text-slate-400">(AUTOMOTOR ID)</span>
-              </label>
-              <input
-                id="placa_vehiculo"
-                name="placa_vehiculo"
-                type="text"
-                value={formData.placa_vehiculo}
-                onChange={handleChange}
-                required
-                placeholder="Ej: ABC123"
-                className={inputClass}
-              />
+          <div className="md:col-span-2 space-y-4">
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="placa_vehiculo" className={labelClass}>
+                  Placa del Vehículo <span className="font-mono text-xs text-slate-400">(AUTOMOTOR ID)</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      id="placa_vehiculo"
+                      name="placa_vehiculo"
+                      type="text"
+                      value={formData.placa_vehiculo}
+                      onChange={handleChange}
+                      required
+                      placeholder="Ej: ABC123"
+                      className={`${inputClass} ${vehiculoValido === true ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : vehiculoValido === false ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
+                    />
+                    {vehiculoValido && (
+                      <CheckCircle2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleValidarVehiculo}
+                    disabled={isValidatingVehiculo || !formData.placa_vehiculo}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    {isValidatingVehiculo ? (
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    ) : (
+                      <Search size={16} />
+                    )}
+                    Validar Vehículo
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="tipo_vehiculo" className={labelClass}>
+                  Tipo de Vehículo
+                </label>
+                <input
+                  id="tipo_vehiculo"
+                  name="tipo_vehiculo"
+                  type="text"
+                  value={formData.tipo_vehiculo}
+                  readOnly
+                  placeholder="Se llena al validar"
+                  className={`${inputClass} bg-slate-100 dark:bg-slate-800`}
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="tipo_vehiculo" className={labelClass}>
-                Tipo de Vehículo
-              </label>
-              <input
-                id="tipo_vehiculo"
-                name="tipo_vehiculo"
-                type="text"
-                value={formData.tipo_vehiculo}
-                readOnly
-                placeholder="Se llena al validar"
-                className={`${inputClass} bg-slate-100 dark:bg-slate-800`}
-              />
-            </div>
+
+            {vehiculoWarning && (
+              <div className="flex items-center justify-between rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <p>{vehiculoWarning}</p>
+                </div>
+                {vehiculoValido === false && (
+                  <button
+                    type="button"
+                    onClick={() => setIsVehiculoModalOpen(true)}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                  >
+                    <Car size={14} /> Registrar Vehículo
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Agente */}
@@ -575,6 +672,37 @@ function NuevoComparendo() {
                 onSuccess={handlePersonaCreated} 
                 onCancel={() => setIsPersonaModalOpen(false)}
                 defaultDocumento={formData.ciudadano_documento}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Vehiculo Creation Modal */}
+      {isVehiculoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-t-2xl">
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                  <Car size={20} className="text-emerald-500" /> Registrar Nuevo Vehículo
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">Coloque los datos del automotor para asociarlo al comparendo.</p>
+              </div>
+              <button
+                onClick={() => setIsVehiculoModalOpen(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <VehiculoForm 
+                onSuccess={handleVehiculoCreated} 
+                onCancel={() => setIsVehiculoModalOpen(false)}
+                defaultPlaca={formData.placa_vehiculo.toUpperCase()}
+                defaultPropietarioDoc={formData.ciudadano_documento}
+                defaultPropietarioNombre={formData.ciudadano_nombre}
               />
             </div>
           </div>

@@ -62,14 +62,16 @@ const router = Router();
 router.post(
   "/licencias",
   [
-    body("persona_id").notEmpty().isInt(),
+    body("persona_id").notEmpty().isUUID(),
     body("numero_licencia").notEmpty().isString(),
-    body("categoria").notEmpty().isIn(["A1", "A2", "B1", "B2", "C1"]),
+    body("categoria")
+      .notEmpty()
+      .isIn(["A1", "A2", "B1", "B2", "B3", "C1", "C2", "C3"]),
     body("fecha_expedicion").notEmpty().isDate(),
     body("fecha_vencimiento").notEmpty().isDate(),
     body("estado")
       .notEmpty()
-      .isIn(["VIGENTE", "SUSPENDIDA", "VENCIDA", "CANCELADA"]),
+      .isIn(["vigente", "suspendida", "vencida", "cancelada"]),
   ],
   crearLicenciaController
 );
@@ -92,7 +94,7 @@ router.post(
  */
 router.get(
   "/licencias/persona/:persona_id",
-  [param("persona_id").isInt()],
+  [param("persona_id").isUUID()],
   listarLicenciasPorPersonaController
 );
 

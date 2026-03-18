@@ -6,28 +6,31 @@ export async function getAutomotores(): Promise<Automotor[]> {
   const response = await apiClient.get<ApiResponse<Automotor[]>>(
     `${API_URLS.automotores}/automotores`,
   )
-  return response.data.data
+  return response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
 }
 
 export async function getAutomotorById(id: UUID): Promise<Automotor> {
   const response = await apiClient.get<ApiResponse<Automotor>>(
     `${API_URLS.automotores}/automotores/${id}`,
   )
-  return response.data.data
+  const data = response.data.data
+  return { ...data, automotor_id: (data as any).id }
 }
 
 export async function searchAutomotorByPlaca(placa: string): Promise<Automotor> {
   const response = await apiClient.get<ApiResponse<Automotor>>(
     `${API_URLS.automotores}/automotores/placa/${placa}`,
   )
-  return response.data.data
+  const data = response.data.data
+  if (!data) return null as any
+  return { ...data, automotor_id: (data as any).id }
 }
 
 export async function getAutomotoresByPropietario(personaId: UUID): Promise<Automotor[]> {
   const response = await apiClient.get<ApiResponse<Automotor[]>>(
     `${API_URLS.automotores}/automotores/propietario/${personaId}`,
   )
-  return response.data.data
+  return response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
 }
 
 export async function createAutomotor(data: import('../types').CreateAutomotorPayload): Promise<Automotor> {
@@ -35,7 +38,8 @@ export async function createAutomotor(data: import('../types').CreateAutomotorPa
     `${API_URLS.automotores}/automotores`,
     data,
   )
-  return response.data.data
+  const resData = response.data.data
+  return { ...resData, automotor_id: (resData as any).id }
 }
 
 export async function updateAutomotor(id: UUID, data: import('../types').UpdateAutomotorPayload): Promise<Automotor> {
@@ -43,7 +47,8 @@ export async function updateAutomotor(id: UUID, data: import('../types').UpdateA
     `${API_URLS.automotores}/automotores/${id}`,
     data,
   )
-  return response.data.data
+  const resData = response.data.data
+  return { ...resData, automotor_id: (resData as any).id }
 }
 
 export async function deleteAutomotor(id: UUID): Promise<boolean> {
@@ -57,5 +62,6 @@ export async function toggleEstadoAutomotor(id: UUID): Promise<Automotor> {
   const response = await apiClient.patch<ApiResponse<Automotor>>(
     `${API_URLS.automotores}/automotores/${id}/estado`,
   )
-  return response.data.data
+  const resData = response.data.data
+  return { ...resData, automotor_id: (resData as any).id }
 }

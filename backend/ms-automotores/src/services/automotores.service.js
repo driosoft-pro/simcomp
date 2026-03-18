@@ -9,11 +9,7 @@ export async function getAllAutomotores() {
 }
 
 export async function getAutomotorById(id) {
-  return await Automotor.findOne({
-    where: {
-      automotor_id: id
-    }
-  });
+  return await Automotor.findByPk(id);
 }
 
 export async function createAutomotor(data) {
@@ -29,14 +25,18 @@ export async function createAutomotor(data) {
 
   const automotor = await Automotor.create({
     placa: data.placa,
-    tipo: data.tipo,
+    vin: data.vin,
+    numero_motor: data.numero_motor,
+    numero_chasis: data.numero_chasis,
     marca: data.marca,
+    linea: data.linea,
     modelo: data.modelo,
-    anio: data.anio,
     color: data.color,
-    cilindraje: data.cilindraje,
-    estado: data.estado || "LEGAL",
-    propietario_id: data.propietario_id
+    clase: data.clase,
+    servicio: data.servicio || "PARTICULAR",
+    propietario_documento: data.propietario_documento,
+    propietario_nombre: data.propietario_nombre,
+    estado: data.estado || "activo"
   });
 
   return automotor;
@@ -50,14 +50,18 @@ export async function updateAutomotor(id, data) {
   }
 
   if (data.placa !== undefined) automotor.placa = data.placa;
-  if (data.tipo !== undefined) automotor.tipo = data.tipo;
+  if (data.vin !== undefined) automotor.vin = data.vin;
+  if (data.numero_motor !== undefined) automotor.numero_motor = data.numero_motor;
+  if (data.numero_chasis !== undefined) automotor.numero_chasis = data.numero_chasis;
   if (data.marca !== undefined) automotor.marca = data.marca;
+  if (data.linea !== undefined) automotor.linea = data.linea;
   if (data.modelo !== undefined) automotor.modelo = data.modelo;
-  if (data.anio !== undefined) automotor.anio = data.anio;
   if (data.color !== undefined) automotor.color = data.color;
-  if (data.cilindraje !== undefined) automotor.cilindraje = data.cilindraje;
+  if (data.clase !== undefined) automotor.clase = data.clase;
+  if (data.servicio !== undefined) automotor.servicio = data.servicio;
+  if (data.propietario_documento !== undefined) automotor.propietario_documento = data.propietario_documento;
+  if (data.propietario_nombre !== undefined) automotor.propietario_nombre = data.propietario_nombre;
   if (data.estado !== undefined) automotor.estado = data.estado;
-  if (data.propietario_id !== undefined) automotor.propietario_id = data.propietario_id;
 
   automotor.updated_at = new Date();
 
@@ -66,20 +70,20 @@ export async function updateAutomotor(id, data) {
 }
 
 export async function changeAutomotorStatus(id, estado) {
-const automotor = await Automotor.findOne({
-  where: {
-    automotor_id: id,
-    deleted_at: null
-  }
+  const automotor = await Automotor.findOne({
+    where: {
+      id: id,
+      deleted_at: null
+    }
   });
 
   if (!automotor) {
     throw new Error("Automotor no encontrado");
   }
 
-  estado = estado.toUpperCase();
+  estado = estado.toLowerCase();
   
-  if (!["LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"].includes(estado)) {
+  if (!["activo", "inactivo", "inmovilizado"].includes(estado)) {
     throw new Error("Estado inválido");
   }
 
@@ -109,7 +113,8 @@ export async function getAutomotorByPlaca(placa) {
 
   return await Automotor.findOne({
     where: {
-      placa: placaNormalizada
+      placa: placaNormalizada,
+      deleted_at: null
     }
   });
 }

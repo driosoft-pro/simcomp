@@ -1,22 +1,19 @@
-version: '3.8'
-
 services:
   db-ms-personas:
-    #image: postgres:16                     # Usar para docker
-    image: docker.io/library/postgres:16    # Usar para podman
+    image: docker.io/library/postgres:16
     container_name: db-ms-personas
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${PERSONAS_DB_USER:-personas_user}
-      POSTGRES_PASSWORD: ${PERSONAS_DB_PASSWORD:-personas_pass}
-      POSTGRES_DB: ${PERSONAS_DB_NAME:-personas_db}
+      POSTGRES_USER: ${DB_USER:-personas_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-personas_pass}
+      POSTGRES_DB: ${DB_NAME:-personas_db}
     ports:
-      - "${PERSONAS_DB_PORT:-5433}:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
-      - personas_data:/var/lib/postgresql/data
-      - ./db/ms-personas/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - personas_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PERSONAS_DB_USER:-personas_user} -d ${PERSONAS_DB_NAME:-personas_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-personas_user} -d ${DB_NAME:-personas_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,4 +21,8 @@ services:
       - microservices-net
 
 volumes:
-  personas_data:
+  personas_db_data:
+
+networks:
+  microservices-net:
+    driver: bridge

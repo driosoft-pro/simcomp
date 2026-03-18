@@ -1,90 +1,53 @@
-import axios from "axios";
 import sequelize from "../config/database.js";
 import Comparendo from "../models/comparendo.model.js";
 import ComparendoEstadoHistorial from "../models/comparendoEstadoHistorial.model.js";
 
-const PERSONAS_SERVICE_URL = process.env.PERSONAS_SERVICE_URL;
-const AUTOMOTORES_SERVICE_URL = process.env.AUTOMOTORES_SERVICE_URL;
-const INFRACCIONES_SERVICE_URL = process.env.INFRACCIONES_SERVICE_URL;
-
 function validarTransicionEstado(estadoActual, nuevoEstado) {
   const transicionesValidas = {
-    CREADO: ["PAGADO", "ANULADO"],
-    PAGADO: ["CREADO"],
+    PENDIENTE: ["PAGADO", "ANULADO"],
+    PAGADO: ["PENDIENTE"],
     ANULADO: [],
   };
 
   return transicionesValidas[estadoActual]?.includes(nuevoEstado);
 }
 
-async function validarExistenciaPersona(personaId) {
-  try {
-    const response = await axios.get(`${PERSONAS_SERVICE_URL}/personas/${personaId}`);
-    return response.data;
-  } catch {
-    throw new Error("La persona no existe en el sistema");
-  }
-}
-
-async function validarExistenciaAutomotor(automotorId) {
-  try {
-    const response = await axios.get(`${AUTOMOTORES_SERVICE_URL}/automotores/${automotorId}`);
-    return response.data;
-  } catch {
-    throw new Error("El automotor no existe en el sistema");
-  }
-}
-
-async function obtenerInfraccion(infraccionId) {
-  try {
-    const response = await axios.get(`${INFRACCIONES_SERVICE_URL}/infracciones/${infraccionId}`);
-    return response.data;
-  } catch {
-    throw new Error("La infracción no existe en el sistema");
-  }
-}
-
 export async function crearComparendo(data) {
   const transaction = await sequelize.transaction();
 
   try {
-    await validarExistenciaPersona(data.persona_id);
-    await validarExistenciaAutomotor(data.automotor_id);
-    const infraccion = await obtenerInfraccion(data.infraccion_id);
-
-    const valorMulta =
-      Number(infraccion?.valor_multa) ||
-      Number(infraccion?.valor) ||
-      Number(infraccion?.data?.valor_multa) ||
-      0;
-
     const nuevoComparendo = await Comparendo.create(
       {
         numero_comparendo: data.numero_comparendo,
-        fecha_hora: data.fecha_hora,
-        automotor_id: data.automotor_id,
-        persona_id: data.persona_id,
-        infraccion_id: data.infraccion_id,
-        direccion_exacta: data.direccion_exacta,
-        estado: "CREADO",
-        valor_multa: valorMulta,
+        ciudadano_documento: data.ciudadano_documento,
+        ciudadano_nombre: data.ciudadano_nombre,
+        agente_documento: data.agente_documento,
+        agente_nombre: data.agente_nombre,
+        placa_vehiculo: data.placa_vehiculo,
+        infraccion_codigo: data.infraccion_codigo,
+        infraccion_descripcion: data.infraccion_descripcion,
+        valor_multa: data.valor_multa,
+        fecha_comparendo: data.fecha_comparendo,
+        lugar: data.lugar,
+        ciudad: data.ciudad,
         observaciones: data.observaciones || null,
+        estado: "PENDIENTE",
       },
       { transaction }
     );
 
     await ComparendoEstadoHistorial.create(
       {
-        comparendo_id: nuevoComparendo.comparendo_id,
+        comparendo_id: nuevoComparendo.id,
         estado_anterior: null,
-        estado_nuevo: "CREADO",
-        observacion: "Estado inicial del comparendo",
+        estado_nuevo: "PENDIENTE",
+        observacion: "Comparendo creado.",
+        fecha_evento: new Date(),
       },
       { transaction }
     );
 
     await transaction.commit();
-
     return nuevoComparendo;
   } catch (error) {
     await transaction.rollback();
@@ -99,29 +62,17 @@ export async function crearComparendo(data) {
 
 export async function listarComparendos() {
   return Comparendo.findAll({
-    order: [["created_at", "DESC"]],
-  });
-}
-
-export async function obtenerComparendosPorPersona(personaId) {
-  return Comparendo.findAll({
-    where: { persona_id: personaId },
-    order: [["created_at", "DESC"]],
-  });
-}
-
-export async function obtenerComparendosPorAutomotor(automotorId) {
-  return Comparendo.findAll({
-    where: { automotor_id: automotorId },
-    order: [["created_at", "DESC"]],
+    order: [["fecha_comparendo", "DESC"]],
   });
 }
 
 export async function obtenerComparendoPorId(id) {
   const comparendo = await Comparendo.findByPk(id);
+
   if (!comparendo) {
     throw new Error("Comparendo no encontrado");
   }
+
   return comparendo;
 }
 
@@ -139,13 +90,14 @@ export async function obtenerComparendoPorNumero(numero) {
 
 export async function obtenerHistorialComparendo(comparendoId) {
   const comparendo = await Comparendo.findByPk(comparendoId);
+
   if (!comparendo) {
     throw new Error("Comparendo no encontrado");
   }
 
   return ComparendoEstadoHistorial.findAll({
     where: { comparendo_id: comparendoId },
-    order: [["changed_at", "ASC"]],
+    order: [["fecha_evento", "ASC"]],
   });
 }
 
@@ -173,16 +125,16 @@ async function cambiarEstadoComparendo(comparendoId, nuevoEstado, observacion) {
 
     await ComparendoEstadoHistorial.create(
       {
-        comparendo_id: comparendo.comparendo_id,
+        comparendo_id: comparendo.id,
         estado_anterior: estadoAnterior,
         estado_nuevo: nuevoEstado,
         observacion,
+        fecha_evento: new Date(),
       },
       { transaction }
     );
 
     await transaction.commit();
-
     return comparendo;
   } catch (error) {
     await transaction.rollback();
@@ -209,7 +161,7 @@ export async function anularComparendo(comparendoId) {
 export async function revertirAPendiente(comparendoId) {
   return cambiarEstadoComparendo(
     comparendoId,
-    "CREADO",
-    "Reversión de pago o reapertura administrativa"
+    "PENDIENTE",
+    "Reapertura administrativa del comparendo"
   );
 }

@@ -4,10 +4,9 @@ import type { Automotor } from '../../types'
 import { ArrowLeft, Car, Tag, Palette, Calendar, Gauge, Hash, User } from 'lucide-react'
 
 const estadoStyles: Record<Automotor['estado'], string> = {
-  LEGAL: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50',
-  REPORTADO_ROBO: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50',
-  RECUPERADO: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-900/50',
-  EMBARGADO: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50',
+  activo: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50',
+  inactivo: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-900/50',
+  inmovilizado: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50',
 }
 
 interface FieldProps {
@@ -94,7 +93,7 @@ function AutomotorDetail() {
                   {data.placa}
                 </h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {data.marca} {data.modelo} · {data.anio}
+                  {data.marca} {data.linea} · {data.modelo}
                 </p>
               </div>
             </div>
@@ -105,16 +104,40 @@ function AutomotorDetail() {
         </div>
 
         {/* Campos */}
-        <div className="p-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Field icon={<Hash size={16}/>} label="ID del automotor" value={data.automotor_id} />
-            <Field icon={<Tag size={16}/>} label="Tipo" value={data.tipo} />
-            <Field icon={<Car size={16}/>} label="Marca" value={data.marca} />
-            <Field icon={<Car size={16}/>} label="Modelo" value={data.modelo} />
-            <Field icon={<Calendar size={16}/>} label="Año" value={data.anio} />
-            <Field icon={<Palette size={16}/>} label="Color" value={data.color} />
-            <Field icon={<Gauge size={16}/>} label="Cilindraje" value={`${data.cilindraje} cc`} />
-            <Field icon={<User size={16}/>} label="Propietario ID" value={data.propietario_id} />
+        <div className="p-6 space-y-8">
+          {/* Información del Vehículo */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">Especificaciones Técnicas</h3>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Field icon={<Tag size={16}/>} label="Clase" value={data.clase} />
+              <Field icon={<Hash size={16}/>} label="Servicio" value={data.servicio} />
+              <Field icon={<Car size={16}/>} label="VIN" value={data.vin} />
+              <Field icon={<Gauge size={16}/>} label="Número Motor" value={data.numero_motor} />
+              <Field icon={<Hash size={16}/>} label="Número Chasis" value={data.numero_chasis} />
+              <Field icon={<Car size={16}/>} label="Marca" value={data.marca} />
+              <Field icon={<Car size={16}/>} label="Línea" value={data.linea} />
+              <Field icon={<Calendar size={16}/>} label="Modelo" value={data.modelo} />
+              <Field icon={<Palette size={16}/>} label="Color" value={data.color} />
+            </div>
+          </div>
+
+          {/* Información del Propietario */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">Información del Propietario</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field icon={<User size={16}/>} label="Nombre del Propietario" value={data.propietario_nombre} />
+              <Field icon={<Hash size={16}/>} label="Documento del Propietario" value={data.propietario_documento} />
+            </div>
+          </div>
+
+          {/* Metadatos */}
+          <div className="border-t border-slate-100 pt-6 dark:border-slate-800">
+             <div className="flex flex-wrap gap-6 text-xs text-slate-400">
+               <p>ID Sistema: {data.id}</p>
+               {data.created_at && (
+                 <p>Registrado el: {new Date(data.created_at).toLocaleString()}</p>
+               )}
+             </div>
           </div>
         </div>
       </div>

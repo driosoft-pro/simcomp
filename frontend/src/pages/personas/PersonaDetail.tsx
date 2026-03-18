@@ -1,20 +1,24 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { usePersona, useLicenciasByPersona } from '../../hooks/usePersonas'
-import { ArrowLeft, User, Hash, Phone, Mail, MapPin, CreditCard, IdCard, Calendar, ShieldCheck } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
+import { ArrowLeft, User, Hash, Phone, Mail, MapPin, CreditCard, IdCard, Calendar, ShieldCheck, Plus, X, Edit, Info } from 'lucide-react'
 import type { Persona } from '../../types'
+import LicenciaForm from '../../components/forms/LicenciaForm'
+import PersonaForm from '../../components/forms/PersonaForm'
 
 const tipoDocLabel: Record<Persona['tipo_documento'], string> = {
   CC: 'Cédula de Ciudadanía',
   CE: 'Cédula de Extranjería',
-  PAS: 'Pasaporte',
+  PASAPORTE: 'Pasaporte',
   TI: 'Tarjeta de Identidad',
 }
 
 const licEstado: Record<string, string> = {
-  VIGENTE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  SUSPENDIDA: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  VENCIDA: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  CANCELADA: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+  vigente: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  suspendida: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  vencida: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  cancelada: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
 }
 
 interface FieldProps {
@@ -37,17 +41,20 @@ function Field({ icon, label, value }: FieldProps) {
 
 function PersonaDetail() {
   const { id } = useParams()
+  const { user } = useAuth()
   const personaId = id ?? ''
   const { data, isLoading, isError, error } = usePersona(personaId)
   const { data: licencias } = useLicenciasByPersona(personaId)
+  const [showLicenciaForm, setShowLicenciaForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-5 w-40 animate-pulse-slow rounded-lg bg-slate-200 dark:bg-slate-800" />
+        <div className="h-5 w-40 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800" />
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="mb-3 h-14 animate-pulse-slow rounded-xl bg-slate-100 dark:bg-slate-800" />
+            <div key={i} className="mb-3 h-14 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
           ))}
         </div>
       </div>
@@ -68,25 +75,37 @@ function PersonaDetail() {
     return <p className="text-sm text-slate-500">Persona no encontrada.</p>
   }
 
-  const nombreCompleto = [
-    data.primer_nombre,
-    data.segundo_nombre,
-    data.primer_apellido,
-    data.segundo_apellido,
-  ]
-    .filter(Boolean)
-    .join(' ')
+  const nombreCompleto = `${data.nombres} ${data.apellidos}`
+
+  // Permisos de edición:
+  // - Admin, Supervisor o Agente pueden editar cualquier persona.
+  // - Ciudadano solo puede editarse a sí mismo (username === numero_documento).
+  const canEdit = user?.rol === 'admin' || 
+                  user?.rol === 'supervisor' || 
+                  user?.rol === 'agente' || 
+                  (user?.rol === 'ciudadano' && user?.username === data.numero_documento)
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <Link
-        to="/personas"
-        className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 transition hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
-      >
-        <ArrowLeft size={16} />
-        Volver a Personas
-      </Link>
+      {/* Breadcrumb and Actions */}
+      <div className="flex items-center justify-between">
+        <Link
+          to="/personas"
+          className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 transition hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+        >
+          <ArrowLeft size={16} />
+          Volver a Personas
+        </Link>
+        {canEdit && (
+          <button
+            onClick={() => setShowEditForm(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+          >
+            <Edit size={16} />
+            Editar Datos
+          </button>
+        )}
+      </div>
 
       {/* Tarjeta principal */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -113,20 +132,34 @@ function PersonaDetail() {
             <Field icon={<Hash size={15}/>} label="ID" value={data.persona_id} />
             <Field icon={<IdCard size={15}/>} label="Tipo de documento" value={tipoDocLabel[data.tipo_documento]} />
             <Field icon={<CreditCard size={15}/>} label="Número de documento" value={data.numero_documento} />
+            <Field icon={<User size={15}/>} label="Género" value={data.genero === 'M' ? 'Masculino' : data.genero === 'F' ? 'Femenino' : 'Otro'} />
+            <Field icon={<Calendar size={15}/>} label="Fecha de Nacimiento" value={data.fecha_nacimiento} />
             <Field icon={<Phone size={15}/>} label="Teléfono" value={data.telefono || 'No registrado'} />
             <Field icon={<Mail size={15}/>} label="Correo electrónico" value={data.email || 'No registrado'} />
             <Field icon={<MapPin size={15}/>} label="Dirección" value={data.direccion || 'No registrada'} />
+            <Field icon={<Info size={15}/>} label="Estado" value={data.estado.toUpperCase()} />
           </div>
         </div>
       </div>
 
       {/* Licencias de conducción */}
-      {licencias && licencias.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+          <div className="flex items-center gap-3">
             <ShieldCheck size={18} className="text-emerald-500" />
             <h2 className="font-bold text-slate-800 dark:text-slate-200">Licencias de conducción</h2>
           </div>
+          {canEdit && (
+            <button
+              onClick={() => setShowLicenciaForm(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+            >
+              <Plus size={16} />
+              Añadir Licencia
+            </button>
+          )}
+        </div>
+        {licencias && licencias.length > 0 ? (
           <div className="p-5">
             <div className="grid gap-3 sm:grid-cols-2">
               {licencias.map((lic) => (
@@ -136,7 +169,7 @@ function PersonaDetail() {
                       {lic.numero_licencia}
                     </p>
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${licEstado[lic.estado] ?? ''}`}>
-                      {lic.estado}
+                      {lic.estado.toUpperCase()}
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
@@ -150,6 +183,62 @@ function PersonaDetail() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        ) : (
+          <div className="px-6 py-8 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Esta persona no tiene licencias registradas.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Licencia */}
+      {showLicenciaForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm dark:bg-slate-950/80">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Añadir Licencia
+              </h3>
+              <button
+                onClick={() => setShowLicenciaForm(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <LicenciaForm 
+                personaId={personaId}
+                onSuccess={() => setShowLicenciaForm(false)} 
+                onCancel={() => setShowLicenciaForm(false)} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Persona */}
+      {showEditForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm dark:bg-slate-950/80">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Editar Datos Personales
+              </h3>
+              <button
+                onClick={() => setShowEditForm(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <PersonaForm 
+                persona={data}
+                onSuccess={() => setShowEditForm(false)} 
+                onCancel={() => setShowEditForm(false)} 
+              />
             </div>
           </div>
         </div>

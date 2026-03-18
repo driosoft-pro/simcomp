@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import {
   healthCheck,
   crearComparendoController,
@@ -10,8 +10,6 @@ import {
   pagarComparendoController,
   anularComparendoController,
   revertirAPendienteController,
-  obtenerComparendosPorPersonaController,
-  obtenerComparendosPorAutomotorController,
 } from "../controllers/comparendos.controller.js";
 
 const router = Router();
@@ -21,6 +19,173 @@ const router = Router();
  * tags:
  *   - name: Comparendos
  *     description: Gestión de comparendos
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Comparendo:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
+ *         numero_comparendo:
+ *           type: string
+ *           example: CMP-2026-000001
+ *         ciudadano_documento:
+ *           type: string
+ *           example: "1010001001"
+ *         ciudadano_nombre:
+ *           type: string
+ *           example: Juan Perez
+ *         agente_documento:
+ *           type: string
+ *           example: "1098700001"
+ *         agente_nombre:
+ *           type: string
+ *           example: Carlos Gomez
+ *         placa_vehiculo:
+ *           type: string
+ *           example: KSP214
+ *         infraccion_codigo:
+ *           type: string
+ *           example: C03
+ *         infraccion_descripcion:
+ *           type: string
+ *           example: Estacionar en sitio prohibido.
+ *         valor_multa:
+ *           type: number
+ *           format: float
+ *           example: 520000
+ *         fecha_comparendo:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-01-10T08:15:00.000Z
+ *         lugar:
+ *           type: string
+ *           example: Av. 3N con Calle 44
+ *         ciudad:
+ *           type: string
+ *           example: Cali
+ *         observaciones:
+ *           type: string
+ *           nullable: true
+ *           example: Vehículo estacionado en zona de restricción.
+ *         estado:
+ *           type: string
+ *           enum: [PENDIENTE, PAGADO, ANULADO]
+ *           example: PENDIENTE
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *         deleted_at:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *
+ *     HistorialComparendo:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: e761c37e-0b3d-40e8-9d5c-9e4d8a911001
+ *         comparendo_id:
+ *           type: string
+ *           format: uuid
+ *           example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
+ *         estado_anterior:
+ *           type: string
+ *           nullable: true
+ *           enum: [PENDIENTE, PAGADO, ANULADO]
+ *           example: PENDIENTE
+ *         estado_nuevo:
+ *           type: string
+ *           enum: [PENDIENTE, PAGADO, ANULADO]
+ *           example: PAGADO
+ *         observacion:
+ *           type: string
+ *           nullable: true
+ *           example: Pago registrado en ventanilla.
+ *         fecha_evento:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-01-15T09:10:00.000Z
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *         deleted_at:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *
+ *     CrearComparendoInput:
+ *       type: object
+ *       required:
+ *         - numero_comparendo
+ *         - ciudadano_documento
+ *         - ciudadano_nombre
+ *         - agente_documento
+ *         - agente_nombre
+ *         - placa_vehiculo
+ *         - infraccion_codigo
+ *         - infraccion_descripcion
+ *         - valor_multa
+ *         - fecha_comparendo
+ *         - lugar
+ *         - ciudad
+ *       properties:
+ *         numero_comparendo:
+ *           type: string
+ *           example: CMP-2026-000009
+ *         ciudadano_documento:
+ *           type: string
+ *           example: "1010001009"
+ *         ciudadano_nombre:
+ *           type: string
+ *           example: Luis Martinez
+ *         agente_documento:
+ *           type: string
+ *           example: "1098700009"
+ *         agente_nombre:
+ *           type: string
+ *           example: Diana Rojas
+ *         placa_vehiculo:
+ *           type: string
+ *           example: ABC123
+ *         infraccion_codigo:
+ *           type: string
+ *           example: C11
+ *         infraccion_descripcion:
+ *           type: string
+ *           example: Adelantar en zona prohibida.
+ *         valor_multa:
+ *           type: number
+ *           format: float
+ *           example: 980000
+ *         fecha_comparendo:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-02-01T14:30:00.000Z
+ *         lugar:
+ *           type: string
+ *           example: Calle 70 con Carrera 1
+ *         ciudad:
+ *           type: string
+ *           example: Cali
+ *         observaciones:
+ *           type: string
+ *           nullable: true
+ *           example: Maniobra peligrosa evidenciada por agente.
  */
 
 /**
@@ -38,84 +203,51 @@ router.get("/health", healthCheck);
 /**
  * @swagger
  * /comparendos:
- *   post:
- *     summary: Crear un comparendo
- *     tags: [Comparendos]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - numero_comparendo
- *               - fecha_hora
- *               - automotor_id
- *               - persona_id
- *               - infraccion_id
- *               - direccion_exacta
- *             properties:
- *               numero_comparendo:
- *                 type: string
- *               fecha_hora:
- *                 type: string
- *                 format: date-time
- *               automotor_id:
- *                 type: string
- *                 format: uuid
- *               persona_id:
- *                 type: string
- *                 format: uuid
- *               infraccion_id:
- *                 type: string
- *                 format: uuid
- *               direccion_exacta:
- *                 type: string
- *     responses:
- *       201:
- *         description: Comparendo creado correctamente
- */
-router.post(
-  "/comparendos",
-  [
-    body("numero_comparendo")
-      .notEmpty()
-      .withMessage("numero_comparendo es requerido"),
-
-    body("fecha_hora")
-      .notEmpty()
-      .withMessage("fecha_hora es requerida"),
-
-    body("automotor_id")
-      .isUUID()
-      .withMessage("automotor_id debe ser UUID válido"),
-
-    body("persona_id")
-      .isUUID()
-      .withMessage("persona_id debe ser UUID válido"),
-
-    body("infraccion_id")
-      .isUUID()
-      .withMessage("infraccion_id debe ser UUID válido"),
-
-    body("direccion_exacta")
-      .notEmpty()
-      .withMessage("direccion_exacta es requerida"),
-  ],
-  crearComparendoController
-);
-
-/**
- * @swagger
- * /comparendos:
  *   get:
  *     summary: Listar todos los comparendos
  *     tags: [Comparendos]
  *     responses:
  *       200:
  *         description: Lista de comparendos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comparendo'
  */
 router.get("/comparendos", listarComparendosController);
+
+/**
+ * @swagger
+ * /comparendos/numero/{numero}:
+ *   get:
+ *     summary: Obtener comparendo por número
+ *     tags: [Comparendos]
+ *     parameters:
+ *       - in: path
+ *         name: numero
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: CMP-2026-000001
+ *     responses:
+ *       200:
+ *         description: Comparendo encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       404:
+ *         description: Comparendo no encontrado
+ */
+router.get("/comparendos/numero/:numero", obtenerComparendoPorNumeroController);
 
 /**
  * @swagger
@@ -133,72 +265,27 @@ router.get("/comparendos", listarComparendosController);
  *     responses:
  *       200:
  *         description: Comparendo encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
  *       404:
  *         description: Comparendo no encontrado
  */
-router.get("/comparendos/:id", obtenerComparendoPorIdController);
-
-/**
- * @swagger
- * /comparendos/numero/{numero}:
- *   get:
- *     summary: Obtener comparendo por número
- *     tags: [Comparendos]
- *     parameters:
- *       - in: path
- *         name: numero
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Comparendo encontrado
- */
-router.get("/comparendos/numero/:numero", obtenerComparendoPorNumeroController);
-
-/**
- * @swagger
- * /comparendos/persona/{personaId}:
- *   get:
- *     summary: Obtener comparendos por ID de persona
- *     tags: [Comparendos]
- *     parameters:
- *       - in: path
- *         name: personaId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Lista de comparendos de la persona
- */
-router.get("/comparendos/persona/:personaId", obtenerComparendosPorPersonaController);
-
-/**
- * @swagger
- * /comparendos/automotor/{automotorId}:
- *   get:
- *     summary: Obtener comparendos por ID de automotor
- *     tags: [Comparendos]
- *     parameters:
- *       - in: path
- *         name: automotorId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Lista de comparendos del automotor
- */
-router.get("/comparendos/automotor/:automotorId", obtenerComparendosPorAutomotorController);
+router.get(
+  "/comparendos/:id",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  obtenerComparendoPorIdController
+);
 
 /**
  * @swagger
  * /comparendos/{id}/historial:
  *   get:
- *     summary: Obtener historial de estados de un comparendo
+ *     summary: Obtener historial de un comparendo
  *     tags: [Comparendos]
  *     parameters:
  *       - in: path
@@ -210,8 +297,110 @@ router.get("/comparendos/automotor/:automotorId", obtenerComparendosPorAutomotor
  *     responses:
  *       200:
  *         description: Historial del comparendo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/HistorialComparendo'
+ *       404:
+ *         description: Comparendo no encontrado
  */
-router.get("/comparendos/:id/historial", obtenerHistorialComparendoController);
+router.get(
+  "/comparendos/:id/historial",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  obtenerHistorialComparendoController
+);
+
+/**
+ * @swagger
+ * /comparendos:
+ *   post:
+ *     summary: Crear un comparendo
+ *     tags: [Comparendos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CrearComparendoInput'
+ *     responses:
+ *       201:
+ *         description: Comparendo creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Comparendo creado correctamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       400:
+ *         description: Error de validación
+ */
+router.post(
+  "/comparendos",
+  [
+    body("numero_comparendo")
+      .notEmpty()
+      .withMessage("numero_comparendo es requerido"),
+
+    body("ciudadano_documento")
+      .notEmpty()
+      .withMessage("ciudadano_documento es requerido"),
+
+    body("ciudadano_nombre")
+      .notEmpty()
+      .withMessage("ciudadano_nombre es requerido"),
+
+    body("agente_documento")
+      .notEmpty()
+      .withMessage("agente_documento es requerido"),
+
+    body("agente_nombre")
+      .notEmpty()
+      .withMessage("agente_nombre es requerido"),
+
+    body("placa_vehiculo")
+      .notEmpty()
+      .withMessage("placa_vehiculo es requerida"),
+
+    body("infraccion_codigo")
+      .notEmpty()
+      .withMessage("infraccion_codigo es requerido"),
+
+    body("infraccion_descripcion")
+      .notEmpty()
+      .withMessage("infraccion_descripcion es requerida"),
+
+    body("valor_multa")
+      .isNumeric()
+      .withMessage("valor_multa debe ser numérico"),
+
+    body("fecha_comparendo")
+      .isISO8601()
+      .withMessage("fecha_comparendo debe ser una fecha válida"),
+
+    body("lugar")
+      .notEmpty()
+      .withMessage("lugar es requerido"),
+
+    body("ciudad")
+      .notEmpty()
+      .withMessage("ciudad es requerida"),
+
+    body("observaciones")
+      .optional()
+      .isString()
+      .withMessage("observaciones debe ser texto"),
+  ],
+  crearComparendoController
+);
 
 /**
  * @swagger
@@ -228,9 +417,25 @@ router.get("/comparendos/:id/historial", obtenerHistorialComparendoController);
  *           format: uuid
  *     responses:
  *       200:
- *         description: Comparendo pagado
+ *         description: Comparendo pagado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Comparendo pagado correctamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       400:
+ *         description: No se pudo cambiar el estado
  */
-router.patch("/comparendos/:id/pagar", pagarComparendoController);
+router.patch(
+  "/comparendos/:id/pagar",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  pagarComparendoController
+);
 
 /**
  * @swagger
@@ -247,9 +452,25 @@ router.patch("/comparendos/:id/pagar", pagarComparendoController);
  *           format: uuid
  *     responses:
  *       200:
- *         description: Comparendo anulado
+ *         description: Comparendo anulado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Comparendo anulado correctamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       400:
+ *         description: No se pudo cambiar el estado
  */
-router.patch("/comparendos/:id/anular", anularComparendoController);
+router.patch(
+  "/comparendos/:id/anular",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  anularComparendoController
+);
 
 /**
  * @swagger
@@ -266,8 +487,24 @@ router.patch("/comparendos/:id/anular", anularComparendoController);
  *           format: uuid
  *     responses:
  *       200:
- *         description: Comparendo revertido
+ *         description: Comparendo regresado a estado pendiente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Comparendo regresado a estado PENDIENTE
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       400:
+ *         description: No se pudo cambiar el estado
  */
-router.patch("/comparendos/:id/revertir", revertirAPendienteController);
+router.patch(
+  "/comparendos/:id/revertir",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  revertirAPendienteController
+);
 
 export default router;

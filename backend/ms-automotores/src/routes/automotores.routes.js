@@ -26,43 +26,59 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - placa
- *               - tipo
+ *               - vin
+ *               - numero_motor
+ *               - numero_chasis
  *               - marca
+ *               - linea
  *               - modelo
- *               - anio
  *               - color
- *               - cilindraje
- *               - propietario_id
+ *               - clase
+ *               - propietario_documento
+ *               - propietario_nombre
  *             properties:
  *               placa:
  *                 type: string
  *                 example: ABC123
- *               tipo:
+ *               vin:
  *                 type: string
- *                 enum: [MOTO, CARRO, BUS, BUSETA, CAMION, TRACTOMULA, CUATRIMOTO]
- *                 example: CARRO
+ *                 example: 1HB5H1234567890
+ *               numero_motor:
+ *                 type: string
+ *                 example: MOT-123456
+ *               numero_chasis:
+ *                 type: string
+ *                 example: CHA-123456
  *               marca:
  *                 type: string
  *                 example: Toyota
- *               modelo:
+ *               linea:
  *                 type: string
  *                 example: Corolla
- *               anio:
+ *               modelo:
  *                 type: integer
  *                 example: 2022
  *               color:
  *                 type: string
  *                 example: Rojo
- *               cilindraje:
- *                 type: integer
- *                 example: 1800
+ *               clase:
+ *                 type: string
+ *                 enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION]
+ *                 example: AUTOMOVIL
+ *               servicio:
+ *                 type: string
+ *                 enum: [PARTICULAR, PUBLICO, OFICIAL]
+ *                 example: PARTICULAR
+ *               propietario_documento:
+ *                 type: string
+ *                 example: "12345678"
+ *               propietario_nombre:
+ *                 type: string
+ *                 example: Juan Perez
  *               estado:
  *                 type: string
- *                 enum: [LEGAL, REPORTADO_ROBO, RECUPERADO, EMBARGADO]
- *                 example: LEGAL
- *               propietario_id:
- *                 type: string
- *                 format: uuid
+ *                 enum: [activo, inactivo, inmovilizado]
+ *                 example: activo
  *     responses:
  *       201:
  *         description: Automotor creado correctamente
@@ -151,23 +167,33 @@ router.get("/:id", getAutomotorByIdController);
  *             properties:
  *               placa:
  *                 type: string
- *               tipo:
+ *               vin:
+ *                 type: string
+ *               numero_motor:
+ *                 type: string
+ *               numero_chasis:
  *                 type: string
  *               marca:
  *                 type: string
- *               modelo:
+ *               linea:
  *                 type: string
- *               anio:
+ *               modelo:
  *                 type: integer
  *               color:
  *                 type: string
- *               cilindraje:
- *                 type: integer
+ *               clase:
+ *                 type: string
+ *                 enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION]
+ *               servicio:
+ *                 type: string
+ *                 enum: [PARTICULAR, PUBLICO, OFICIAL]
+ *               propietario_documento:
+ *                 type: string
+ *               propietario_nombre:
+ *                 type: string
  *               estado:
  *                 type: string
- *               propietario_id:
- *                 type: string
- *                 format: uuid
+ *                 enum: [activo, inactivo, inmovilizado]
  *     responses:
  *       200:
  *         description: Automotor actualizado
@@ -221,8 +247,8 @@ router.delete("/:id", deleteAutomotorController);
  *             properties:
  *               estado:
  *                 type: string
- *                 enum: [LEGAL, REPORTADO_ROBO, RECUPERADO, EMBARGADO]
- *                 example: REPORTADO_ROBO
+ *                 enum: [activo, inactivo, inmovilizado]
+ *                 example: inactivo
  *     responses:
  *       200:
  *         description: Estado actualizado

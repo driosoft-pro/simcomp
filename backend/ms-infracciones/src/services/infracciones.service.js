@@ -1,18 +1,13 @@
 import Infraccion from "../models/infracciones.model.js";
 
 export async function getAllInfracciones() {
-  return await Infraccion.findAll({
-    where: {
-      deletet_at: null,
-    },
-  });
+  return await Infraccion.findAll();
 }
 
 export async function getInfraccionById(id) {
   return await Infraccion.findOne({
     where: {
       infraccion_id: id,
-      deletet_at: null,
     },
   });
 }
@@ -43,7 +38,7 @@ export async function createInfraccion(data) {
 export async function updateInfraccion(id, data) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deletet_at) {
+  if (!infraccion || infraccion.deleted_at) {
     throw new Error("Infracción no encontrada");
   }
 
@@ -65,11 +60,11 @@ export async function updateInfraccion(id, data) {
 export async function deleteInfraccion(id) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deletet_at) {
+  if (!infraccion || infraccion.deleted_at) {
     throw new Error("Infracción no encontrada");
   }
 
-  infraccion.deletet_at = new Date();
+  infraccion.deleted_at = new Date();
   await infraccion.save();
 
   return infraccion;
@@ -78,7 +73,7 @@ export async function deleteInfraccion(id) {
 export async function changeInfraccionStatus(id, vigente) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deletet_at) {
+  if (!infraccion || infraccion.deleted_at) {
     throw new Error("Infracción no encontrada");
   }
 

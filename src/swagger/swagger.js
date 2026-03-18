@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:8002/api",
+        url: process.env.SWAGGER_SERVER_URL ? `${process.env.SWAGGER_SERVER_URL}/api` : "http://localhost:8002/api",
       },
     ],
   },

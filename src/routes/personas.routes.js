@@ -50,8 +50,10 @@ router.get("/health", (req, res) => {
  *             required:
  *               - tipo_documento
  *               - numero_documento
- *               - primer_nombre
- *               - primer_apellido
+ *               - nombres
+ *               - apellidos
+ *               - fecha_nacimiento
+ *               - genero
  *             properties:
  *               tipo_documento:
  *                 type: string
@@ -59,18 +61,20 @@ router.get("/health", (req, res) => {
  *               numero_documento:
  *                 type: string
  *                 example: "1234567890"
- *               primer_nombre:
+ *               nombres:
  *                 type: string
- *                 example: Juan
- *               segundo_nombre:
+ *                 example: Juan Carlos
+ *               apellidos:
  *                 type: string
- *                 example: Carlos
- *               primer_apellido:
+ *                 example: Perez Gomez
+ *               fecha_nacimiento:
  *                 type: string
- *                 example: Pérez
- *               segundo_apellido:
+ *                 format: date
+ *                 example: "1990-01-01"
+ *               genero:
  *                 type: string
- *                 example: Gómez
+ *                 enum: [M, F, O]
+ *                 example: M
  *               direccion:
  *                 type: string
  *                 example: Calle 1 # 2-3
@@ -89,10 +93,14 @@ router.post(
   [
     body("tipo_documento")
       .notEmpty()
-      .isIn(["CC", "CE", "PAS", "TI"]),
+      .isIn(["CC", "CE", "TI", "PASAPORTE"]),
     body("numero_documento").notEmpty().isString(),
-    body("primer_nombre").notEmpty().isString(),
-    body("primer_apellido").notEmpty().isString(),
+    body("nombres").notEmpty().isString(),
+    body("apellidos").notEmpty().isString(),
+    body("fecha_nacimiento").notEmpty().isISO8601(),
+    body("genero").notEmpty().isIn(["M", "F", "O"]),
+    body("direccion").notEmpty().isString(),
+    body("telefono").notEmpty().isString(),
     body("email").optional().isEmail(),
   ],
   crearPersonaController
@@ -130,7 +138,7 @@ router.get("/personas", listarPersonasController);
  */
 router.get(
   "/personas/:persona_id",
-  [param("persona_id").isInt()],
+  [param("persona_id").isUUID()],
   obtenerPersonaPorIdController
 );
 

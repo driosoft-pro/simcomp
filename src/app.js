@@ -10,7 +10,10 @@ import swaggerSpec from "./swagger/swagger.js";
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  hsts: false,
+  contentSecurityPolicy: false,
+}));
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());

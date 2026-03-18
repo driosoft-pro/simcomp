@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  createLicencia,
   createPersona,
+  getLicenciaByNumero,
   getLicenciasByPersona,
   getPersonaByDocumento,
   getPersonaById,
   getPersonas,
+  updatePersona,
+  updateLicencia,
 } from '../api/personas.api'
-import type { LicenciaConduccion, Persona, UUID } from '../types'
+import type { LicenciaConduccion, Persona, UUID, CreatePersonaPayload, UpdatePersonaPayload, CreateLicenciaPayload, UpdateLicenciaPayload } from '../types'
 
 export function usePersonas() {
   return useQuery<Persona[]>({
@@ -39,15 +43,64 @@ export function useLicenciasByPersona(personaId: UUID) {
   })
 }
 
+export function useUpdatePersona() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: UUID; data: UpdatePersonaPayload }) =>
+      updatePersona(id, data),
+    onSuccess: (persona: Persona) => {
+      queryClient.invalidateQueries({ queryKey: ['personas'] })
+      queryClient.invalidateQueries({ queryKey: ['persona', persona.persona_id] })
+    },
+  })
+}
+
 export function useCreatePersona() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (
-      data: Omit<Persona, 'persona_id' | 'created_at' | 'updated_at'>,
-    ) => createPersona(data),
+    mutationFn: (data: CreatePersonaPayload) =>
+      createPersona(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['personas'] })
+    },
+  })
+}
+
+export function useLicenciaByNumero(numero: string) {
+  return useQuery<LicenciaConduccion>({
+    queryKey: ['licencia-numero', numero],
+    queryFn: () => getLicenciaByNumero(numero),
+    enabled: Boolean(numero),
+  })
+}
+
+export function useCreateLicencia() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (
+      data: CreateLicenciaPayload,
+    ) => createLicencia(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['licencias-persona', variables.persona_id],
+      })
+    },
+  })
+}
+
+export function useUpdateLicencia() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: UUID; data: UpdateLicenciaPayload }) =>
+      updateLicencia(id, data),
+    onSuccess: (licencia: LicenciaConduccion) => {
+      queryClient.invalidateQueries({
+        queryKey: ['licencias-persona', licencia.persona_id],
+      })
     },
   })
 }

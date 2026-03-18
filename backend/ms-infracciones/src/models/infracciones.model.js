@@ -9,23 +9,19 @@ const Infraccion = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-
     codigo: {
       type: DataTypes.STRING(10),
       allowNull: false,
       unique: true,
     },
-
     descripcion: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-
     articulo_codigo: {
       type: DataTypes.STRING(30),
       allowNull: false,
     },
-
     tipo_sancion: {
       type: DataTypes.ENUM(
         "MONETARIA",
@@ -35,53 +31,39 @@ const Infraccion = sequelize.define(
       ),
       allowNull: false,
     },
-
     valor_multa: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
-      validate: {
-        min: 0,
-      },
     },
-
     dias_suspension: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      validate: {
-        min: 0,
-      },
     },
-
+    estado: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "activo",
+    },
     aplica_descuento: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: false,
     },
-
     vigente: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: true,
     },
-
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-
-    deletet_at: {
+    deleted_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },
   },
   {
     tableName: "infracciones",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    deletedAt: "deleted_at",
+    paranoid: true,
   }
 );
 

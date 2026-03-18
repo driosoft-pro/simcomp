@@ -25,14 +25,14 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     path: '/',
     icon: LayoutDashboard,
-    roles: ['admin', 'supervisor'],
+    roles: ['admin', 'supervisor', 'ciudadano'],
     color: 'text-blue-400',
   },
   {
     label: 'Personas',
     path: '/personas',
     icon: Users,
-    roles: ['admin', 'agente', 'supervisor'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-violet-400',
   },
   {
@@ -53,14 +53,14 @@ const navItems: NavItem[] = [
     label: 'Comparendos',
     path: '/comparendos',
     icon: ClipboardList,
-    roles: ['admin', 'agente', 'supervisor'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-emerald-400',
   },
   {
     label: 'Usuarios',
     path: '/usuarios',
     icon: UserCog,
-    roles: ['admin'],
+    roles: ['admin', 'ciudadano'],
     color: 'text-rose-400',
   },
 ]

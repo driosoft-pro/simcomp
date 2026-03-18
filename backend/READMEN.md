@@ -605,4 +605,15 @@ curl http://localhost:8005/api/health
 
 ---
 
+### USUARIOS DE PRUEBA
+
+Usuatios y contraseñas:
+Admin: admin123*
+Supervisores: super123*
+Agentes: agente123*
+Ciudadanos con usuario: su número de documento
+
+
+---
+
 *Sistema de Comparendos de Tránsito — README corregido según `requerimientos.docx`*

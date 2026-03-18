@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# SIMCOMP — Variables específicas de srv-simcomp-web (192.168.100.4)
+# Nginx: API Gateway JWT + servidor React SPA
+# Todos los upstreams apuntan a srv-simcomp-api (192.168.100.3)
+# =============================================================================
+
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+
+api_upstream: "192.168.100.3"
+
+# Rutas del API Gateway
+# public: true  → sin validación JWT
+# public: false → auth_request → auth-service :3001 antes de enrutar
+api_proxy_routes:
+  - location: /api/auth
+    upstream: "http://192.168.100.3:3001"
+    public: true
+  - location: /api/personas
+    upstream: "http://192.168.100.3:3002"
+    public: false
+  - location: /api/vehiculos
+    upstream: "http://192.168.100.3:3003"
+    public: false
+  - location: /api/infracciones
+    upstream: "http://192.168.100.3:3004"
+    public: false
+  - location: /api/comparendos
+    upstream: "http://192.168.100.3:3005"
+    public: false

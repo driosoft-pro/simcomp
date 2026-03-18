@@ -4,20 +4,20 @@
 # 3 VMs: svr-dns | svr-api | svr-web
 # =============================================================================
 
-- name: Aprovisionar svr-dns (BIND9 + zona simcomp.co)
-  hosts: svr-dns
+- name: Aprovisionar srv-simcomp-dns (BIND9 + zona simcomp.co)
+  hosts: srv-simcomp-dns
   become: true
   roles:
     - serve-dns
 
-- name: Aprovisionar svr-api (PostgreSQL x5 + Node.js x5 + PM2)
-  hosts: svr-api
+- name: Aprovisionar srv-simcomp-api (PostgreSQL x5 + Node.js x5 + PM2)
+  hosts: srv-simcomp-api
   become: true
   roles:
     - serve-api
 
-- name: Aprovisionar svr-web (Nginx API Gateway JWT + React SPA)
-  hosts: svr-web
+- name: Aprovisionar srv-simcomp-web (Nginx API Gateway JWT + React SPA)
+  hosts: srv-simcomp-web
   become: true
   roles:
     - server-web

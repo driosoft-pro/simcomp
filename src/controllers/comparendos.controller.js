@@ -8,8 +8,6 @@ import {
   pagarComparendo,
   anularComparendo,
   revertirAPendiente,
-  obtenerComparendosPorPersona,
-  obtenerComparendosPorAutomotor,
 } from "../services/comparendos.service.js";
 
 export async function healthCheck(req, res) {
@@ -23,6 +21,7 @@ export async function healthCheck(req, res) {
 export async function crearComparendoController(req, res) {
   try {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         message: "Errores de validación",
@@ -76,28 +75,6 @@ export async function obtenerComparendoPorNumeroController(req, res) {
   }
 }
 
-export async function obtenerComparendosPorPersonaController(req, res) {
-  try {
-    const data = await obtenerComparendosPorPersona(req.params.personaId);
-    return res.json({ data });
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
-}
-
-export async function obtenerComparendosPorAutomotorController(req, res) {
-  try {
-    const data = await obtenerComparendosPorAutomotor(req.params.automotorId);
-    return res.json({ data });
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
-}
-
 export async function obtenerHistorialComparendoController(req, res) {
   try {
     const data = await obtenerHistorialComparendo(req.params.id);
@@ -141,7 +118,7 @@ export async function revertirAPendienteController(req, res) {
   try {
     const data = await revertirAPendiente(req.params.id);
     return res.json({
-      message: "Comparendo regresado a estado CREADO",
+      message: "Comparendo regresado a estado PENDIENTE",
       data,
     });
   } catch (error) {

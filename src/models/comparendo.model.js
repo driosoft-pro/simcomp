@@ -4,49 +4,69 @@ import sequelize from "../config/database.js";
 const Comparendo = sequelize.define(
   "comparendos",
   {
-    comparendo_id: {
+    id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     numero_comparendo: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(30),
       allowNull: false,
       unique: true,
     },
-    fecha_hora: {
-      type: DataTypes.DATE,
+    ciudadano_documento: {
+      type: DataTypes.STRING(20),
       allowNull: false,
     },
-    automotor_id: {
-      type: DataTypes.UUID,
+    ciudadano_nombre: {
+      type: DataTypes.STRING(200),
       allowNull: false,
     },
-    persona_id: {
-      type: DataTypes.UUID,
+    agente_documento: {
+      type: DataTypes.STRING(20),
       allowNull: false,
     },
-    infraccion_id: {
-      type: DataTypes.UUID,
+    agente_nombre: {
+      type: DataTypes.STRING(200),
       allowNull: false,
     },
-    direccion_exacta: {
+    placa_vehiculo: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+    infraccion_codigo: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+    infraccion_descripcion: {
       type: DataTypes.TEXT,
       allowNull: false,
-    },
-    estado: {
-      type: DataTypes.ENUM("CREADO", "PAGADO", "ANULADO"),
-      allowNull: false,
-      defaultValue: "CREADO",
     },
     valor_multa: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
       defaultValue: 0,
     },
+    fecha_comparendo: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    lugar: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    ciudad: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
     observaciones: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    estado: {
+      type: DataTypes.ENUM("PENDIENTE", "PAGADO", "ANULADO"),
+      allowNull: false,
+      defaultValue: "PENDIENTE",
     },
     created_at: {
       type: DataTypes.DATE,
@@ -58,8 +78,13 @@ const Comparendo = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
+    tableName: "comparendos",
     timestamps: false,
   }
 );

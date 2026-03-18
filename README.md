@@ -263,6 +263,31 @@ ansible-playbook provisioning/verify.yml
 
 ---
 
+## Ejecución con Docker (Orquestación Completa)
+
+Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant, puedes usar Docker Compose:
+
+1. **Iniciar el ecosistema**:
+   ```bash
+   docker compose up --build -d
+   ```
+
+2. **Servicios disponibles**:
+   - **Frontend**: [http://localhost](http://localhost)
+   - **Gateway (Puertos 3001-3005)**: Simulan la red de producción.
+
+3. **Ver logs**:
+   ```bash
+   docker compose logs -f
+   ```
+
+4. **Detener**:
+   ```bash
+   docker compose down
+   ```
+
+---
+
 ## Comandos Vagrant
 
 ```bash

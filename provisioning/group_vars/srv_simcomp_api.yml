@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# SIMCOMP — Variables específicas de srv_simcomp_api (192.168.100.3)
+# =============================================================================
+
+# Configuración extra de PostgreSQL
+pg_max_connections: 100
+pg_shared_buffers: "256MB"
+
+# PM2 ecosystem file path
+pm2_ecosystem: "{{ app_base_dir }}/ecosystem.config.js"
+
+# Node environment
+node_env: production

@@ -31,11 +31,11 @@ base de datos propia.
 
 Tecnologías base del proyecto:
 
-- Node.js 20
+- Node.js 22
 - Express 4
-- PostgreSQL 15
-- Docker Compose
+- PostgreSQL 14
 - Vagrant
+- Ansible
 - Swagger / OpenAPI
 
 ### Principios de diseño
@@ -410,21 +410,46 @@ npm install
 ## FLUJO DE COMUNICACIÓN ENTRE SERVICIOS
 
 ```text
-POST /api/comparendos
+ms-comparendos (srv-simcomp-api:8005)
         │
-        ▼
-ms-comparendos
-        │
-        ├── GET http://ms-personas:8002/api/personas/:persona_id
+        ├── GET http://srv-simcomp-api:8002/api/personas/:persona_id
         │      └── valida que la persona exista
         │
-        ├── GET http://ms-automotores:8003/api/automotores/:automotor_id
+        ├── GET http://srv-simcomp-api:8003/api/automotores/:automotor_id
         │      └── valida que el automotor exista
         │
-        ├── GET http://ms-infracciones:8004/api/infracciones/:infraccion_id
+        ├── GET http://srv-simcomp-api:8004/api/infracciones/:infraccion_id
         │      └── obtiene valor de multa y vigencia
         │
-        └── persiste el comparendo en comparendos_db
+        └── persiste el comparendo en Postgres Cluster 'comparendos' (puerto 5436)
+```
+
+---
+
+## ARQUITECTURA DE BASE DE DATOS (MULTI-CLUSTER)
+
+Para garantizar un aislamiento total de los datos en una misma VM (`srv-simcomp-api`), se han configurado **5 clusters de PostgreSQL** independientes. Cada cluster tiene su propio proceso, archivos de configuración, logs y puerto.
+
+| Cluster Name | Puerto | Base de Datos | Servicio Asociado |
+|--------------|--------|---------------|-------------------|
+| auth         | 5432   | usuarios_db   | ms-auth-service   |
+| personas     | 5433   | personas_db   | ms-personas       |
+| automotores  | 5434   | vehiculos_db  | ms-automotores    |
+| infracciones | 5435   | infracciones_db| ms-infracciones   |
+| comparendos  | 5436   | comparendos_db | ms-comparendos    |
+
+### Gestión de Clusters (pg_ctlcluster)
+
+```bash
+# Listar todos los clusters y su estado
+pg_lsclusters
+
+# Iniciar/Detener/Reiniciar un cluster específico (ej. personas)
+sudo pg_ctlcluster 14 personas start
+sudo pg_ctlcluster 14 personas restart
+
+# Ver logs de un cluster
+sudo tail -f /var/log/postgresql/postgresql-14-personas.log
 ```
 
 ---
@@ -526,26 +551,41 @@ services:
     build: ./ms-auth-service
     ports:
       - "8001:8001"
+    environment:
+      - PORT=8001
+      - DB_PORT=5432
 
   ms-personas:
     build: ./ms-personas
     ports:
       - "8002:8002"
+    environment:
+      - PORT=8002
+      - DB_PORT=5433
 
   ms-automotores:
     build: ./ms-automotores
     ports:
       - "8003:8003"
+    environment:
+      - PORT=8003
+      - DB_PORT=5434
 
   ms-infracciones:
     build: ./ms-infracciones
     ports:
       - "8004:8004"
+    environment:
+      - PORT=8004
+      - DB_PORT=5435
 
   ms-comparendos:
     build: ./ms-comparendos
     ports:
       - "8005:8005"
+    environment:
+      - PORT=8005
+      - DB_PORT=5436
 ```
 
 > Las variables de entorno, volúmenes, redes y `depends_on` deben ajustarse a la
@@ -574,15 +614,13 @@ CMD ["node", "src/server.js"]
 
 ---
 
-## PUERTOS DE REFERENCIA
-
-| Microservicio | Puerto |
-|---|---:|
-| ms-auth-service | 8001 |
-| ms-personas | 8002 |
-| ms-automotores | 8003 |
-| ms-infracciones | 8004 |
-| ms-comparendos | 8005 |
+| Microservicio    | Puerto | DB Port | Cluster Name |
+|------------------|--------|---------|--------------|
+| ms-auth-service  | 8001   | 5432    | auth         |
+| ms-personas      | 8002   | 5433    | personas     |
+| ms-automotores   | 8003   | 5434    | automotores  |
+| ms-infracciones  | 8004   | 5435    | infracciones |
+| ms-comparendos   | 8005   | 5436    | comparendos  |
 
 ---
 
@@ -605,6 +643,34 @@ curl http://localhost:8005/api/health
 
 ---
 
+## GUÍA DE MANTENIMIENTO (srv-simcomp-api)
+
+### Gestión de Procesos (PM2)
+
+Todos los microservicios se orquestan mediante PM2 bajo el usuario `vagrant`.
+
+```bash
+# Ver estado de todos los servicios
+pm2 status
+
+# Ver logs en tiempo real de un servicio específico
+pm2 logs ms-personas
+
+# Reiniciar todos los servicios tras un cambio
+pm2 reload all
+
+# Guardar la lista de procesos actual para reinicio automático
+pm2 save
+```
+
+### Rutas de Archivos Importantes
+
+- **Código fuente**: `/var/www/simcomp/backend/`
+- **Logs de aplicación**: `/var/log/simcomp/` (ej. `auth-error.log`)
+- **Configuración (.env)**: En la raíz de cada carpeta de servicio.
+
+---
+
 ### USUARIOS DE PRUEBA
 
 Usuatios y contraseñas:
@@ -616,4 +682,4 @@ Ciudadanos con usuario: su número de documento
 
 ---
 
-*Sistema de Comparendos de Tránsito — README corregido según `requerimientos.docx`*
+*Sistema de Comparendos de Tránsito — Manual Técnico de Backend v1.1.0*

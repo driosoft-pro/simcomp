@@ -4,79 +4,89 @@ import sequelize from "../config/database.js";
 const Automotor = sequelize.define(
   "Automotor",
   {
-    automotor_id: {
+    id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      defaultValue: DataTypes.UUIDV4,
     },
-
     placa: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       unique: true,
     },
-
-    tipo: {
-      type: DataTypes.STRING(20),
+    vin: {
+      type: DataTypes.STRING(30),
       allowNull: false,
+      unique: true,
     },
-
+    numero_motor: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      unique: true,
+    },
+    numero_chasis: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      unique: true,
+    },
     marca: {
       type: DataTypes.STRING(50),
       allowNull: false,
     },
-
-    modelo: {
+    linea: {
       type: DataTypes.STRING(50),
       allowNull: false,
     },
-
-    anio: {
-      type: DataTypes.SMALLINT,
+    modelo: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
-
     color: {
       type: DataTypes.STRING(30),
       allowNull: false,
     },
-
-    cilindraje: {
-      type: DataTypes.INTEGER,
+    clase: {
+      type: DataTypes.ENUM(
+        "AUTOMOVIL",
+        "MOTOCICLETA",
+        "CAMIONETA",
+        "CAMPERO",
+        "BUS",
+        "CAMION"
+      ),
       allowNull: false,
     },
-
+    servicio: {
+      type: DataTypes.ENUM("PARTICULAR", "PUBLICO", "OFICIAL"),
+      allowNull: false,
+      defaultValue: "PARTICULAR",
+    },
+    propietario_documento: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+    },
+    propietario_nombre: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
     estado: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.ENUM("activo", "inactivo", "inmovilizado"),
       allowNull: false,
+      defaultValue: "activo",
     },
-
-    propietario_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-
     deleted_at: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
     },
-
   },
   {
-    tableName: "automotores",
-    timestamps: false,
+    tableName: "vehiculos",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    deletedAt: "deleted_at",
+    paranoid: true,
+    freezeTableName: true,
   }
 );
 

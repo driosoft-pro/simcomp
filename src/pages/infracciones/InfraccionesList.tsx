@@ -9,8 +9,6 @@ import {
 } from '../../hooks/useInfracciones'
 import { formatCurrency } from '../../utils/formatters'
 import type { Infraccion } from '../../types'
-import Modal from '../../components/ui/Modal'
-
 const tipoSancionStyles: Record<Infraccion['tipo_sancion'], string> = {
   MONETARIA: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   SUSPENSION_LICENCIA: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',

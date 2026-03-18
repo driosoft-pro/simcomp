@@ -50,6 +50,7 @@ export interface ApiResponse<T> {
 }
 
 export interface Persona {
+  id: UUID
   persona_id: UUID
   tipo_documento: 'CC' | 'CE' | 'PASAPORTE' | 'TI'
   numero_documento: string
@@ -82,6 +83,7 @@ export interface CreatePersonaPayload {
 export interface UpdatePersonaPayload extends Partial<CreatePersonaPayload> {}
 
 export interface LicenciaConduccion {
+  id: UUID
   licencia_id: UUID
   persona_id: UUID
   numero_licencia: string
@@ -108,6 +110,7 @@ export interface CreateLicenciaPayload {
 export interface UpdateLicenciaPayload extends Partial<Omit<CreateLicenciaPayload, 'persona_id'>> {}
 
 export interface Automotor {
+  id: UUID
   automotor_id: UUID
   placa: string
   vin: string
@@ -128,6 +131,7 @@ export interface Automotor {
 }
 
 export interface Infraccion {
+  id: UUID
   infraccion_id: UUID
   codigo: string
   descripcion: string
@@ -175,6 +179,7 @@ export interface CreateAutomotorPayload {
 export interface UpdateAutomotorPayload extends Partial<CreateAutomotorPayload> {}
 
 export interface Comparendo {
+  id: UUID
   comparendo_id: UUID
   numero_comparendo: string
   ciudadano_documento: string

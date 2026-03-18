@@ -1,0 +1,88 @@
+---
+# Tasks for server-web
+
+- name: Actualizar caché apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Instalar Nginx y utilidades
+  ansible.builtin.apt:
+    name: [nginx, curl, ufw, rsync]
+    state: present
+
+- name: Crear directorio web
+  ansible.builtin.file:
+    path: "{{ frontend_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Verificar existencia de build del frontend
+  ansible.builtin.stat:
+    path: "{{ frontend_source }}/index.html"
+  register: frontend_build
+
+- name: Copiar build React (excluyendo node_modules)
+  ansible.builtin.command: >
+    rsync -aq --exclude='node_modules'
+    {{ frontend_source }}/
+    {{ frontend_dir }}/
+  when: frontend_build.stat.exists
+  changed_when: true
+  become: true
+
+- name: Eliminar configuración default
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Configurar Nginx para SIMCOMP
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/simcomp
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload nginx
+
+- name: Activar sitio SIMCOMP
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/simcomp
+    dest: /etc/nginx/sites-enabled/simcomp
+    state: link
+  notify: reload nginx
+
+- name: Habilitar y arrancar Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Firewall rules
+  block:
+    - community.general.ufw:
+        rule: allow
+        name: OpenSSH
+    - community.general.ufw:
+        rule: allow
+        name: "Nginx HTTP"
+    - community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: [3001, 3002, 3003, 3004, 3005]
+    - community.general.ufw:
+        state: enabled
+        policy: deny
+
+- name: Configurar resolv.conf
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      search {{ domain }}
+      nameserver {{ ip_dns }}
+      nameserver 8.8.8.8
+    mode: "0644"

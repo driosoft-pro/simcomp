@@ -1,29 +1,28 @@
-version: "3.8"
-
 services:
-  postgres:
-    #image: postgres:16                     # Usar para docker
-    image: docker.io/library/postgres:16    # Usar para podman
-    container_name: auth-db
-    restart: always
+  db-ms-auth-service:
+    image: docker.io/library/postgres:16
+    container_name: db-ms-auth-service
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USER:-auth_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-auth_pass}
+      POSTGRES_DB: ${DB_NAME:-auth_db}
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - postgres_auth_data:/var/lib/postgresql/data
-
-  ms-auth-service:
-    build: ./ms-auth-service
-    container_name: ms-auth-service
-    env_file:
-      - ./ms-auth-service/.env
-    ports:
-      - "8001:8001"
-    depends_on:
-      - postgres-auth
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-auth_user} -d ${DB_NAME:-auth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
 
 volumes:
   auth_db_data:
+
+networks:
+  microservices-net:
+    driver: bridge

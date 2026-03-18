@@ -1,0 +1,226 @@
+---
+# Tasks for serve-api
+
+- name: Actualizar caché apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Instalar dependencias del sistema
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - build-essential
+      - python3-psycopg2
+      - acl
+      - ufw
+      - gnupg2
+      - rsync
+    state: present
+
+# ── PostgreSQL setup ──────────────────────────────────────────────────────────
+- name: Añadir llave GPG de PostgreSQL
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Añadir repositorio de PostgreSQL
+  ansible.builtin.apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+
+- name: Instalar PostgreSQL {{ pg_version }}
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ pg_version }}"
+      - "postgresql-contrib-{{ pg_version }}"
+      - libpq-dev
+    state: present
+    update_cache: true
+
+- name: Detener cluster default si no es el deseado por algún servicio
+  ansible.builtin.systemd:
+    name: postgresql
+    state: stopped
+  # Detenemos el servicio manejado por systemd para controlarlos individualmente con pg_ctlcluster si es necesario
+  # o simplemente dejar que el cluster 'main' ruede si coincide con alguno.
+
+- name: Crear clusters de PostgreSQL para cada puerto (5432-5436)
+  ansible.builtin.command: >
+    pg_createcluster {{ pg_version }} {{ item.name | replace('-service', '') }} --port {{ item.db_port }} --start
+  args:
+    creates: "/etc/postgresql/{{ pg_version }}/{{ item.name | replace('-service', '') }}/postgresql.conf"
+  loop: "{{ services }}"
+  become: true
+
+- name: Asegurar que todos los clusters estén iniciados
+  ansible.builtin.command: >
+    pg_ctlcluster {{ pg_version }} {{ item.name | replace('-service', '') }} start
+  loop: "{{ services }}"
+  become: true
+  register: cluster_start
+  failed_when: false
+  changed_when: "'already running' not in cluster_start.stderr"
+
+- name: Establecer contraseña del rol postgres en todos los clusters
+  ansible.builtin.command: >
+    psql --port {{ item.db_port }} -c "ALTER USER postgres WITH PASSWORD '{{ pg_password }}';"
+  become: true
+  become_user: postgres
+  loop: "{{ services }}"
+  changed_when: false
+  no_log: true
+
+- name: Crear bases de datos de microservicios en sus respectivos clusters
+  community.postgresql.postgresql_db:
+    name: "{{ item.db }}"
+    port: "{{ item.db_port }}"
+    owner: postgres
+    state: present
+  become: true
+  become_user: postgres
+  loop: "{{ services }}"
+
+- name: Configurar autenticación md5 en todos los clusters
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ pg_version }}/{{ item.name | replace('-service', '') }}/pg_hba.conf"
+    regexp: '^local\s+all\s+all\s+'
+    line: "local   all             all                                     md5"
+  loop: "{{ services }}"
+  become: true
+  notify: restart all postgres clusters
+
+# ── Node.js & Tooling ──────────────────────────────────────────────────────────
+- name: Instalar Node.js {{ node_version }} vía NodeSource
+  block:
+    - name: Añadir llave NodeSource
+      ansible.builtin.apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+        state: present
+    - name: Añadir repo NodeSource
+      ansible.builtin.apt_repository:
+        repo: "deb https://deb.nodesource.com/node_{{ node_version }}.x nodistro main"
+        state: present
+    - name: Instalar nodejs
+      ansible.builtin.apt:
+        name: nodejs
+        state: present
+        update_cache: true
+
+- name: Instalar PM2 globalmente
+  community.general.npm:
+    name: pm2
+    global: true
+    state: present
+
+# ── Application Layout ────────────────────────────────────────────────────────
+- name: Crear directorio base y carpetas de servicios
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ node_user }}"
+    group: "{{ node_user }}"
+    mode: "0755"
+  loop:
+    - "{{ app_base_dir }}"
+    - "/var/log/simcomp"
+
+- name: Crear directorios por servicio
+  ansible.builtin.file:
+    path: "{{ app_base_dir }}/{{ item.name }}"
+    state: directory
+    owner: "{{ node_user }}"
+    group: "{{ node_user }}"
+    mode: "0755"
+  loop: "{{ services }}"
+
+# ── Deployment Logic ──────────────────────────────────────────────────────────
+- name: Copiar código fuente (excluyendo node_modules)
+  ansible.builtin.command: >
+    rsync -aq --exclude='node_modules'
+    /vagrant/backend/{{ item.name }}/
+    {{ app_base_dir }}/{{ item.name }}/
+  loop: "{{ services }}"
+  changed_when: true
+  become: true
+
+- name: Generar archivos .env
+  ansible.builtin.template:
+    src: server.env.j2
+    dest: "{{ app_base_dir }}/{{ item.name }}/.env"
+    owner: "{{ node_user }}"
+    group: "{{ node_user }}"
+    mode: "0600"
+  loop: "{{ services }}"
+  no_log: true
+
+- name: npm install en la VM
+  community.general.npm:
+    path: "{{ app_base_dir }}/{{ item.name }}"
+    state: present
+    production: true
+  loop: "{{ services }}"
+
+- name: Configurar PM2 Ecosystem
+  ansible.builtin.template:
+    src: ecosystem.config.js.j2
+    dest: "{{ pm2_ecosystem }}"
+    owner: "{{ node_user }}"
+    group: "{{ node_user }}"
+    mode: "0644"
+
+# ── PM2 Lifecycle ─────────────────────────────────────────────────────────────
+- name: Gestionar servicios con PM2
+  become: true
+  become_user: "{{ node_user }}"
+  block:
+    - name: Detener procesos anteriores
+      ansible.builtin.command: pm2 delete all
+      ignore_errors: true
+      changed_when: false
+
+    - name: Iniciar servicios
+      ansible.builtin.command: "pm2 start {{ pm2_ecosystem }}"
+      changed_when: true
+
+    - name: Guardar configuración
+      ansible.builtin.command: pm2 save
+      changed_when: true
+
+# ── System Integration ────────────────────────────────────────────────────────
+- name: Firewall rules (Microservicios y DBs)
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 8001
+    - 8002
+    - 8003
+    - 8004
+    - 8005
+    - 5432
+    - 5433
+    - 5434
+    - 5435
+    - 5436
+
+- name: Habilitar UFW y permitir SSH
+  block:
+    - community.general.ufw:
+        rule: allow
+        name: OpenSSH
+    - community.general.ufw:
+        state: enabled
+        policy: deny
+
+- name: Configurar recursión DNS local
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      search {{ domain }}
+      nameserver {{ ip_dns }}
+      nameserver 8.8.8.8
+    mode: "0644"

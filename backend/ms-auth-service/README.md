@@ -486,6 +486,13 @@ podman run -d \
 
 ---
 
+## Sctipt para crear la base de datos y usuarios
+```bash
+pnpm node scripts/generate-seed-hashes.js
+```
+
+---
+
 ## Estado actual del microservicio
 
 Este microservicio ya deja lista la base para:

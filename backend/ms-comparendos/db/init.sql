@@ -1,69 +1,89 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'estado_comparendo_enum') THEN
+    CREATE TYPE estado_comparendo_enum AS ENUM ('PENDIENTE', 'PAGADO', 'ANULADO');
+  END IF;
+END$$;
+
 CREATE TABLE IF NOT EXISTS comparendos (
-  comparendo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  numero_comparendo VARCHAR(20) NOT NULL UNIQUE,
-  fecha_hora TIMESTAMP NOT NULL,
-  automotor_id UUID NOT NULL,
-  persona_id UUID NOT NULL,
-  infraccion_id UUID NOT NULL,
-  direccion_exacta TEXT NOT NULL,
-  estado VARCHAR(25) NOT NULL DEFAULT 'CREADO',
-  valor_multa DECIMAL(14,2) NOT NULL,
-  observaciones TEXT,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  numero_comparendo VARCHAR(30) NOT NULL UNIQUE,
+  ciudadano_documento VARCHAR(20) NOT NULL,
+  ciudadano_nombre VARCHAR(200) NOT NULL,
+  agente_documento VARCHAR(20) NOT NULL,
+  agente_nombre VARCHAR(200) NOT NULL,
+  placa_vehiculo VARCHAR(10) NOT NULL,
+  infraccion_codigo VARCHAR(10) NOT NULL,
+  infraccion_descripcion TEXT NOT NULL,
+  valor_multa DECIMAL(12,2) NOT NULL,
+  fecha_comparendo TIMESTAMP NOT NULL,
+  lugar VARCHAR(200) NOT NULL,
+  ciudad VARCHAR(100) NOT NULL,
+  observaciones TEXT NULL,
+  estado estado_comparendo_enum NOT NULL DEFAULT 'PENDIENTE',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_comparendos_estado CHECK (estado IN ('CREADO', 'PAGADO', 'ANULADO')),
-  CONSTRAINT chk_comparendos_valor_multa CHECK (valor_multa >= 0)
+  deleted_at TIMESTAMP NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_comparendos_numero_comparendo ON comparendos(numero_comparendo);
-CREATE INDEX IF NOT EXISTS idx_comparendos_fecha_hora ON comparendos(fecha_hora);
-CREATE INDEX IF NOT EXISTS idx_comparendos_automotor_id ON comparendos(automotor_id);
-CREATE INDEX IF NOT EXISTS idx_comparendos_persona_id ON comparendos(persona_id);
-CREATE INDEX IF NOT EXISTS idx_comparendos_infraccion_id ON comparendos(infraccion_id);
-CREATE INDEX IF NOT EXISTS idx_comparendos_estado ON comparendos(estado);
-
-CREATE TABLE IF NOT EXISTS comparendo_transiciones_estado (
-  transicion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  comparendo_id UUID NOT NULL,
-  estado_origen VARCHAR(25),
-  estado_destino VARCHAR(25) NOT NULL,
-  trigger_evento VARCHAR(120) NOT NULL,
-  detalle TEXT,
+CREATE TABLE IF NOT EXISTS historial_comparendos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comparendo_id UUID NOT NULL REFERENCES comparendos(id) ON DELETE CASCADE,
+  estado_anterior estado_comparendo_enum NULL,
+  estado_nuevo estado_comparendo_enum NOT NULL,
+  observacion TEXT NULL,
+  fecha_evento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT chk_transiciones_estado_origen CHECK (estado_origen IS NULL OR estado_origen IN ('CREADO', 'PAGADO', 'ANULADO')),
-  CONSTRAINT chk_transiciones_estado_destino CHECK (estado_destino IN ('CREADO', 'PAGADO', 'ANULADO'))
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_transiciones_comparendo_id ON comparendo_transiciones_estado(comparendo_id);
+TRUNCATE TABLE historial_comparendos RESTART IDENTITY CASCADE;
+TRUNCATE TABLE comparendos RESTART IDENTITY CASCADE;
 
 INSERT INTO comparendos (
-  comparendo_id, numero_comparendo, fecha_hora, automotor_id, persona_id, infraccion_id,
-  direccion_exacta, estado, valor_multa, observaciones
+  id, numero_comparendo, ciudadano_documento, ciudadano_nombre, agente_documento, agente_nombre,
+  placa_vehiculo, infraccion_codigo, infraccion_descripcion, valor_multa, fecha_comparendo,
+  lugar, ciudad, observaciones, estado, created_at, updated_at, deleted_at
 ) VALUES
-  (
-    '77777777-7777-7777-7777-777777777777',
-    'CMP-2026-0001',
-    CURRENT_TIMESTAMP,
-    '33333333-3333-3333-3333-333333333333',
-    '11111111-1111-1111-1111-111111111111',
-    '44444444-4444-4444-4444-444444444444',
-    'Calle 5 con Carrera 10, Cali, Valle del Cauca',
-    'CREADO',
-    650000.00,
-    'Comparendo de ejemplo creado para pruebas iniciales.'
-  )
-ON CONFLICT (numero_comparendo) DO NOTHING;
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001', 'CMP-2026-000001', '1010001001', 'Juan Perez', '1098700001', 'Carlos Gomez', 'KSP214', 'C03', 'Estacionar en sitio prohibido.', 520000.00, '2026-01-10 08:15:00', 'Av. 3N con Calle 44', 'Cali', 'Vehículo estacionado en zona de restricción.', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
 
-INSERT INTO comparendo_transiciones_estado (
-  comparendo_id, estado_origen, estado_destino, trigger_evento, detalle
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73002', 'CMP-2026-000002', '1010001002', 'Maria Garcia', '1098700002', 'Andrea Lopez', 'HJL482', 'C04', 'No utilizar el cinturón de seguridad.', 570000.00, '2026-01-12 10:30:00', 'Autopista Suroriental', 'Cali', 'Conductora sin cinturón al momento del control.', 'PAGADO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73003', 'CMP-2026-000003', '1010001003', 'Andres Rodriguez', '1098700003', 'Jhon Mosquera', 'QWE91F', 'C07', 'Conducir usando dispositivos móviles.', 650000.00, '2026-01-14 18:05:00', 'Cra 100 con Calle 16', 'Cali', 'Se observó uso de celular mientras conducía.', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73004', 'CMP-2026-000004', '1010001004', 'Sofia Hernandez', '1098700004', 'Paola Ruiz', 'TRK550', 'C08', 'No respetar la luz roja del semáforo.', 1300000.00, '2026-01-16 07:50:00', 'Calle 5 con Carrera 39', 'Cali', 'Paso con semáforo en rojo.', 'ANULADO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73005', 'CMP-2026-000005', '1010001005', 'Camilo Castillo', '1098700005', 'Felipe Torres', 'MLN773', 'C05', 'Conducir sin revisión técnico-mecánica vigente.', 780000.00, '2026-01-19 15:20:00', 'Cra 8 con Calle 70', 'Cali', 'RTM vencida al verificar documentos.', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73006', 'CMP-2026-000006', '1010001006', 'Valentina Moreno', '1098700001', 'Carlos Gomez', 'ZXC38D', 'C02', 'No portar la licencia de conducción.', 420000.00, '2026-01-21 09:40:00', 'Terminal de Transporte', 'Cali', 'No presentó licencia física ni digital.', 'PAGADO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73007', 'CMP-2026-000007', '1010001007', 'Sebastian Vargas', '1098700002', 'Andrea Lopez', 'BGT901', 'C09', 'Exceder los límites de velocidad permitidos.', 900000.00, '2026-01-24 11:55:00', 'Recta Cali - Palmira', 'Cali', 'Captado por control operativo a velocidad superior a la permitida.', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73008', 'CMP-2026-000008', '1010001008', 'Daniela Ortega', '1098700003', 'Jhon Mosquera', 'PLM662', 'C06', 'Transitar sin SOAT vigente.', 1160000.00, '2026-01-27 13:10:00', 'Av. Ciudad de Cali', 'Cali', 'SOAT no vigente al momento del control.', 'ANULADO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO historial_comparendos (
+  id, comparendo_id, estado_anterior, estado_nuevo, observacion, fecha_evento,
+  created_at, updated_at, deleted_at
 ) VALUES
-  (
-    '77777777-7777-7777-7777-777777777777',
-    NULL,
-    'CREADO',
-    'REGISTRO_INICIAL',
-    'Estado inicial del comparendo al momento de su creación.'
-  )
-ON CONFLICT DO NOTHING;
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911001', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-10 08:15:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911002', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73002', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-12 10:30:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911003', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73002', 'PENDIENTE', 'PAGADO', 'Pago registrado en ventanilla.', '2026-01-15 09:10:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911004', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73003', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-14 18:05:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911005', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73004', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-16 07:50:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911006', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73004', 'PENDIENTE', 'ANULADO', 'Anulado por error en identificación del vehículo.', '2026-01-17 12:00:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911007', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73005', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-19 15:20:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911008', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73006', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-21 09:40:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911009', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73006', 'PENDIENTE', 'PAGADO', 'Pago realizado por PSE.', '2026-01-23 14:25:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911010', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73007', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-24 11:55:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911011', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73008', NULL, 'PENDIENTE', 'Comparendo creado.', '2026-01-27 13:10:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL),
+('e761c37e-0b3d-40e8-9d5c-9e4d8a911012', '3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73008', 'PENDIENTE', 'ANULADO', 'Se validó póliza vigente cargada posteriormente.', '2026-01-28 16:35:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL);

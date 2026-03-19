@@ -253,9 +253,9 @@ function AutomotoresList() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleToggleEstado(automotor.id)}
-                      disabled={toggleEstado.isPending}
+                      disabled={toggleEstado.isPending || user?.rol === 'supervisor' || user?.rol === 'ciudadano'}
                       className="transition opacity-90 hover:opacity-100 disabled:opacity-50"
-                      title="Cambiar estado"
+                      title={user?.rol === 'supervisor' || user?.rol === 'ciudadano' ? 'Sin permisos para cambiar estado' : 'Cambiar estado'}
                     >
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ring-current/10 ${estadoStyles[automotor.estado] ?? 'bg-slate-100 text-slate-600'}`}>
                         {automotor.estado.replace(/_/g, ' ')}

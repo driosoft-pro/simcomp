@@ -3,6 +3,7 @@ import {
   crearLicencia,
   listarLicenciasPorPersona,
   obtenerLicenciaPorNumero,
+  actualizarLicencia,
 } from "../services/licencias.service.js";
 
 export async function crearLicenciaController(req, res) {
@@ -74,6 +75,33 @@ export async function obtenerLicenciaPorNumeroController(req, res) {
     });
   } catch (error) {
     return res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+export async function actualizarLicenciaController(req, res) {
+  try {
+    const { licencia_id } = req.params;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        ok: false,
+        errors: errors.array(),
+      });
+    }
+
+    const licencia = await actualizarLicencia(licencia_id, req.body);
+
+    return res.json({
+      ok: true,
+      message: "Licencia actualizada correctamente",
+      data: licencia,
+    });
+  } catch (error) {
+    const status = error.message.includes("no existe") ? 404 : 500;
+    return res.status(status).json({
       ok: false,
       message: error.message,
     });

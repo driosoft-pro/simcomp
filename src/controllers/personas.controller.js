@@ -6,6 +6,7 @@ import {
   obtenerPersonaPorId,
   obtenerPersonaPorEmail,
   validarExistenciaPersona,
+  actualizarPersona,
 } from "../services/personas.service.js";
 
 export async function crearPersonaController(req, res) {
@@ -155,6 +156,45 @@ export async function obtenerPersonaPorEmailController(req, res) {
       data: persona,
     });
   } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+
+export async function actualizarPersonaController(req, res) {
+  try {
+    const { persona_id } = req.params;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        ok: false,
+        errors: errors.array(),
+      });
+    }
+
+    const persona = await actualizarPersona(persona_id, req.body);
+
+    return res.json({
+      ok: true,
+      message: "Persona actualizada correctamente",
+      data: persona,
+    });
+  } catch (error) {
+    if (error.message === "Persona no encontrada") {
+      return res.status(404).json({
+        ok: false,
+        message: error.message,
+      });
+    }
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe un registro con estos datos únicos",
+      });
+    }
     return res.status(500).json({
       ok: false,
       message: error.message,

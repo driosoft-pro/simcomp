@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Lista de usuarios
  */
-router.get("/", authMiddleware, roleMiddleware("admin", "supervisor"), listUsers);
+router.get("/", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), listUsers);
 
 /**
  * @swagger
@@ -37,35 +37,9 @@ router.get("/", authMiddleware, roleMiddleware("admin", "supervisor"), listUsers
  *       200:
  *         description: Usuario encontrado
  */
-router.get("/:id", authMiddleware, roleMiddleware("admin", "supervisor"), getUser);
-
-/**
- * @swagger
- * /api/usuarios:
- *   post:
- *     summary: Crear usuario
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: Usuario creado
- */
-router.post("/", authMiddleware, roleMiddleware("admin"), createUserController);
-
-/**
- * @swagger
- * /api/usuarios/{id}:
- *   put:
- *     summary: Actualizar usuario
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Usuario actualizado
- */
-router.put("/:id", authMiddleware, roleMiddleware("admin"), updateUserController);
+router.get("/:id", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), getUser);
+// ... existing Swagger ...
+router.put("/:id", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"), updateUserController);
 
 /**
  * @swagger

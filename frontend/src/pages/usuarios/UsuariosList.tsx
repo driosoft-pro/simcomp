@@ -53,9 +53,7 @@ function UsuariosList() {
   const [formError, setFormError] = useState<string | null>(null)
 
   const isCiudadano = user?.rol === 'ciudadano'
-  const filteredData = isCiudadano 
-    ? data?.filter((u) => u.id === user?.id)
-    : data
+  const filteredData = data
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -88,7 +86,7 @@ function UsuariosList() {
             Gestión de cuentas de acceso al sistema.
           </p>
         </div>
-        {!isCiudadano && (
+        {!isCiudadano && user?.rol !== 'supervisor' && (
           <button
             type="button"
             onClick={() => setShowForm((s) => !s)}

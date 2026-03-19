@@ -4,6 +4,7 @@ import {
   listarPersonas,
   obtenerPersonaPorDocumento,
   obtenerPersonaPorId,
+  obtenerPersonaPorEmail,
   validarExistenciaPersona,
 } from "../services/personas.service.js";
 
@@ -129,6 +130,29 @@ export async function validarExistenciaPersonaController(req, res) {
     return res.json({
       ok: true,
       data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+export async function obtenerPersonaPorEmailController(req, res) {
+  try {
+    const { email } = req.params;
+    const persona = await obtenerPersonaPorEmail(email);
+
+    if (!persona) {
+      return res.status(404).json({
+        ok: false,
+        message: "Persona no encontrada",
+      });
+    }
+
+    return res.json({
+      ok: true,
+      data: persona,
     });
   } catch (error) {
     return res.status(500).json({

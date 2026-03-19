@@ -674,9 +674,9 @@ pm2 save
 ### USUARIOS DE PRUEBA
 
 Usuatios y contraseñas:
-- Admin: admin123*
-- Supervisores: super123*
-- Agentes: agente123*
+- Admin: Admin123*
+- Supervisores: Super123*
+- Agentes: Agente123*
 - Ciudadanos con usuario: su número de documento
 
 

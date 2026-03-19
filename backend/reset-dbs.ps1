@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $BASE_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
-$BACKEND_DIR = Join-Path $BASE_DIR "backend"
+$BACKEND_DIR = $BASE_DIR
 
 $DB_CONTAINERS = @(
   "db-ms-auth-service",

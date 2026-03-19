@@ -136,7 +136,7 @@ function InfraccionesList() {
           </p>
         </div>
         
-        {user?.rol === 'admin' && (
+        {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
           <button
             onClick={() => handleOpenModal()}
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition hover:-translate-y-0.5 hover:shadow-amber-500/30"
@@ -231,7 +231,7 @@ function InfraccionesList() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      {user?.rol === 'admin' && (
+                      {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
                         <>
                           <button
                             onClick={() => handleOpenModal(infraccion)}

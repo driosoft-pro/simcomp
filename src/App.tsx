@@ -46,7 +46,7 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute roles={['admin', 'supervisor', 'ciudadano']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <Dashboard />
               </Layout>
@@ -80,7 +80,7 @@ function App() {
         <Route
           path="/automotores"
           element={
-            <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <AutomotoresList />
               </Layout>
@@ -91,7 +91,7 @@ function App() {
         <Route
           path="/automotores/:id"
           element={
-            <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <AutomotorDetail />
               </Layout>
@@ -139,7 +139,7 @@ function App() {
         <Route
           path="/comparendos/:id"
           element={
-            <ProtectedRoute roles={['admin', 'supervisor', 'ciudadano']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <ComparendoDetail />
               </Layout>
@@ -151,7 +151,7 @@ function App() {
         <Route
           path="/usuarios"
           element={
-            <ProtectedRoute roles={['admin', 'ciudadano']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <UsuariosList />
               </Layout>
@@ -162,7 +162,7 @@ function App() {
         <Route
           path="/usuarios/:id"
           element={
-            <ProtectedRoute roles={['admin', 'ciudadano']}>
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <UsuarioDetail />
               </Layout>

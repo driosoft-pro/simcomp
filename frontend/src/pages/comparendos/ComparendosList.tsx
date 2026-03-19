@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { useComparendos } from '../../hooks/useComparendos'
+import { useComparendos, useComparendosByDocumento } from '../../hooks/useComparendos'
+import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/formatters'
 import type { Comparendo } from '../../types'
 import { Plus } from 'lucide-react'
 
 const estadoStyles: Record<Comparendo['estado'], string> = {
-  CREADO: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+  PENDIENTE: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
   VIGENTE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   EN_PROCESO_DE_PAGO: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   PAGADO: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -16,12 +17,25 @@ const estadoStyles: Record<Comparendo['estado'], string> = {
   ANULADO: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
 }
 
+function extraerDocumento(username: string): string {
+  return username.replace(/^[a-z]+\./i, '')
+}
+
 function ComparendosList() {
-  const { data, isLoading, isError, error } = useComparendos()
+  const { user } = useAuth()
+  const isCiudadano = user?.rol === 'ciudadano'
+  const documento = isCiudadano && user?.username ? extraerDocumento(user.username) : ''
+
+  const queryAll = useComparendos()
+  const queryUser = useComparendosByDocumento(documento)
+
+  const data = isCiudadano ? queryUser.data : queryAll.data
+  const isLoading = isCiudadano ? queryUser.isLoading : queryAll.isLoading
+  const isError = isCiudadano ? queryUser.isError : queryAll.isError
+  const error = isCiudadano ? queryUser.error : queryAll.error
 
   return (
     <div className="space-y-6">
-      {/* Encabezado */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
@@ -34,16 +48,17 @@ function ComparendosList() {
             Consulta del historial de comparendos generados.
           </p>
         </div>
-        <Link
-          to="/comparendos/nuevo"
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
-        >
-          <Plus size={16} />
-          Nuevo comparendo
-        </Link>
+        {!isCiudadano && (
+          <Link
+            to="/comparendos/nuevo"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
+          >
+            <Plus size={16} />
+            Nuevo comparendo
+          </Link>
+        )}
       </div>
 
-      {/* Error */}
       {isError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/40 dark:bg-red-950/20">
           <p className="text-sm font-medium text-red-700 dark:text-red-400">
@@ -52,16 +67,16 @@ function ComparendosList() {
         </div>
       )}
 
-      {/* Tabla */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">N° Comparendo</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Infractor</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fecha</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dirección</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Lugar</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acción</th>
               </tr>
             </thead>
@@ -69,7 +84,7 @@ function ComparendosList() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                    {Array.from({ length: 5 }).map((__, j) => (
+                    {Array.from({ length: 6 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-28 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
                       </td>
@@ -86,15 +101,19 @@ function ComparendosList() {
                     {comparendo.numero_comparendo}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    {formatDate(comparendo.fecha_hora)}
+                    {comparendo.ciudadano_nombre}
+                    <div className="text-[10px] font-mono text-slate-400">{comparendo.ciudadano_documento}</div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">
+                    {formatDate(comparendo.fecha_comparendo)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${estadoStyles[comparendo.estado] ?? 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${estadoStyles[comparendo.estado] ?? 'bg-slate-100 text-slate-600'}`}>
                       {comparendo.estado.replace(/_/g, ' ')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 max-w-[200px] truncate text-slate-600 dark:text-slate-400" title={comparendo.direccion_exacta}>
-                    {comparendo.direccion_exacta}
+                  <td className="px-4 py-3 max-w-[150px] truncate text-slate-600 dark:text-slate-400 text-xs" title={`${comparendo.lugar}, ${comparendo.ciudad}`}>
+                    {comparendo.lugar}, {comparendo.ciudad}
                   </td>
                   <td className="px-4 py-3">
                     <Link

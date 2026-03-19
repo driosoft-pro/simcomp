@@ -29,20 +29,20 @@ jwt_refresh_expiry: "7d"
 
 # ── Servicios (corren todos en svr-api 192.168.100.3) ────────────────────────
 services:
-  - name: auth-service
-    port: 3001
-    db:   usuarios_db
-  - name: personas-service
-    port: 3002
+  - name: ms-auth-service
+    port: 8001
+    db:   auth_db
+  - name: ms-personas
+    port: 8002
     db:   personas_db
-  - name: vehiculos-service
-    port: 3003
-    db:   vehiculos_db
-  - name: infracciones-service
-    port: 3004
+  - name: ms-automotores
+    port: 8003
+    db:   automotores_db
+  - name: ms-infracciones
+    port: 8004
     db:   infracciones_db
-  - name: comparendos-service
-    port: 3005
+  - name: ms-comparendos
+    port: 8005
     db:   comparendos_db
 
 # ── Frontend ──────────────────────────────────────────────────────────────────

@@ -7,9 +7,12 @@ import {
   getComparendos,
   getComparendosByAutomotor,
   getComparendosByPersona,
+  getComparendosByDocumento,
   pagarComparendo,
+  revertirComparendo,
+  getComparendoHistorial,
 } from '../api/comparendos.api'
-import type { Comparendo, UUID } from '../types'
+import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial } from '../types'
 
 export function useComparendos() {
   return useQuery<Comparendo[]>({
@@ -42,6 +45,14 @@ export function useComparendosByPersona(personaId: UUID) {
   })
 }
 
+export function useComparendosByDocumento(documento: string) {
+  return useQuery<Comparendo[]>({
+    queryKey: ['comparendos-documento', documento],
+    queryFn: () => getComparendosByDocumento(documento),
+    enabled: Boolean(documento),
+  })
+}
+
 export function useComparendosByAutomotor(automotorId: UUID) {
   return useQuery<Comparendo[]>({
     queryKey: ['comparendos-automotor', automotorId],
@@ -52,41 +63,58 @@ export function useComparendosByAutomotor(automotorId: UUID) {
 
 export function useCreateComparendo() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data: {
-      numero_comparendo: string
-      fecha_hora: string
-      automotor_id: UUID
-      persona_id: UUID
-      infraccion_id: UUID
-      direccion_exacta: string
-      observaciones?: string
-    }) => createComparendo(data),
+    mutationFn: (data: CreateComparendoPayload) => createComparendo(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendos-documento'] })
     },
   })
 }
 
 export function usePagarComparendo() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: (id: UUID) => pagarComparendo(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendos-documento'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo-historial', id] })
     },
   })
 }
 
 export function useAnularComparendo() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: (id: UUID) => anularComparendo(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendos-documento'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo-historial', id] })
     },
+  })
+}
+
+export function useRevertirComparendo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: UUID) => revertirComparendo(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendos-documento'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo-historial', id] })
+    },
+  })
+}
+
+export function useComparendoHistorial(id: UUID) {
+  return useQuery<ComparendoHistorial[]>({
+    queryKey: ['comparendo-historial', id],
+    queryFn: () => getComparendoHistorial(id),
+    enabled: Boolean(id),
   })
 }

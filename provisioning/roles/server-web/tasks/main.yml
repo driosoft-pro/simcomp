@@ -1,23 +1,17 @@
 ---
 # =============================================================================
 # SIMCOMP — Rol: server-web  (svr-web 192.168.100.4)
-# Nginx como API Gateway con validación JWT + servidor React SPA
+# Nginx como API Gateway + servidor React SPA
 #
-# Upstreams (una VM por servicio, red 192.168.100.x):
-#   auth-service        192.168.100.3:3001  ← subrequest de validación JWT
-#   personas-service    192.168.100.3:3002
-#   vehiculos-service   192.168.100.3:3003
-#   infracciones-service 192.168.100.3:3004
-#   comparendos-service  192.168.100.3:3005
+# Upstreams (svr-api 192.168.100.3):
+#   ms-auth-service      192.168.100.3:8001
+#   ms-personas          192.168.100.3:8002
+#   ms-automotores       192.168.100.3:8003
+#   ms-infracciones      192.168.100.3:8004
+#   ms-comparendos       192.168.100.3:8005
 #
-# Rutas PÚBLICAS (sin JWT):
-#   POST /api/auth/login
-#   POST /api/auth/refresh
-#   POST /api/auth/register
-#
-# Rutas PROTEGIDAS (Nginx valida JWT via auth_request antes de enrutar):
-#   /api/personas/*   /api/vehiculos/*
-#   /api/infracciones/*   /api/comparendos/*
+# Validación JWT: cada microservicio valida el token con su propio middleware
+# Nginx reenvía el header Authorization a cada upstream
 # =============================================================================
 
 # ── 1. Instalar Nginx ─────────────────────────────────────────────────────────
@@ -54,13 +48,19 @@
   when: not frontend_build.stat.exists
 
 - name: Copiar build React a /var/www/simcomp
-  ansible.builtin.copy:
-    src: /vagrant/frontend/dist/
-    dest: /var/www/simcomp/
+  ansible.builtin.shell: >
+    rsync -a --exclude='node_modules'
+    /vagrant/frontend/dist/
+    /var/www/simcomp/
+  when: frontend_build.stat.exists
+  changed_when: true
+
+- name: Ajustar permisos del frontend
+  ansible.builtin.file:
+    path: /var/www/simcomp
     owner: www-data
     group: www-data
-    mode: preserve
-    force: true
+    recurse: true
   when: frontend_build.stat.exists
 
 # ── 4. Configurar Nginx ───────────────────────────────────────────────────────
@@ -77,28 +77,25 @@
     mode: "0644"
     content: |
       # ================================================================
-      # SIMCOMP — Nginx: API Gateway JWT + Frontend
-      # svr-web: 192.168.100.20
+      # SIMCOMP — Nginx: API Gateway + Frontend
+      # svr-web: 192.168.100.4
       #
-      # Arquitectura de red (una VM por servicio):
-      #   auth-service        → 192.168.100.3:3001
-      #   personas-service    → 192.168.100.3:3002
-      #   vehiculos-service   → 192.168.100.3:3003
-      #   infracciones-service→ 192.168.100.3:3004
-      #   comparendos-service → 192.168.100.3:3005
+      # Microservicios en svr-api (192.168.100.3):
+      #   ms-auth-service      → :8001
+      #   ms-personas          → :8002
+      #   ms-automotores       → :8003
+      #   ms-infracciones      → :8004
+      #   ms-comparendos       → :8005
       #
-      # Flujo JWT:
-      #   1. Cliente envía: Authorization: Bearer <access_token>
-      #   2. Nginx hace subrequest POST /_auth_validate → auth-service
-      #   3. auth-service: 200 OK (+ X-User-ID, X-User-Role) o 401
-      #   4. Nginx enruta o rechaza según respuesta
+      # Validación JWT: cada microservicio valida el token Authorization
+      # proxy_pass incluye la ruta base para evitar duplicación de rutas
       # ================================================================
 
-      upstream auth_backend        { server 192.168.100.3:3001; keepalive 16; }
-      upstream personas_backend    { server 192.168.100.3:3002; keepalive 16; }
-      upstream vehiculos_backend   { server 192.168.100.3:3003; keepalive 16; }
-      upstream infracciones_backend{ server 192.168.100.3:3004; keepalive 16; }
-      upstream comparendos_backend { server 192.168.100.3:3005; keepalive 16; }
+      upstream auth_backend        { server 192.168.100.3:8001; keepalive 16; }
+      upstream personas_backend    { server 192.168.100.3:8002; keepalive 16; }
+      upstream automotores_backend { server 192.168.100.3:8003; keepalive 16; }
+      upstream infracciones_backend{ server 192.168.100.3:8004; keepalive 16; }
+      upstream comparendos_backend { server 192.168.100.3:8005; keepalive 16; }
 
       # ── Servidor principal: simcomp.co ─────────────────────────────
       server {
@@ -112,27 +109,24 @@
           add_header X-Content-Type-Options "nosniff"       always;
           add_header X-XSS-Protection       "1; mode=block" always;
 
-          # ── Subrequest interno de validación JWT ───────────────────
-          location = /_auth_validate {
-              internal;
-              proxy_pass              http://auth_backend/api/auth/validate;
-              proxy_method            POST;
-              proxy_pass_request_body off;
-              proxy_set_header        Content-Length    "";
-              proxy_set_header        X-Original-URI    $request_uri;
-              proxy_set_header        X-Original-Method $request_method;
-              proxy_set_header        Authorization     $http_authorization;
-              proxy_read_timeout      5s;
-              proxy_connect_timeout   3s;
-          }
-
-          # ── Rutas PÚBLICAS: auth ───────────────────────────────────
+          # ── Rutas auth (públicas) ──────────────────────────────────
           location /api/auth {
-              proxy_pass         http://auth_backend;
+              proxy_pass         http://auth_backend/api/auth;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
               proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 30s;
+
+        # ── Rutas usuarios ─────────────────────────────────────────────
+        location /api/usuarios {
+              proxy_pass         http://auth_backend/api/usuarios;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
               proxy_read_timeout 30s;
 
               add_header Access-Control-Allow-Origin      "$http_origin"                           always;
@@ -142,21 +136,31 @@
               if ($request_method = OPTIONS) { return 204; }
           }
 
-          # ── Rutas PROTEGIDAS: personas ─────────────────────────────
+        # ── Rutas licencias ────────────────────────────────────────────
+        location /api/licencias {
+              proxy_pass         http://personas_backend/api/licencias;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+        } 
+        
+          # ── Rutas personas ─────────────────────────────────────────
           location /api/personas {
-              auth_request     /_auth_validate;
-              auth_request_set $auth_user_id $upstream_http_x_user_id;
-              auth_request_set $auth_role    $upstream_http_x_user_role;
-              error_page 401 = @unauthorized;
-              error_page 403 = @forbidden;
-
-              proxy_pass         http://personas_backend;
+              proxy_pass         http://personas_backend/api/personas;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
               proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header   X-User-ID       $auth_user_id;
-              proxy_set_header   X-User-Role     $auth_role;
+              proxy_set_header   Authorization   $http_authorization;
               proxy_read_timeout 60s;
 
               add_header Access-Control-Allow-Origin      "$http_origin"                           always;
@@ -166,21 +170,14 @@
               if ($request_method = OPTIONS) { return 204; }
           }
 
-          # ── Rutas PROTEGIDAS: vehiculos ────────────────────────────
-          location /api/vehiculos {
-              auth_request     /_auth_validate;
-              auth_request_set $auth_user_id $upstream_http_x_user_id;
-              auth_request_set $auth_role    $upstream_http_x_user_role;
-              error_page 401 = @unauthorized;
-              error_page 403 = @forbidden;
-
-              proxy_pass         http://vehiculos_backend;
+          # ── Rutas automotores ──────────────────────────────────────
+          location /api/automotores {
+              proxy_pass         http://automotores_backend/api/automotores;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
               proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header   X-User-ID       $auth_user_id;
-              proxy_set_header   X-User-Role     $auth_role;
+              proxy_set_header   Authorization   $http_authorization;
               proxy_read_timeout 60s;
 
               add_header Access-Control-Allow-Origin      "$http_origin"                           always;
@@ -190,21 +187,14 @@
               if ($request_method = OPTIONS) { return 204; }
           }
 
-          # ── Rutas PROTEGIDAS: infracciones ─────────────────────────
+          # ── Rutas infracciones ─────────────────────────────────────
           location /api/infracciones {
-              auth_request     /_auth_validate;
-              auth_request_set $auth_user_id $upstream_http_x_user_id;
-              auth_request_set $auth_role    $upstream_http_x_user_role;
-              error_page 401 = @unauthorized;
-              error_page 403 = @forbidden;
-
-              proxy_pass         http://infracciones_backend;
+              proxy_pass         http://infracciones_backend/api/infracciones;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
               proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header   X-User-ID       $auth_user_id;
-              proxy_set_header   X-User-Role     $auth_role;
+              proxy_set_header   Authorization   $http_authorization;
               proxy_read_timeout 60s;
 
               add_header Access-Control-Allow-Origin      "$http_origin"                           always;
@@ -214,21 +204,14 @@
               if ($request_method = OPTIONS) { return 204; }
           }
 
-          # ── Rutas PROTEGIDAS: comparendos ──────────────────────────
+          # ── Rutas comparendos ──────────────────────────────────────
           location /api/comparendos {
-              auth_request     /_auth_validate;
-              auth_request_set $auth_user_id $upstream_http_x_user_id;
-              auth_request_set $auth_role    $upstream_http_x_user_role;
-              error_page 401 = @unauthorized;
-              error_page 403 = @forbidden;
-
-              proxy_pass         http://comparendos_backend;
+              proxy_pass         http://comparendos_backend/api/comparendos;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
               proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header   X-User-ID       $auth_user_id;
-              proxy_set_header   X-User-Role     $auth_role;
+              proxy_set_header   Authorization   $http_authorization;
               proxy_read_timeout 60s;
 
               add_header Access-Control-Allow-Origin      "$http_origin"                           always;
@@ -236,22 +219,12 @@
               add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
               add_header Access-Control-Allow-Credentials "true"                                   always;
               if ($request_method = OPTIONS) { return 204; }
-          }
-
-          # ── Errores de autenticación ───────────────────────────────
-          location @unauthorized {
-              default_type application/json;
-              return 401 '{"error":"No autorizado","message":"Token requerido o inválido"}';
-          }
-          location @forbidden {
-              default_type application/json;
-              return 403 '{"error":"Prohibido","message":"Sin permisos para este recurso"}';
           }
 
           # ── Swagger Docs (sin auth) ────────────────────────────────
           location /docs/auth         { proxy_pass http://auth_backend/api/docs;         }
           location /docs/personas     { proxy_pass http://personas_backend/api/docs;     }
-          location /docs/vehiculos    { proxy_pass http://vehiculos_backend/api/docs;    }
+          location /docs/automotores  { proxy_pass http://automotores_backend/api/docs;  }
           location /docs/infracciones { proxy_pass http://infracciones_backend/api/docs; }
           location /docs/comparendos  { proxy_pass http://comparendos_backend/api/docs;  }
 
@@ -279,23 +252,11 @@
           listen 80;
           server_name api.simcomp.co;
 
-          location = /_auth_validate {
-              internal;
-              proxy_pass              http://auth_backend/api/auth/validate;
-              proxy_method            POST;
-              proxy_pass_request_body off;
-              proxy_set_header        Content-Length "";
-              proxy_set_header        Authorization  $http_authorization;
-              proxy_read_timeout      5s;
-          }
-
-          location /api/auth        { proxy_pass http://auth_backend;         proxy_http_version 1.1; proxy_set_header Host $host; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
-          location /api/personas    { auth_request /_auth_validate; error_page 401 = @unauth_api; proxy_pass http://personas_backend;     proxy_http_version 1.1; proxy_set_header Host $host; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
-          location /api/vehiculos   { auth_request /_auth_validate; error_page 401 = @unauth_api; proxy_pass http://vehiculos_backend;    proxy_http_version 1.1; proxy_set_header Host $host; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
-          location /api/infracciones{ auth_request /_auth_validate; error_page 401 = @unauth_api; proxy_pass http://infracciones_backend; proxy_http_version 1.1; proxy_set_header Host $host; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
-          location /api/comparendos { auth_request /_auth_validate; error_page 401 = @unauth_api; proxy_pass http://comparendos_backend;  proxy_http_version 1.1; proxy_set_header Host $host; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
-
-          location @unauth_api { default_type application/json; return 401 '{"error":"No autorizado"}'; }
+          location /api/auth        { proxy_pass http://auth_backend/api/auth;               proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/personas    { proxy_pass http://personas_backend/api/personas;        proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/automotores { proxy_pass http://automotores_backend/api/automotores;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/infracciones{ proxy_pass http://infracciones_backend/api/infracciones;proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/comparendos { proxy_pass http://comparendos_backend/api/comparendos;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
 
           access_log /var/log/nginx/simcomp-api-access.log;
           error_log  /var/log/nginx/simcomp-api-error.log warn;
@@ -375,7 +336,8 @@
   ansible.builtin.debug:
     msg:
       - "Nginx activo como API Gateway"
-      - "Rutas públicas: /api/auth/login, /api/auth/refresh, /api/auth/register"
-      - "Rutas protegidas: /api/personas, /api/vehiculos, /api/infracciones, /api/comparendos"
-      - "Frontend disponible en http://simcomp.co"
-      - "{% if not frontend_build.stat.exists %}  Sin build React — ejecuta npm run build y re-provisiona{% endif %}"
+      - "Upstreams: ms-auth:8001 ms-personas:8002 ms-automotores:8003 ms-infracciones:8004 ms-comparendos:8005"
+      - "JWT validado por cada microservicio via header Authorization"
+      - "Rutas: /api/auth /api/personas /api/automotores /api/infracciones /api/comparendos"
+      - "Frontend: http://simcomp.co"
+      - "{% if not frontend_build.stat.exists %}⚠️  Sin build React — ejecuta npm run build y re-provisiona{% endif %}"

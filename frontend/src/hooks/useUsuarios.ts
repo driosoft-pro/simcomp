@@ -8,10 +8,11 @@ import {
 } from '../api/usuarios.api'
 import type { CreateUsuarioPayload, UpdateUsuarioPayload, UserEstado, UUID } from '../types'
 
-export function useUsuarios() {
+export function useUsuarios(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['usuarios'],
     queryFn: getUsuarios,
+    enabled: options?.enabled ?? true,
   })
 }
 
@@ -50,5 +51,13 @@ export function useCambiarEstado(id: UUID) {
       qc.invalidateQueries({ queryKey: ['usuarios'] })
       qc.invalidateQueries({ queryKey: ['usuario', id] })
     },
+  })
+}
+
+export function useUsuarioActual(id: UUID | undefined) {
+  return useQuery({
+    queryKey: ['usuario', id],
+    queryFn: () => getUsuarioById(id!),
+    enabled: Boolean(id),
   })
 }

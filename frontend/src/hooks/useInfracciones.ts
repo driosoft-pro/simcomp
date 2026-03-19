@@ -1,8 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getInfraccionByCodigo,
   getInfraccionById,
   getInfracciones,
+  createInfraccion,
+  updateInfraccion,
+  deleteInfraccion,
+  toggleVigenciaInfraccion,
 } from '../api/infracciones.api'
 import type { Infraccion, UUID } from '../types'
 
@@ -26,5 +30,43 @@ export function useInfraccionByCodigo(codigo: string) {
     queryKey: ['infraccion-codigo', codigo],
     queryFn: () => getInfraccionByCodigo(codigo),
     enabled: Boolean(codigo),
+  })
+}
+
+export function useCreateInfraccion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: import('../types').CreateInfraccionPayload) => createInfraccion(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['infracciones'] }),
+  })
+}
+
+export function useUpdateInfraccion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: UUID; data: import('../types').UpdateInfraccionPayload }) => updateInfraccion(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['infracciones'] })
+      queryClient.invalidateQueries({ queryKey: ['infraccion'] })
+    },
+  })
+}
+
+export function useDeleteInfraccion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: UUID) => deleteInfraccion(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['infracciones'] }),
+  })
+}
+
+export function useToggleVigenciaInfraccion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: UUID) => toggleVigenciaInfraccion(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['infracciones'] })
+      queryClient.invalidateQueries({ queryKey: ['infraccion'] })
+    },
   })
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { UserPlus, X } from 'lucide-react'
-import { useUsuarios, useCreateUsuario } from '../../hooks/useUsuarios'
+import { useUsuarios, useCreateUsuario, useUsuarioActual } from '../../hooks/useUsuarios'
+import { useAuth } from '../../hooks/useAuth'
 import type { UserRole } from '../../types'
 import axios from 'axios'
 
@@ -44,7 +45,28 @@ function extractError(err: unknown): string {
 }
 
 function UsuariosList() {
-  const { data, isLoading, isError, error } = useUsuarios()
+  const { user } = useAuth()
+  const isCiudadano = user?.rol === 'ciudadano'
+
+  const {
+    data: listaData,
+    isLoading: listaLoading,
+    isError: listaError,
+    error: listaErr,
+  } = useUsuarios({ enabled: !isCiudadano })
+
+  const {
+    data: selfData,
+    isLoading: selfLoading,
+    isError: selfError,
+    error: selfErr,
+  } = useUsuarioActual(isCiudadano ? user?.id : undefined)
+
+  const data = isCiudadano ? (selfData ? [selfData] : undefined) : listaData
+  const isLoading = isCiudadano ? selfLoading : listaLoading
+  const isError = isCiudadano ? selfError : listaError
+  const error = isCiudadano ? selfErr : listaErr
+
   const createMutation = useCreateUsuario()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
@@ -68,7 +90,6 @@ function UsuariosList() {
 
   return (
     <div className="space-y-6">
-      {/* Encabezado */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">
@@ -78,20 +99,21 @@ function UsuariosList() {
             Usuarios
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Gestión de cuentas de acceso al sistema.
+            {isCiudadano ? 'Tu información de usuario.' : 'Gestión de cuentas de acceso al sistema.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((s) => !s)}
-          className="mt-1 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
-        >
-          {showForm ? <X size={16} /> : <UserPlus size={16} />}
-          {showForm ? 'Cancelar' : 'Nuevo usuario'}
-        </button>
+        {!isCiudadano && (
+          <button
+            type="button"
+            onClick={() => setShowForm((s) => !s)}
+            className="mt-1 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
+          >
+            {showForm ? <X size={16} /> : <UserPlus size={16} />}
+            {showForm ? 'Cancelar' : 'Nuevo usuario'}
+          </button>
+        )}
       </div>
 
-      {/* Formulario nuevo usuario (Modal) */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <form
@@ -109,13 +131,11 @@ function UsuariosList() {
                 <X size={20} />
               </button>
             </div>
-
             {formError && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 shadow-sm dark:border-red-900/40 dark:bg-red-950/20">
                 <p className="text-sm font-medium text-red-700 dark:text-red-400">{formError}</p>
               </div>
             )}
-
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="username">
@@ -177,7 +197,6 @@ function UsuariosList() {
                 </select>
               </div>
             </div>
-
             <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
               <button
                 type="button"
@@ -198,7 +217,6 @@ function UsuariosList() {
         </div>
       )}
 
-      {/* Error listado */}
       {isError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/40 dark:bg-red-950/20">
           <p className="text-sm font-medium text-red-700 dark:text-red-400">
@@ -207,27 +225,16 @@ function UsuariosList() {
         </div>
       )}
 
-      {/* Tabla */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Username
-                </th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Email
-                </th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Rol
-                </th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Estado
-                </th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Acción
-                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Username</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Rol</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -241,31 +248,20 @@ function UsuariosList() {
                     ))}
                   </tr>
                 ))}
-
               {data?.map((usuario) => (
                 <tr
                   key={usuario.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
                 >
-                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
-                    {usuario.username}
-                  </td>
+                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{usuario.username}</td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{usuario.email}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${
-                        rolBadge[usuario.rol] ?? 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${rolBadge[usuario.rol] ?? 'bg-slate-100 text-slate-600'}`}>
                       {usuario.rol}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        estadoBadge[usuario.estado] ?? 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${estadoBadge[usuario.estado] ?? 'bg-slate-100 text-slate-600'}`}>
                       {usuario.estado}
                     </span>
                   </td>
@@ -281,7 +277,6 @@ function UsuariosList() {
               ))}
             </tbody>
           </table>
-
           {!isLoading && data?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay usuarios registrados.</p>

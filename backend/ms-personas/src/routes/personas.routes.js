@@ -6,6 +6,7 @@ import {
   obtenerPersonaPorDocumentoController,
   obtenerPersonaPorIdController,
   validarExistenciaPersonaController,
+  obtenerPersonaPorEmailController,
 } from "../controllers/personas.controller.js";
 
 const router = Router();
@@ -181,3 +182,22 @@ router.get("/personas/documento/:numero", obtenerPersonaPorDocumentoController);
 router.get("/personas/existe/:numero", validarExistenciaPersonaController);
 
 export default router;
+/**
+ * @swagger
+ * /personas/email/{email}:
+ *   get:
+ *     summary: Buscar persona por email
+ *     tags: [Personas]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Persona encontrada
+ *       404:
+ *         description: Persona no encontrada
+ */
+router.get("/personas/email/:email", obtenerPersonaPorEmailController);

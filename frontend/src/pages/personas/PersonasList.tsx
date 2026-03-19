@@ -19,7 +19,7 @@ function PersonasList() {
 
   const isCiudadano = user?.rol === 'ciudadano'
   const filteredData = isCiudadano
-    ? data?.filter((p) => p.numero_documento === user?.username)
+    ? data?.filter((p) => p.numero_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : data
 
   return (
@@ -37,7 +37,7 @@ function PersonasList() {
             Listado general de personas registradas en el sistema.
           </p>
         </div>
-        {!isCiudadano && (
+        {user?.rol !== 'ciudadano' && user?.rol !== 'supervisor' && (
           <button
             onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"

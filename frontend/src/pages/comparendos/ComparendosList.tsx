@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useComparendos, useComparendosByPersona } from '../../hooks/useComparendos'
-import { getPersonaByDocumento } from '../../api/personas.api'
+import { useComparendos } from '../../hooks/useComparendos'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/formatters'
-import type { Comparendo, UUID } from '../../types'
+import type { Comparendo } from '../../types'
 import { Plus } from 'lucide-react'
 
 const estadoStyles: Record<Comparendo['estado'], string> = {
@@ -21,27 +19,12 @@ const estadoStyles: Record<Comparendo['estado'], string> = {
 
 function ComparendosList() {
   const { user } = useAuth()
+  const { data: allData, isLoading, isError, error } = useComparendos()
+
   const isCiudadano = user?.rol === 'ciudadano'
-  const [personaId, setPersonaId] = useState<UUID | ''>('')
-
-  useEffect(() => {
-    if (isCiudadano && user?.username) {
-      getPersonaByDocumento(user.username)
-        .then((p) => setPersonaId(p.persona_id))
-        .catch(console.error)
-    }
-  }, [isCiudadano, user?.username])
-
-  const queryAll = useComparendos()
-  const queryUser = useComparendosByPersona(personaId)
-
-  // Deshabilitar la query general si es ciudadano para no cargar datos innecesarios
-  // (Aunque react-query la dispara de todas formas sin "enabled: false", 
-  // pero usaremos el resultado de queryUser)
-  const data = isCiudadano ? queryUser.data : queryAll.data
-  const isLoading = isCiudadano ? queryUser.isLoading : queryAll.isLoading
-  const isError = isCiudadano ? queryUser.isError : queryAll.isError
-  const error = isCiudadano ? queryUser.error : queryAll.error
+  const data = isCiudadano
+    ? allData?.filter((c) => c.ciudadano_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
+    : allData
 
   return (
     <div className="space-y-6">
@@ -58,7 +41,7 @@ function ComparendosList() {
             Consulta del historial de comparendos generados.
           </p>
         </div>
-        {!isCiudadano && (
+        {user?.rol !== 'ciudadano' && user?.rol !== 'supervisor' && (
           <Link
             to="/comparendos/nuevo"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"

@@ -8,7 +8,15 @@ import {
 
 export async function listUsers(req, res) {
   try {
-    const users = await getAllUsers();
+    let users = await getAllUsers();
+
+    // Si es ciudadano, solo puede ver su propio perfil en la lista
+    if (req.user.rol === "ciudadano") {
+      console.log("Filtrando lista de usuarios para ciudadano. Sub:", req.user.sub);
+      users = users.filter((u) => String(u.id) === String(req.user.sub));
+      console.log("Usuarios encontrados tras filtro:", users.length);
+    }
+
     return res.status(200).json({
       success: true,
       data: users,
@@ -23,6 +31,14 @@ export async function listUsers(req, res) {
 
 export async function getUser(req, res) {
   try {
+    // Verificar si el usuario tiene permiso para ver este perfil
+    if (req.user.rol !== "admin" && req.user.rol !== "supervisor" && String(req.user.sub) !== String(req.params.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "No tienes permiso para ver este perfil",
+      });
+    }
+
     const user = await getUserById(req.params.id);
 
     if (!user) {
@@ -70,6 +86,14 @@ export async function createUserController(req, res) {
 
 export async function updateUserController(req, res) {
   try {
+    // Solo el admin o el propio usuario pueden actualizar
+    if (req.user.rol !== "admin" && String(req.user.sub) !== String(req.params.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "No tienes permiso para actualizar este perfil",
+      });
+    }
+
     const user = await updateUser(req.params.id, req.body);
 
     return res.status(200).json({

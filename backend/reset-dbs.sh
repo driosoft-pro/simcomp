@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKEND_DIR="${BASE_DIR}/backend"
+BACKEND_DIR="${BASE_DIR}"
 
 DB_CONTAINERS=(
   "db-ms-auth-service"

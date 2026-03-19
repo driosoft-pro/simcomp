@@ -70,3 +70,17 @@ export async function validarExistenciaPersona(numeroDocumento) {
     persona,
   };
 }
+export async function obtenerPersonaPorEmail(email) {
+  return await Persona.findOne({
+    where: {
+      email,
+    },
+    include: [
+      {
+        model: Licencia,
+        as: "licencias",
+        required: false,
+      },
+    ],
+  });
+}

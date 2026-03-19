@@ -7,6 +7,7 @@ import {
   useDeleteInfraccion,
   useToggleVigenciaInfraccion,
 } from '../../hooks/useInfracciones'
+import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency } from '../../utils/formatters'
 import type { Infraccion } from '../../types'
 const tipoSancionStyles: Record<Infraccion['tipo_sancion'], string> = {
@@ -21,6 +22,7 @@ const inputClass =
 const labelClass = 'mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300'
 
 function InfraccionesList() {
+  const { user } = useAuth()
   const { data, isLoading, isError, error } = useInfracciones()
   const createInfraccion = useCreateInfraccion()
   const updateInfraccion = useUpdateInfraccion()
@@ -134,13 +136,15 @@ function InfraccionesList() {
           </p>
         </div>
         
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition hover:-translate-y-0.5 hover:shadow-amber-500/30"
-        >
-          <Plus size={18} />
-          Nueva Infracción
-        </button>
+        {user?.rol === 'admin' && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition hover:-translate-y-0.5 hover:shadow-amber-500/30"
+          >
+            <Plus size={18} />
+            Nueva Infracción
+          </button>
+        )}
       </div>
 
       {/* Error */}
@@ -227,19 +231,23 @@ function InfraccionesList() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleOpenModal(infraccion)}
-                        className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(infraccion.infraccion_id)}
-                        disabled={deleteInfraccion.isPending}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
-                      >
-                        Eliminar
-                      </button>
+                      {user?.rol === 'admin' && (
+                        <>
+                          <button
+                            onClick={() => handleOpenModal(infraccion)}
+                            className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(infraccion.infraccion_id)}
+                            disabled={deleteInfraccion.isPending}
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

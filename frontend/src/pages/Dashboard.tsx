@@ -36,7 +36,7 @@ const baseCards: DashboardCard[] = [
     shadow: 'shadow-sky-500/20',
     bg: 'bg-sky-50 dark:bg-sky-950/20',
     border: 'border-sky-200 dark:border-sky-900/40',
-    roles: ['admin', 'agente', 'supervisor'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
   },
   {
     title: 'Infracciones',
@@ -71,7 +71,7 @@ const adminCard: DashboardCard = {
   shadow: 'shadow-rose-500/20',
   bg: 'bg-rose-50 dark:bg-rose-950/20',
   border: 'border-rose-200 dark:border-rose-900/40',
-  roles: ['admin', 'ciudadano'],
+  roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
 }
 
 import { DashboardCharts } from '../components/DashboardCharts'

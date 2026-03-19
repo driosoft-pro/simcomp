@@ -8,6 +8,7 @@ import {
   useDeleteAutomotor,
   useToggleEstadoAutomotor,
 } from '../../hooks/useAutomotores'
+import { useAuth } from '../../hooks/useAuth'
 // import { getPersonaByDocumento } from '../../api/personas.api'
 import type { Automotor } from '../../types'
 
@@ -49,7 +50,14 @@ function LoadingRow() {
 }
 
 function AutomotoresList() {
+  const { user } = useAuth()
   const { data, isLoading, isError, error } = useAutomotores()
+
+  const isCiudadano = user?.rol === 'ciudadano'
+
+  const filteredData = isCiudadano
+    ? data?.filter((v) => v.propietario_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
+    : data
   const createAutomotor = useCreateAutomotor()
   const updateAutomotor = useUpdateAutomotor()
   const deleteAutomotor = useDeleteAutomotor()
@@ -183,13 +191,15 @@ function AutomotoresList() {
           </p>
         </div>
 
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/20 transition hover:-translate-y-0.5 hover:shadow-sky-500/30"
-        >
-          <Plus size={18} />
-          Nuevo Automotor
-        </button>
+        {user?.rol !== 'ciudadano' && user?.rol !== 'supervisor' && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/20 transition hover:-translate-y-0.5 hover:shadow-sky-500/30"
+          >
+            <Plus size={18} />
+            Nuevo Automotor
+          </button>
+        )}
       </div>
 
       {/* Error */}
@@ -220,7 +230,7 @@ function AutomotoresList() {
             </thead>
             <tbody>
               {isLoading && Array.from({ length: 4 }).map((_, i) => <LoadingRow key={i} />)}
-              {data?.map((automotor) => (
+              {filteredData?.map((automotor) => (
                 <tr
                   key={automotor.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -260,19 +270,23 @@ function AutomotoresList() {
                       >
                         Ver
                       </Link>
-                      <button
-                        onClick={() => handleOpenModal(automotor)}
-                        className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(automotor.id)}
-                        disabled={deleteAutomotor.isPending}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
-                      >
-                        Eliminar
-                      </button>
+                      {!isCiudadano && user?.rol !== 'supervisor' && (
+                        <>
+                          <button
+                            onClick={() => handleOpenModal(automotor)}
+                            className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(automotor.id)}
+                            disabled={deleteAutomotor.isPending}
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -280,7 +294,7 @@ function AutomotoresList() {
             </tbody>
           </table>
 
-          {!isLoading && data?.length === 0 && (
+          {!isLoading && filteredData?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay automotores registrados.</p>
             </div>

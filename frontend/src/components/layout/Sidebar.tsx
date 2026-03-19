@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     path: '/',
     icon: LayoutDashboard,
-    roles: ['admin', 'supervisor', 'ciudadano'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-blue-400',
   },
   {
@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
     label: 'Automotores',
     path: '/automotores',
     icon: Car,
-    roles: ['admin', 'agente', 'supervisor'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-sky-400',
   },
   {
@@ -60,7 +60,7 @@ const navItems: NavItem[] = [
     label: 'Usuarios',
     path: '/usuarios',
     icon: UserCog,
-    roles: ['admin', 'ciudadano'],
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-rose-400',
   },
 ]

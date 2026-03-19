@@ -7,6 +7,7 @@ import {
   useRevertirComparendo,
   useComparendoHistorial,
 } from '../../hooks/useComparendos'
+import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { ArrowLeft, ClipboardList, AlertCircle, CheckCircle2, XCircle, RotateCcw, Clock, CreditCard, Receipt, X } from 'lucide-react'
 import type { Comparendo } from '../../types'
@@ -42,6 +43,7 @@ function Field({ label, value, mono = false }: FieldProps) {
 
 function ComparendoDetail() {
   const { id } = useParams()
+  const { user } = useAuth()
   const comparendoId = id ?? ''
 
   const { data, isLoading, isError, error } = useComparendo(comparendoId)
@@ -115,9 +117,16 @@ function ComparendoDetail() {
   }
 
   const estadoClass = estadoStyles[data.estado] ?? 'bg-slate-100 text-slate-600 border-slate-200'
-  const canPagar = !['PAGADO', 'ANULADO', 'CERRADO', 'EXONERADO'].includes(data.estado)
-  const canAnular = !['ANULADO', 'CERRADO'].includes(data.estado)
-  const canRevertir = ['PAGADO', 'ANULADO'].includes(data.estado)
+  const isSupervisor = user?.rol === 'supervisor'
+  const isCiudadano = user?.rol === 'ciudadano'
+  const isOwner = data && (data.ciudadano_documento === user?.username?.replace('cc.', ''))
+
+  const canPagar =
+    (user?.rol === 'admin' || user?.rol === 'agente' || (isCiudadano && isOwner)) &&
+    !['PAGADO', 'ANULADO', 'CERRADO', 'EXONERADO'].includes(data.estado)
+  
+  const canAnular = (user?.rol === 'admin' || user?.rol === 'agente') && !isSupervisor && data.estado === 'PENDIENTE'
+  const canRevertir = (user?.rol === 'admin' || user?.rol === 'agente') && !isSupervisor && (data.estado === 'PAGADO' || data.estado === 'ANULADO')
   const hasReceipt = data.estado === 'PAGADO'
 
   return (

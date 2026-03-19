@@ -80,10 +80,7 @@ function PersonaDetail() {
   // Permisos de edición:
   // - Admin, Supervisor o Agente pueden editar cualquier persona.
   // - Ciudadano solo puede editarse a sí mismo (username === numero_documento).
-  const canEdit = user?.rol === 'admin' || 
-                  user?.rol === 'supervisor' || 
-                  user?.rol === 'agente' || 
-                  (user?.rol === 'ciudadano' && user?.username === data.numero_documento)
+  const canEdit = user?.rol === 'admin' || user?.rol === 'agente'
 
   return (
     <div className="space-y-6">

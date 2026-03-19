@@ -7,6 +7,7 @@ import {
   obtenerPersonaPorIdController,
   validarExistenciaPersonaController,
   obtenerPersonaPorEmailController,
+  actualizarPersonaController,
 } from "../controllers/personas.controller.js";
 
 const router = Router();
@@ -180,6 +181,85 @@ router.get("/personas/documento/:numero", obtenerPersonaPorDocumentoController);
  *         description: Resultado de validación
  */
 router.get("/personas/existe/:numero", validarExistenciaPersonaController);
+
+/**
+ * @swagger
+ * /personas/{persona_id}:
+ *   put:
+ *     summary: Actualizar una persona
+ *     tags: [Personas]
+ *     parameters:
+ *       - in: path
+ *         name: persona_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tipo_documento:
+ *                 type: string
+ *                 example: CC
+ *               numero_documento:
+ *                 type: string
+ *                 example: "1234567890"
+ *               nombres:
+ *                 type: string
+ *                 example: Juan Carlos
+ *               apellidos:
+ *                 type: string
+ *                 example: Perez Gomez
+ *               fecha_nacimiento:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-01"
+ *               genero:
+ *                 type: string
+ *                 enum: [M, F, O]
+ *                 example: M
+ *               direccion:
+ *                 type: string
+ *                 example: Calle 1 # 2-3
+ *               telefono:
+ *                 type: string
+ *                 example: "3001234567"
+ *               email:
+ *                 type: string
+ *                 example: juan@example.com
+ *               estado:
+ *                 type: string
+ *                 enum: [activo, inactivo]
+ *                 example: activo
+ *     responses:
+ *       200:
+ *         description: Persona actualizada correctamente
+ *       404:
+ *         description: Persona no encontrada
+ */
+router.put(
+  "/personas/:persona_id",
+  [
+    param("persona_id").isUUID(),
+    body("tipo_documento")
+      .optional()
+      .isIn(["CC", "CE", "TI", "PASAPORTE"]),
+    body("numero_documento").optional().isString(),
+    body("nombres").optional().isString(),
+    body("apellidos").optional().isString(),
+    body("fecha_nacimiento").optional().isISO8601(),
+    body("genero").optional().isIn(["M", "F", "O"]),
+    body("direccion").optional().isString(),
+    body("telefono").optional().isString(),
+    body("email").optional().isEmail(),
+    body("estado").optional().isIn(["activo", "inactivo"]),
+  ],
+  actualizarPersonaController
+);
 
 export default router;
 /**

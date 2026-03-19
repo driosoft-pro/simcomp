@@ -125,6 +125,7 @@ export interface Automotor {
   propietario_documento: string
   propietario_nombre: string
   estado: 'activo' | 'inactivo' | 'inmovilizado'
+  condicion: 'LEGAL' | 'REPORTADO_ROBO' | 'RECUPERADO' | 'EMBARGADO'
   created_at?: string
   updated_at?: string
   deleted_at?: string | null
@@ -174,6 +175,7 @@ export interface CreateAutomotorPayload {
   propietario_documento: string
   propietario_nombre: string
   estado?: 'activo' | 'inactivo' | 'inmovilizado'
+  condicion?: 'LEGAL' | 'REPORTADO_ROBO' | 'RECUPERADO' | 'EMBARGADO'
 }
 
 export interface UpdateAutomotorPayload extends Partial<CreateAutomotorPayload> {}

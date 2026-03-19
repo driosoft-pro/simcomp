@@ -74,6 +74,11 @@ const Automotor = sequelize.define(
       allowNull: false,
       defaultValue: "activo",
     },
+    condicion: {
+      type: DataTypes.ENUM("LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"),
+      allowNull: false,
+      defaultValue: "LEGAL",
+    },
     deleted_at: {
       type: DataTypes.DATE,
       allowNull: true,

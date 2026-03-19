@@ -9,6 +9,13 @@ const estadoStyles: Record<Automotor['estado'], string> = {
   inmovilizado: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50',
 }
 
+const condicionStyles: Record<string, string> = {
+  LEGAL: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50',
+  REPORTADO_ROBO: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50',
+  RECUPERADO: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-900/50',
+  EMBARGADO: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50',
+}
+
 interface FieldProps {
   icon: React.ReactNode
   label: string
@@ -97,9 +104,14 @@ function AutomotorDetail() {
                 </p>
               </div>
             </div>
-            <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-bold ${estadoClass}`}>
-              {data.estado.replace(/_/g, ' ')}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-bold ${condicionStyles[data.condicion] || 'bg-slate-100 text-slate-600'}`}>
+                {data.condicion.replace(/_/g, ' ')}
+              </span>
+              <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-bold ${estadoClass}`}>
+                {data.estado.replace(/_/g, ' ')}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -109,6 +121,7 @@ function AutomotorDetail() {
           <div>
             <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">Especificaciones Técnicas</h3>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Field icon={<Tag size={16}/>} label="Condición" value={data.condicion} />
               <Field icon={<Tag size={16}/>} label="Clase" value={data.clase} />
               <Field icon={<Hash size={16}/>} label="Servicio" value={data.servicio} />
               <Field icon={<Car size={16}/>} label="VIN" value={data.vin} />

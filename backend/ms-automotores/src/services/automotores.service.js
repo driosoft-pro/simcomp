@@ -36,7 +36,8 @@ export async function createAutomotor(data) {
     servicio: data.servicio || "PARTICULAR",
     propietario_documento: data.propietario_documento,
     propietario_nombre: data.propietario_nombre,
-    estado: data.estado || "activo"
+    estado: data.estado || "activo",
+    condicion: data.condicion || "LEGAL"
   });
 
   return automotor;
@@ -62,6 +63,7 @@ export async function updateAutomotor(id, data) {
   if (data.propietario_documento !== undefined) automotor.propietario_documento = data.propietario_documento;
   if (data.propietario_nombre !== undefined) automotor.propietario_nombre = data.propietario_nombre;
   if (data.estado !== undefined) automotor.estado = data.estado;
+  if (data.condicion !== undefined) automotor.condicion = data.condicion;
 
   automotor.updated_at = new Date();
 
@@ -102,6 +104,7 @@ export async function deleteAutomotor(id) {
     throw new Error("Automotor no encontrado");
   }
 
+  automotor.estado = "inactivo";
   automotor.deleted_at = new Date();
 
   await automotor.save();

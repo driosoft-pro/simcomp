@@ -36,6 +36,25 @@ export async function listarLicenciasPorPersona(personaId) {
   });
 }
 
+export async function actualizarLicencia(id, data) {
+  const licencia = await Licencia.findByPk(id);
+
+  if (!licencia) {
+    throw new Error("La licencia no existe");
+  }
+
+  await licencia.update({
+    numero_licencia: data.numero_licencia,
+    categoria: data.categoria,
+    fecha_expedicion: data.fecha_expedicion,
+    fecha_vencimiento: data.fecha_vencimiento,
+    estado: data.estado,
+    observaciones: data.observaciones,
+  });
+
+  return licencia;
+}
+
 export async function obtenerLicenciaPorNumero(numeroLicencia) {
   return await Licencia.findOne({
     where: {

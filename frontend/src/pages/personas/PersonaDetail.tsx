@@ -135,6 +135,8 @@ function PersonaDetail() {
             <Field icon={<Mail size={15}/>} label="Correo electrónico" value={data.email || 'No registrado'} />
             <Field icon={<MapPin size={15}/>} label="Dirección" value={data.direccion || 'No registrada'} />
             <Field icon={<Info size={15}/>} label="Estado" value={data.estado.toUpperCase()} />
+            {data.created_at && <Field icon={<Calendar size={15}/>} label="Fecha Registro" value={new Date(data.created_at).toLocaleString()} />}
+            {data.updated_at && <Field icon={<Calendar size={15}/>} label="Última Actualización" value={new Date(data.updated_at).toLocaleString()} />}
           </div>
         </div>
       </div>
@@ -178,6 +180,12 @@ function PersonaDetail() {
                     </span>
                     <span>Categoría: <strong>{lic.categoria}</strong></span>
                   </div>
+                  {lic.observaciones && (
+                    <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Observaciones</p>
+                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400 italic">"{lic.observaciones}"</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

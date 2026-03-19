@@ -67,34 +67,52 @@ export async function listarComparendos({ userRole, username, email } = {}) {
 
   console.log("Filtrando comparendos. Rol:", userRole, "Username:", username, "Email:", email);
 
-  if (String(userRole).toLowerCase().trim() === "ciudadano") {
+  const role = String(userRole || "").toLowerCase().trim();
+
+  console.log("Filtrando comparendos. Rol:", role, "Username:", username, "Email:", email);
+
+  if (role === "ciudadano") {
     const documento = String(username || "").replace("cc.", "").trim();
     if (documento) {
       where.ciudadano_documento = documento;
     }
     console.log("Filtro ciudadano aplicado:", where);
-  } else if (userRole === "agente") {
+  } else if (role === "agente") {
     try {
-      console.log("Buscando datos del agente para el email:", email);
-      const response = await axios.get(`${process.env.PERSONAS_SERVICE_URL}/personas/email/${email}`);
-      const persona = response.data?.data;
-      
-      if (persona) {
-        const nombreCompleto = `${persona.nombres} ${persona.apellidos}`.trim();
+      let identificadorEncontrado = false;
+
+      // 1. Intentar identificar al agente por su username (si es un documento)
+      const documentoFromUsername = String(username || "").replace("cc.", "").trim();
+      // Validamos que sean solo números para asegurar que es un documento
+      if (documentoFromUsername && /^\d+$/.test(documentoFromUsername)) {
+        where.agente_documento = documentoFromUsername;
+        identificadorEncontrado = true;
+        console.log("Agente identificado por documento (username):", documentoFromUsername);
+      }
+
+      // 2. Si no se identificó por username, o para mayor seguridad, buscar por email
+      if (!identificadorEncontrado && email) {
+        console.log("Buscando datos del agente para el email:", email);
+        const response = await axios.get(`${process.env.PERSONAS_SERVICE_URL}/personas/email/${email}`);
+        const persona = response.data?.data;
         
-        // El usuario pidió por nombre, pero el documento es el identificador único.
-        // Usamos [Op.or] para cubrir ambos casos por seguridad.
-        where[Op.or] = [
-          { agente_documento: persona.numero_documento },
-          { agente_nombre: nombreCompleto }
-        ];
-        
-        console.log("Filtro agente aplicado (por documento o nombre):", {
-          documento: persona.numero_documento,
-          nombre: nombreCompleto
-        });
-      } else {
-        console.warn("No se encontró persona asociada al email del agente:", email);
+        if (persona) {
+          const nombreCompleto = `${persona.nombres} ${persona.apellidos}`.trim();
+          
+          where[Op.or] = [
+            { agente_documento: persona.numero_documento },
+            { agente_nombre: nombreCompleto }
+          ];
+          identificadorEncontrado = true;
+          console.log("Filtro agente aplicado por email (documento o nombre):", {
+            documento: persona.numero_documento,
+            nombre: nombreCompleto
+          });
+        }
+      }
+
+      if (!identificadorEncontrado) {
+        console.warn("No se pudo identificar al agente logueado. Retornando lista vacía.");
         return [];
       }
     } catch (error) {

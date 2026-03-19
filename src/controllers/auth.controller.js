@@ -92,8 +92,17 @@ export async function validate(req, res) {
     const token = authHeader.split(" ")[1];
     const decoded = await verifyAccessToken(token);
 
+    // Central security check: Supervisor is read-only
+    const originalMethod = req.headers['x-original-method'];
+    if (decoded.rol === 'supervisor' && originalMethod && !['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(originalMethod.toUpperCase())) {
+      return res.status(403).send();
+    }
+
+    console.log("Validating token. Rol:", decoded.rol, "Username:", decoded.username);
     res.setHeader("X-User-ID", decoded.sub);
     res.setHeader("X-User-Role", decoded.rol);
+    res.setHeader("X-User-Username", decoded.username || "");
+    res.setHeader("X-User-Email", decoded.email || "");
 
     return res.status(200).send();
   } catch (error) {

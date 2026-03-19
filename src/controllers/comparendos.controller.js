@@ -95,13 +95,17 @@ export async function obtenerHistorialComparendoController(req, res) {
 
 export async function pagarComparendoController(req, res) {
   try {
-    const data = await pagarComparendo(req.params.id);
+    const userRole = req.headers["x-user-role"];
+    const username = req.headers["x-user-username"];
+
+    const data = await pagarComparendo(req.params.id, { userRole, username });
     return res.json({
       message: "Comparendo pagado correctamente",
       data,
     });
   } catch (error) {
-    return res.status(400).json({
+    const status = error.message.includes("permiso") ? 403 : 400;
+    return res.status(status).json({
       message: error.message,
     });
   }

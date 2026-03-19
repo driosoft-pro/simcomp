@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, X, AlertCircle } from 'lucide-react'
 import {
   useInfracciones,
@@ -230,7 +231,13 @@ function InfraccionesList() {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to={`/infracciones/${infraccion.infraccion_id}`}
+                        className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
+                      >
+                        Ver detalle
+                      </Link>
                       {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
                         <>
                           <button

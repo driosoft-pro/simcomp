@@ -281,7 +281,7 @@ function UsuariosList() {
                       to={`/usuarios/${usuario.id}`}
                       className="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40"
                     >
-                      Gestionar
+                      Ver detalles
                     </Link>
                   </td>
                 </tr>

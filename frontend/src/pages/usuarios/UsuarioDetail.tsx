@@ -109,8 +109,7 @@ function UsuarioDetail() {
     }
   }
 
-  const isSupervisor = user?.rol === 'supervisor'
-  const isCiudadano = user?.rol === 'ciudadano'
+  const isAdmin = user?.rol === 'admin'
 
   return (
     <div className="space-y-6">
@@ -184,8 +183,8 @@ function UsuarioDetail() {
         </div>
 
         <div className="space-y-6">
-          {/* Formulario: actualizar datos (PUT) - Visible para todos menos supervisor */}
-          {!isSupervisor && (
+          {/* Formulario: actualizar datos (PUT) - solo admin */}
+          {isAdmin && (
             <form
               onSubmit={handleUpdate}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-5"
@@ -244,31 +243,29 @@ function UsuarioDetail() {
                     className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
                   />
                 </div>
-                {!isCiudadano && (
-                  <div className="flex flex-col gap-2 sm:col-span-2">
-                    <label
-                      className="text-xs font-semibold text-slate-500 dark:text-slate-400"
-                      htmlFor="edit-rol"
-                    >
-                      Rol
-                    </label>
-                    <select
-                      id="edit-rol"
-                      value={editForm.rol ?? ''}
-                      onChange={(e) =>
-                        setEditForm((p) => ({ ...p, rol: e.target.value as UserRole }))
-                      }
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
-                    >
-                      <option value="">— sin cambio —</option>
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {r.charAt(0).toUpperCase() + r.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <div className="flex flex-col gap-2 sm:col-span-2">
+                  <label
+                    className="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                    htmlFor="edit-rol"
+                  >
+                    Rol
+                  </label>
+                  <select
+                    id="edit-rol"
+                    value={editForm.rol ?? ''}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, rol: e.target.value as UserRole }))
+                    }
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  >
+                    <option value="">— sin cambio —</option>
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="flex justify-end pt-2">
@@ -286,8 +283,8 @@ function UsuarioDetail() {
             </form>
           )}
 
-          {/* Formulario: cambiar estado (PATCH) - Visible solo para admin/agente */}
-          {!isSupervisor && !isCiudadano && (
+          {/* Formulario: cambiar estado (PATCH) - solo admin */}
+          {isAdmin && (
             <form
               onSubmit={handleCambiarEstado}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-5"

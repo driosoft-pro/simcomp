@@ -268,7 +268,7 @@ function AutomotoresList() {
                         to={`/automotores/${automotor.id}`}
                         className="inline-flex items-center gap-1 rounded bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 dark:bg-sky-900/20 dark:text-sky-400 dark:hover:bg-sky-900/40"
                       >
-                        Ver
+                        Ver detalle
                       </Link>
                       {!isCiudadano && user?.rol !== 'supervisor' && (
                         <>

@@ -187,11 +187,35 @@ async function cambiarEstadoComparendo(comparendoId, nuevoEstado, observacion) {
   }
 }
 
-export async function pagarComparendo(comparendoId) {
+export async function pagarComparendo(comparendoId, { userRole, username } = {}) {
+  const comparendo = await Comparendo.findByPk(comparendoId);
+  
+  if (!comparendo) {
+    throw new Error("Comparendo no encontrado");
+  }
+
+  const role = String(userRole || "").toLowerCase().trim();
+  const citizenDoc = String(comparendo.ciudadano_documento || "").replace("cc.", "").trim();
+  const userDoc = String(username || "").replace("cc.", "").trim();
+
+  // Restricción: Agente solo puede pagar si es el infractor
+  if (role === "agente") {
+    if (citizenDoc !== userDoc) {
+      throw new Error("No tienes permiso para pagar un comparendo de otro ciudadano");
+    }
+  }
+
+  // Ciudadano solo puede pagar el suyo
+  if (role === "ciudadano") {
+    if (citizenDoc !== userDoc) {
+      throw new Error("No tienes permiso para pagar este comparendo");
+    }
+  }
+
   return cambiarEstadoComparendo(
     comparendoId,
     "PAGADO",
-    "Pago válido registrado en el sistema"
+    `Pago registrado por usuario ${username} (Rol: ${userRole})`
   );
 }
 

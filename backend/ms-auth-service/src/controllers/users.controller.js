@@ -32,7 +32,13 @@ export async function listUsers(req, res) {
 export async function getUser(req, res) {
   try {
     // Verificar si el usuario tiene permiso para ver este perfil
-    if (req.user.rol !== "admin" && req.user.rol !== "supervisor" && String(req.user.sub) !== String(req.params.id)) {
+    console.log(`Checking permissions for getUser. User ID: ${req.user.sub}, Role: ${req.user.rol}, Requested ID: ${req.params.id}`);
+    
+    const isAuthorizedRole = ["admin", "supervisor", "agente"].includes(req.user.rol);
+    const isOwnProfile = String(req.user.sub) === String(req.params.id);
+
+    if (!isAuthorizedRole && !isOwnProfile) {
+      console.log("Permission denied for getUser");
       return res.status(403).json({
         success: false,
         message: "No tienes permiso para ver este perfil",

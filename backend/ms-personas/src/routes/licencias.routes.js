@@ -4,6 +4,7 @@ import {
   crearLicenciaController,
   listarLicenciasPorPersonaController,
   obtenerLicenciaPorNumeroController,
+  actualizarLicenciaController,
 } from "../controllers/licencias.controller.js";
 
 const router = Router();
@@ -117,5 +118,66 @@ router.get(
  *         description: Licencia no encontrada
  */
 router.get("/licencias/:numero", obtenerLicenciaPorNumeroController);
+
+
+/**
+ * @swagger
+ * /licencias/{licencia_id}:
+ *   put:
+ *     summary: Actualizar licencia de conducción
+ *     tags: [Licencias]
+ *     parameters:
+ *       - in: path
+ *         name: licencia_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               numero_licencia:
+ *                 type: string
+ *                 example: LIC-1001
+ *               categoria:
+ *                 type: string
+ *                 example: B1
+ *               fecha_expedicion:
+ *                 type: string
+ *                 format: date
+ *                 example: 2025-01-01
+ *               fecha_vencimiento:
+ *                 type: string
+ *                 format: date
+ *                 example: 2030-01-01
+ *               estado:
+ *                 type: string
+ *                 example: vigente
+ *     responses:
+ *       200:
+ *         description: Licencia actualizada correctamente
+ *       404:
+ *         description: Licencia no encontrada
+ */
+router.put(
+  "/licencias/:licencia_id",
+  [
+    param("licencia_id").isUUID(),
+    body("numero_licencia").optional().isString(),
+    body("categoria")
+      .optional()
+      .isIn(["A1", "A2", "B1", "B2", "B3", "C1", "C2", "C3"]),
+    body("fecha_expedicion").optional().isDate(),
+    body("fecha_vencimiento").optional().isDate(),
+    body("estado")
+      .optional()
+      .isIn(["vigente", "suspendida", "vencida", "cancelada"]),
+  ],
+  actualizarLicenciaController
+);
 
 export default router;

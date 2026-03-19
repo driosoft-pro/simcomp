@@ -18,6 +18,13 @@ const estadoStyles: Record<Automotor['estado'], string> = {
   inmovilizado: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 }
 
+const condicionStyles: Record<string, string> = {
+  LEGAL: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  REPORTADO_ROBO: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  RECUPERADO: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+  EMBARGADO: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+}
+
 const claseLabel: Record<string, string> = {
   AUTOMOVIL: '🚗 Automóvil',
   MOTOCICLETA: '🏍️ Motocicleta',
@@ -40,7 +47,7 @@ const labelClass = 'mb-1.5 block text-sm font-semibold text-slate-700 dark:text-
 function LoadingRow() {
   return (
     <tr className="border-t border-slate-100 dark:border-slate-800">
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 w-24 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
         </td>
@@ -80,6 +87,7 @@ function AutomotoresList() {
     propietario_documento: '',
     propietario_nombre: '',
     estado: 'activo',
+    condicion: 'LEGAL',
   })
 
   const [submitError, setSubmitError] = useState('')
@@ -100,6 +108,7 @@ function AutomotoresList() {
         propietario_documento: editingAutomotor.propietario_documento,
         propietario_nombre: editingAutomotor.propietario_nombre,
         estado: editingAutomotor.estado,
+        condicion: editingAutomotor.condicion,
       })
       setSubmitError('')
     } else {
@@ -117,6 +126,7 @@ function AutomotoresList() {
         propietario_documento: '',
         propietario_nombre: '',
         estado: 'activo',
+        condicion: 'LEGAL',
       })
       setSubmitError('')
     }
@@ -224,6 +234,7 @@ function AutomotoresList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Propietario</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Marca / Línea</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Modelo</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Condición</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acciones</th>
               </tr>
@@ -250,6 +261,11 @@ function AutomotoresList() {
                     {automotor.marca} {automotor.linea}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{automotor.modelo}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ring-current/10 ${condicionStyles[automotor.condicion] ?? 'bg-slate-100 text-slate-600'}`}>
+                      {automotor.condicion.replace(/_/g, ' ')}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleToggleEstado(automotor.id)}
@@ -366,19 +382,36 @@ function AutomotoresList() {
                       <option value="OFICIAL">Oficial</option>
                     </select>
                   </div>
-                  <div>
-                    <label className={labelClass}>Estado</label>
-                    <select
-                      name="estado"
-                      required
-                      value={formData.estado}
-                      onChange={handleFormChange}
-                      className={inputClass}
-                    >
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                      <option value="inmovilizado">Inmovilizado</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={labelClass}>Condición</label>
+                      <select
+                        name="condicion"
+                        required
+                        value={formData.condicion}
+                        onChange={handleFormChange}
+                        className={inputClass}
+                      >
+                        <option value="LEGAL">Legal</option>
+                        <option value="REPORTADO_ROBO">Reportado Robo</option>
+                        <option value="RECUPERADO">Recuperado</option>
+                        <option value="EMBARGADO">Embargado</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Estado</label>
+                      <select
+                        name="estado"
+                        required
+                        value={formData.estado}
+                        onChange={handleFormChange}
+                        className={inputClass}
+                      >
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="inmovilizado">Inmovilizado</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 

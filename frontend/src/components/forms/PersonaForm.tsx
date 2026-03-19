@@ -142,7 +142,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona }: Persona
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Número <span className="text-red-500">*</span></label>
-            <input required type="text" name="numero_documento" defaultValue={persona?.numero_documento || defaultDocumento} readOnly={!!defaultDocumento || isEdit} className={`w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-200 ${(defaultDocumento || isEdit) ? 'bg-slate-100 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`} />
+            <input required type="text" name="numero_documento" defaultValue={persona?.numero_documento || defaultDocumento} readOnly={!!defaultDocumento} className={`w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-200 ${defaultDocumento ? 'bg-slate-100 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`} />
           </div>
         </div>
 

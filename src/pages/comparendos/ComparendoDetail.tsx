@@ -122,7 +122,7 @@ function ComparendoDetail() {
   const isOwner = data && (data.ciudadano_documento === user?.username?.replace('cc.', ''))
 
   const canPagar =
-    (user?.rol === 'admin' || user?.rol === 'agente' || (isCiudadano && isOwner)) &&
+    (user?.rol === 'admin' || (user?.rol === 'agente' && isOwner) || (isCiudadano && isOwner)) &&
     !['PAGADO', 'ANULADO', 'CERRADO', 'EXONERADO'].includes(data.estado)
   
   const canAnular = (user?.rol === 'admin' || user?.rol === 'agente') && !isSupervisor && data.estado === 'PENDIENTE'

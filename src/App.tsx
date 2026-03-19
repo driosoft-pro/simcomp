@@ -10,6 +10,7 @@ import PersonaDetail from './pages/personas/PersonaDetail'
 import AutomotoresList from './pages/automotores/AutomotoresList'
 import AutomotorDetail from './pages/automotores/AutomotorDetail'
 import InfraccionesList from './pages/infracciones/InfraccionesList'
+import InfraccionDetail from './pages/infracciones/InfraccionDetail'
 import ComparendosList from './pages/comparendos/ComparendosList'
 import ComparendoDetail from './pages/comparendos/ComparendoDetail'
 import NuevoComparendo from './pages/comparendos/NuevoComparendo'
@@ -109,6 +110,17 @@ function App() {
             <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <InfraccionesList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/infracciones/:id"
+          element={
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor']}>
+              <Layout theme={theme} onToggleTheme={toggleTheme}>
+                <InfraccionDetail />
               </Layout>
             </ProtectedRoute>
           }

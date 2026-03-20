@@ -27,6 +27,25 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
   const [error, setError] = useState<string | null>(null)
   const [isCreatingUser, setIsCreatingUser] = useState(false)
 
+  // Sync documento with licencia logic
+  const [docNumber, setDocNumber] = useState(persona?.numero_documento || defaultDocumento || '')
+  const [licNumber, setLicNumber] = useState(firstLicencia?.numero_licencia || '')
+  const [licManuallyEdited, setLicManuallyEdited] = useState(isEdit && !!firstLicencia)
+
+  const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setDocNumber(val)
+    // Only auto-sync if not editing or if license hasn't been manually touched
+    if (!isEdit && !licManuallyEdited) {
+      setLicNumber(val)
+    }
+  }
+
+  const handleLicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLicNumber(e.target.value)
+    setLicManuallyEdited(true)
+  }
+
   const isPending = isCreatingPersona || isUpdatingPersona || isCreatingLicencia || isUpdatingLicencia || isCreatingUser || isLoadingLicencias
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -143,7 +162,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Número <span className="text-red-500">*</span></label>
-            <input required type="text" name="numero_documento" defaultValue={persona?.numero_documento || defaultDocumento} readOnly={!!defaultDocumento} className={`w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-200 ${defaultDocumento ? 'bg-slate-100 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`} />
+            <input required type="text" name="numero_documento" value={docNumber} onChange={handleDocChange} readOnly={!!defaultDocumento} className={`w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-200 ${defaultDocumento ? 'bg-slate-100 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`} />
           </div>
         </div>
 
@@ -236,7 +255,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
             <div className="grid gap-4 sm:grid-cols-2 mt-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Número de Licencia <span className="text-red-500">*</span></label>
-            <input required type="text" name="numero_licencia" defaultValue={firstLicencia?.numero_licencia} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+            <input required type="text" name="numero_licencia" value={licNumber} onChange={handleLicChange} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
           </div>
           
           <div className="space-y-1">

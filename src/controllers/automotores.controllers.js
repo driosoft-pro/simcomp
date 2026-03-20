@@ -2,6 +2,7 @@ import {
   getAllAutomotores,
   getAutomotorById,
   getAutomotorByPlaca,
+  inmovilizarAutomotorPorPlaca,
   createAutomotor,
   updateAutomotor,
   deleteAutomotor,
@@ -175,5 +176,24 @@ export async function changeAutomotorStatusController(req, res) {
       message: error.message
     });
 
+  }
+}
+
+export async function inmovilizarPorPlacaController(req, res) {
+  try {
+    const automotor = await inmovilizarAutomotorPorPlaca(req.params.placa);
+
+    return res.status(200).json({
+      success: true,
+      message: "Vehículo inmovilizado correctamente",
+      data: automotor
+    });
+  } catch (error) {
+    const status = error.message.includes("no encontrado") ? 404 : 400;
+
+    return res.status(status).json({
+      success: false,
+      message: error.message
+    });
   }
 }

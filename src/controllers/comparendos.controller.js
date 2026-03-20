@@ -9,6 +9,7 @@ import {
   pagarComparendo,
   anularComparendo,
   revertirAPendiente,
+  actualizarComparendo,
 } from "../services/comparendos.service.js";
 
 export async function healthCheck(req, res) {
@@ -30,14 +31,18 @@ export async function crearComparendoController(req, res) {
       });
     }
 
-    const comparendo = await crearComparendo(req.body);
+    const userRole = req.headers["x-user-role"];
+    const comparendo = await crearComparendo(req.body, { userRole });
 
     return res.status(201).json({
-      message: "Comparendo creado correctamente",
+      message: Array.isArray(comparendo) 
+        ? "Comparendos creados correctamente" 
+        : "Comparendo creado correctamente",
       data: comparendo,
     });
   } catch (error) {
-    return res.status(400).json({
+    const status = error.message.includes("permiso") ? 403 : 400;
+    return res.status(status).json({
       message: error.message,
     });
   }
@@ -146,6 +151,31 @@ export async function revertirAPendienteController(req, res) {
     });
   } catch (error) {
     return res.status(400).json({
+      message: error.message,
+    });
+  }
+}
+
+export async function actualizarComparendoController(req, res) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: "Errores de validación",
+        errors: errors.array(),
+      });
+    }
+
+    const userRole = req.headers["x-user-role"];
+    const data = await actualizarComparendo(req.params.id, req.body, { userRole });
+
+    return res.json({
+      message: "Comparendo actualizado correctamente",
+      data,
+    });
+  } catch (error) {
+    const status = error.message.includes("permiso") ? 403 : 400;
+    return res.status(status).json({
       message: error.message,
     });
   }

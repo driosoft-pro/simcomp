@@ -9,9 +9,10 @@ interface PersonaFormProps {
   onCancel?: () => void
   defaultDocumento?: string
   persona?: Persona // If provided, we are in EDIT mode
+  requireLicense?: boolean
 }
 
-function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona }: PersonaFormProps) {
+function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLicense }: PersonaFormProps) {
   const isEdit = Boolean(persona)
   const { mutateAsync: createPersona, isPending: isCreatingPersona } = useCreatePersona()
   const { mutateAsync: updatePersona, isPending: isUpdatingPersona } = useUpdatePersona()
@@ -22,7 +23,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona }: Persona
   const { data: licencias, isLoading: isLoadingLicencias } = useLicenciasByPersona(persona?.persona_id || '')
   const firstLicencia = licencias?.[0]
 
-  const [showLicenseForm, setShowLicenseForm] = useState(isEdit && !!firstLicencia)
+  const [showLicenseForm, setShowLicenseForm] = useState(requireLicense || (isEdit && !!firstLicencia))
   const [error, setError] = useState<string | null>(null)
   const [isCreatingUser, setIsCreatingUser] = useState(false)
 
@@ -207,25 +208,27 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona }: Persona
             <ShieldCheck size={16} className="text-emerald-500" />
             {isEdit ? 'Licencia de Conducción' : 'Datos de Licencia'}
           </h3>
-          <button
-            type="button"
-            onClick={() => setShowLicenseForm(!showLicenseForm)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold uppercase transition-colors ${
-              showLicenseForm 
-                ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400' 
-                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400'
-            }`}
-          >
-            {showLicenseForm ? (
-              <>
-                <ChevronUp size={14} /> Quitar
-              </>
-            ) : (
-              <>
-                <ChevronDown size={14} /> Registrar
-              </>
-            )}
-          </button>
+          {!requireLicense && (
+            <button
+              type="button"
+              onClick={() => setShowLicenseForm(!showLicenseForm)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold uppercase transition-colors ${
+                showLicenseForm 
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400' 
+                  : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400'
+              }`}
+            >
+              {showLicenseForm ? (
+                <>
+                  <ChevronUp size={14} /> Quitar
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={14} /> Registrar
+                </>
+              )}
+            </button>
+          )}
         </div>
         
         {showLicenseForm ? (

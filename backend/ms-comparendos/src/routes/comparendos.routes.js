@@ -11,6 +11,7 @@ import {
   pagarComparendoController,
   anularComparendoController,
   revertirAPendienteController,
+  actualizarComparendoController,
 } from "../controllers/comparendos.controller.js";
 
 const router = Router();
@@ -141,9 +142,6 @@ const router = Router();
  *         - agente_documento
  *         - agente_nombre
  *         - placa_vehiculo
- *         - infraccion_codigo
- *         - infraccion_descripcion
- *         - valor_multa
  *         - fecha_comparendo
  *         - lugar
  *         - ciudad
@@ -176,6 +174,17 @@ const router = Router();
  *           type: number
  *           format: float
  *           example: 980000
+ *         infracciones:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               codigo:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               valor_multa:
+ *                 type: number
  *         fecha_comparendo:
  *           type: string
  *           format: date-time
@@ -421,16 +430,24 @@ router.post(
       .withMessage("placa_vehiculo es requerida"),
 
     body("infraccion_codigo")
+      .if(body("infracciones").not().exists())
       .notEmpty()
-      .withMessage("infraccion_codigo es requerido"),
+      .withMessage("infraccion_codigo es requerido si no se envía el arreglo de infracciones"),
 
     body("infraccion_descripcion")
+      .if(body("infracciones").not().exists())
       .notEmpty()
-      .withMessage("infraccion_descripcion es requerida"),
+      .withMessage("infraccion_descripcion es requerida si no se envía el arreglo de infracciones"),
 
     body("valor_multa")
+      .if(body("infracciones").not().exists())
       .isNumeric()
       .withMessage("valor_multa debe ser numérico"),
+
+    body("infracciones")
+      .optional()
+      .isArray()
+      .withMessage("infracciones debe ser un arreglo"),
 
     body("fecha_comparendo")
       .isISO8601()
@@ -564,6 +581,85 @@ router.patch(
   "/comparendos/:id/revertir",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
   revertirAPendienteController
+);
+
+/**
+ * @swagger
+ * /comparendos/{id}:
+ *   put:
+ *     summary: Editar un comparendo (solo admin/agente, estado PENDIENTE)
+ *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               placa_vehiculo:
+ *                 type: string
+ *                 example: ABC123
+ *               infraccion_codigo:
+ *                 type: string
+ *                 example: C03
+ *               infraccion_descripcion:
+ *                 type: string
+ *                 example: Estacionar en sitio prohibido.
+ *               valor_multa:
+ *                 type: number
+ *                 example: 520000
+ *               fecha_comparendo:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2026-01-10T08:15:00.000Z
+ *               lugar:
+ *                 type: string
+ *                 example: Av. 3N con Calle 44
+ *               ciudad:
+ *                 type: string
+ *                 example: Cali
+ *               observaciones:
+ *                 type: string
+ *                 nullable: true
+ *                 example: Correción de datos.
+ *     responses:
+ *       200:
+ *         description: Comparendo actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Comparendo actualizado correctamente
+ *                 data:
+ *                   $ref: '#/components/schemas/Comparendo'
+ *       400:
+ *         description: Error de validación o estado no permitido
+ *       403:
+ *         description: Sin permisos para editar
+ */
+router.put(
+  "/comparendos/:id",
+  [
+    param("id").isUUID().withMessage("El id debe ser un UUID válido"),
+    body("valor_multa").optional().isNumeric().withMessage("valor_multa debe ser numérico"),
+    body("infracciones").optional().isArray().withMessage("infracciones debe ser un arreglo"),
+    body("fecha_comparendo").optional().isISO8601().withMessage("fecha_comparendo debe ser fecha válida"),
+    body("observaciones").optional().isString(),
+  ],
+  actualizarComparendoController
 );
 
 export default router;

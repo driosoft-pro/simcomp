@@ -9,6 +9,8 @@ import {
   obtenerPersonaPorEmailController,
   actualizarPersonaController,
 } from "../controllers/personas.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { roleMiddleware } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
@@ -59,6 +61,8 @@ router.get("/health", (req, res) => {
  */
 router.post(
   "/",
+  authMiddleware,
+  roleMiddleware("admin", "agente"),
   [
     body("tipo_documento")
       .notEmpty()
@@ -87,7 +91,7 @@ router.post(
  *       200:
  *         description: Lista de personas
  */
-router.get("/", listarPersonasController);
+router.get("/", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), listarPersonasController);
 
 /**
  * @swagger
@@ -113,6 +117,8 @@ router.get("/", listarPersonasController);
  */
 router.get(
   "/:persona_id",
+  authMiddleware,
+  roleMiddleware("admin", "supervisor", "agente", "ciudadano"),
   [param("persona_id").isUUID()],
   obtenerPersonaPorIdController
 );
@@ -193,6 +199,8 @@ router.get("/existe/:numero", validarExistenciaPersonaController);
  */
 router.put(
   "/:persona_id",
+  authMiddleware,
+  roleMiddleware("admin", "agente"),
   [
     param("persona_id").isUUID(),
     body("tipo_documento")

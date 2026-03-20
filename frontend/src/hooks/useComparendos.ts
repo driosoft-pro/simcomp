@@ -11,6 +11,7 @@ import {
   pagarComparendo,
   revertirComparendo,
   getComparendoHistorial,
+  updateComparendo,
 } from '../api/comparendos.api'
 import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial } from '../types'
 
@@ -116,5 +117,18 @@ export function useComparendoHistorial(id: UUID) {
     queryKey: ['comparendo-historial', id],
     queryFn: () => getComparendoHistorial(id),
     enabled: Boolean(id),
+  })
+}
+
+export function useUpdateComparendo() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: UUID; data: Partial<CreateComparendoPayload> }) =>
+      updateComparendo(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
+    },
   })
 }

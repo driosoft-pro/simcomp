@@ -18,8 +18,8 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 
-app.use("/api", personasRoutes);
-app.use("/api", licenciasRoutes);
+app.use("/api/Personas", personasRoutes);
+app.use("/api/Licencias", licenciasRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req, res) => {

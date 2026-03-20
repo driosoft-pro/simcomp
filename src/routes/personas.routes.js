@@ -25,6 +25,8 @@ const router = Router();
  *   get:
  *     summary: Health check del servicio
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Servicio activo
@@ -39,59 +41,25 @@ router.get("/health", (req, res) => {
 
 /**
  * @swagger
- * /personas:
+ * /Personas:
  *   post:
  *     summary: Crear una persona
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - tipo_documento
- *               - numero_documento
- *               - nombres
- *               - apellidos
- *               - fecha_nacimiento
- *               - genero
- *             properties:
- *               tipo_documento:
- *                 type: string
- *                 example: CC
- *               numero_documento:
- *                 type: string
- *                 example: "1234567890"
- *               nombres:
- *                 type: string
- *                 example: Juan Carlos
- *               apellidos:
- *                 type: string
- *                 example: Perez Gomez
- *               fecha_nacimiento:
- *                 type: string
- *                 format: date
- *                 example: "1990-01-01"
- *               genero:
- *                 type: string
- *                 enum: [M, F, O]
- *                 example: M
- *               direccion:
- *                 type: string
- *                 example: Calle 1 # 2-3
- *               telefono:
- *                 type: string
- *                 example: "3001234567"
- *               email:
- *                 type: string
- *                 example: juan@example.com
+ *             $ref: '#/components/schemas/Persona'
+ *     responses:
  *     responses:
  *       201:
  *         description: Persona creada correctamente
  */
 router.post(
-  "/personas",
+  "/",
   [
     body("tipo_documento")
       .notEmpty()
@@ -110,28 +78,34 @@ router.post(
 
 /**
  * @swagger
- * /personas:
+ * /Personas:
  *   get:
  *     summary: Listar personas
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de personas
  */
-router.get("/personas", listarPersonasController);
+router.get("/", listarPersonasController);
 
 /**
  * @swagger
- * /personas/{persona_id}:
+ * /Personas/{id}:
  *   get:
  *     summary: Buscar persona por ID
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: persona_id
+ *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Persona encontrada
@@ -139,17 +113,19 @@ router.get("/personas", listarPersonasController);
  *         description: Persona no encontrada
  */
 router.get(
-  "/personas/:persona_id",
+  "/:persona_id",
   [param("persona_id").isUUID()],
   obtenerPersonaPorIdController
 );
 
 /**
  * @swagger
- * /personas/documento/{numero}:
+ * /Personas/documento/{numero}:
  *   get:
  *     summary: Buscar persona por documento
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: numero
@@ -162,14 +138,16 @@ router.get(
  *       404:
  *         description: Persona no encontrada
  */
-router.get("/personas/documento/:numero", obtenerPersonaPorDocumentoController);
+router.get("/documento/:numero", obtenerPersonaPorDocumentoController);
 
 /**
  * @swagger
- * /personas/existe/{numero}:
+ * /Personas/existe/{numero}:
  *   get:
  *     summary: Validar existencia de persona por documento
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: numero
@@ -180,69 +158,42 @@ router.get("/personas/documento/:numero", obtenerPersonaPorDocumentoController);
  *       200:
  *         description: Resultado de validación
  */
-router.get("/personas/existe/:numero", validarExistenciaPersonaController);
+router.get("/existe/:numero", validarExistenciaPersonaController);
 
 /**
  * @swagger
- * /personas/{persona_id}:
+ * /Personas/{id}:
  *   put:
  *     summary: Actualizar una persona
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: persona_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               tipo_documento:
- *                 type: string
- *                 example: CC
- *               numero_documento:
- *                 type: string
- *                 example: "1234567890"
- *               nombres:
- *                 type: string
- *                 example: Juan Carlos
- *               apellidos:
- *                 type: string
- *                 example: Perez Gomez
- *               fecha_nacimiento:
- *                 type: string
- *                 format: date
- *                 example: "1990-01-01"
- *               genero:
- *                 type: string
- *                 enum: [M, F, O]
- *                 example: M
- *               direccion:
- *                 type: string
- *                 example: Calle 1 # 2-3
- *               telefono:
- *                 type: string
- *                 example: "3001234567"
- *               email:
- *                 type: string
- *                 example: juan@example.com
- *               estado:
- *                 type: string
- *                 enum: [activo, inactivo]
- *                 example: activo
+ *             $ref: '#/components/schemas/Persona'
  *     responses:
  *       200:
  *         description: Persona actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Persona'
  *       404:
  *         description: Persona no encontrada
  */
 router.put(
-  "/personas/:persona_id",
+  "/:persona_id",
   [
     param("persona_id").isUUID(),
     body("tipo_documento")
@@ -264,10 +215,12 @@ router.put(
 export default router;
 /**
  * @swagger
- * /personas/email/{email}:
+ * /Personas/email/{email}:
  *   get:
  *     summary: Buscar persona por email
  *     tags: [Personas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: email
@@ -280,4 +233,4 @@ export default router;
  *       404:
  *         description: Persona no encontrada
  */
-router.get("/personas/email/:email", obtenerPersonaPorEmailController);
+router.get("/email/:email", obtenerPersonaPorEmailController);

@@ -1,6 +1,7 @@
 import {
   getAllUsers,
   getUserById,
+  getUserByEmail,
   createUser,
   updateUser,
   changeUserStatus,
@@ -91,6 +92,30 @@ export async function getUser(req, res) {
     return res.status(500).json({
       success: false,
       message: "Error consultando usuario",
+    });
+  }
+}
+
+export async function getUserByEmailController(req, res) {
+  try {
+    const { email } = req.params;
+    const user = await getUserByEmail(decodeURIComponent(email));
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error consultando usuario por email",
     });
   }
 }

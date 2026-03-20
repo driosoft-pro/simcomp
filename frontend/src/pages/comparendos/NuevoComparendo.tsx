@@ -831,6 +831,7 @@ function NuevoComparendo() {
                 onCancel={() => setIsPersonaModalOpen(false)}
                 defaultDocumento={formData.ciudadano_documento}
                 requireLicense={true}
+                submitLabel="Registrar Infractor"
               />
             </div>
           </div>

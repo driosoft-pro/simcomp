@@ -50,6 +50,9 @@ export async function updateUser(id, data) {
     throw new Error("Usuario no encontrado");
   }
 
+  const oldEmail = user.email;
+  const oldUsername = user.username;
+
   if (data.username !== undefined) user.username = data.username;
   if (data.email !== undefined) user.email = data.email;
   if (data.rol !== undefined) user.rol = data.rol;
@@ -60,6 +63,30 @@ export async function updateUser(id, data) {
   }
 
   await user.save();
+
+  // Cascading update to ms-personas
+  if (data.email && data.email !== oldEmail) {
+    try {
+      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002/api";
+      // Find persona by old email or username
+      const response = await fetch(`${personasServiceUrl}/Personas/documento/${oldUsername}`);
+      if (response.ok) {
+        const personaData = await response.json();
+        const personaId = personaData.id || personaData.data?.id;
+        if (personaId) {
+          await fetch(`${personasServiceUrl}/Personas/${personaId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: data.email }),
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error synchronizing email with ms-personas:", error.message);
+      // We don't throw here to avoid blocking the user update if the other service is down
+    }
+  }
+
   return user;
 }
 

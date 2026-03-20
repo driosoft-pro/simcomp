@@ -97,6 +97,13 @@ export async function getUser(req, res) {
 
 export async function createUserController(req, res) {
   try {
+    const requesterRole = req.user.rol || req.headers["x-user-role"];
+    
+    // Si es supervisor, solo puede crear agentes
+    if (requesterRole === "supervisor") {
+      req.body.rol = "agente";
+    }
+
     const user = await createUser(req.body);
 
     return res.status(201).json({
@@ -122,15 +129,61 @@ export async function createUserController(req, res) {
 
 export async function updateUserController(req, res) {
   try {
-    // Solo el admin o el propio usuario pueden actualizar
-    if (req.user.rol !== "admin" && String(req.user.sub) !== String(req.params.id)) {
+    const requesterRole = req.user.rol;
+    const requesterId = String(req.user.sub);
+    const targetId = req.params.id;
+    const isOwnProfile = requesterId === String(targetId);
+
+    const targetUser = await getUserById(targetId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    // Permission check
+    let canUpdate = false;
+    let allowedFields = [];
+
+    if (requesterRole === "admin") {
+      canUpdate = true;
+      allowedFields = ["username", "email", "password", "rol", "estado"];
+    } else if (isOwnProfile) {
+      canUpdate = true;
+      if (requesterRole === "agente") {
+        allowedFields = ["username", "email", "password"];
+      } else if (requesterRole === "supervisor" || requesterRole === "ciudadano") {
+        allowedFields = ["email", "password"];
+      }
+    } else if (requesterRole === "supervisor" && targetUser.rol === "agente") {
+      canUpdate = true;
+      allowedFields = ["estado"];
+    }
+
+    if (!canUpdate) {
       return res.status(403).json({
         success: false,
         message: "No tienes permiso para actualizar este perfil",
       });
     }
 
-    const user = await updateUser(req.params.id, req.body);
+    // Filter body based on allowed fields
+    const updateData = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No hay campos válidos para actualizar",
+      });
+    }
+
+    const user = await updateUser(targetId, updateData);
 
     return res.status(200).json({
       success: true,
@@ -143,9 +196,7 @@ export async function updateUserController(req, res) {
       },
     });
   } catch (error) {
-    const status = error.message === "Usuario no encontrado" ? 404 : 400;
-
-    return res.status(status).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });

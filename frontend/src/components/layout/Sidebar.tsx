@@ -68,9 +68,16 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   onClose?: () => void
   isMobile?: boolean
+  isMinimized?: boolean
+  onToggleMinimize?: () => void
 }
 
-function Sidebar({ onClose, isMobile = false }: SidebarProps) {
+function Sidebar({ 
+  onClose, 
+  isMobile = false, 
+  isMinimized = false, 
+  onToggleMinimize 
+}: SidebarProps) {
   const { user } = useAuth()
 
   const filteredItems = navItems.filter((item) =>
@@ -78,20 +85,30 @@ function Sidebar({ onClose, isMobile = false }: SidebarProps) {
   )
 
   return (
-    <aside className="flex h-full w-72 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-slate-800">
+    <aside 
+      className={`flex h-full flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-slate-800 transition-all duration-300 ease-in-out ${
+        isMinimized ? 'w-20' : 'w-72'
+      }`}
+    >
       {/* Logo / Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 px-5 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/30">
+      <div className={`flex items-center border-b border-slate-800 px-5 py-5 ${isMinimized ? 'justify-center' : 'justify-between'}`}>
+        <button 
+          onClick={onToggleMinimize}
+          className="group flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
+          title={isMinimized ? "Expandir" : "Minimizar"}
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all">
             <ShieldCheck size={18} className="text-white" />
           </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
-              SIMCOMP
-            </p>
-            <p className="text-sm font-semibold text-slate-200">Tránsito</p>
-          </div>
-        </div>
+          {!isMinimized && (
+            <div className="animate-fade-in whitespace-nowrap overflow-hidden">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
+                SIMCOMP
+              </p>
+              <p className="text-sm font-semibold text-slate-200 text-left">Tránsito</p>
+            </div>
+          )}
+        </button>
         {isMobile && onClose && (
           <button
             type="button"
@@ -106,9 +123,11 @@ function Sidebar({ onClose, isMobile = false }: SidebarProps) {
 
       {/* Navegación */}
       <nav className="flex flex-1 flex-col gap-1 p-3 overflow-y-auto">
-        <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-          Menú principal
-        </p>
+        {!isMinimized && (
+          <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in">
+            Menú principal
+          </p>
+        )}
         {filteredItems.map((item) => {
           const Icon = item.icon
 
@@ -119,20 +138,27 @@ function Sidebar({ onClose, isMobile = false }: SidebarProps) {
               end={item.path === '/'}
               onClick={isMobile && onClose ? onClose : undefined}
               className={({ isActive }) =>
-                `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                `group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                  isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'
+                } ${
                   isActive
                     ? 'bg-gradient-to-r from-blue-600/90 to-indigo-600/80 text-white shadow-md shadow-blue-900/30'
                     : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
                 }`
               }
+              title={isMinimized ? item.label : undefined}
             >
               {({ isActive }) => (
                 <>
                   <Icon
                     size={18}
-                    className={isActive ? 'text-white' : item.color}
+                    className={`${isActive ? 'text-white' : item.color} shrink-0`}
                   />
-                  <span>{item.label}</span>
+                  {!isMinimized && (
+                    <span className="animate-fade-in whitespace-nowrap overflow-hidden">
+                      {item.label}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>

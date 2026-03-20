@@ -12,13 +12,23 @@ interface LayoutProps {
 
 function Layout({ children, theme, onToggleTheme }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false)
+
+  const toggleSidebar = () => setIsSidebarMinimized((prev) => !prev)
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
       {/* Sidebar escritorio */}
-      <div className="hidden lg:block lg:w-72 shrink-0">
+      <div 
+        className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out ${
+          isSidebarMinimized ? 'w-20' : 'w-72'
+        }`}
+      >
         <div className="sticky top-0 h-screen overflow-hidden">
-          <Sidebar />
+          <Sidebar 
+            isMinimized={isSidebarMinimized} 
+            onToggleMinimize={toggleSidebar} 
+          />
         </div>
       </div>
 
@@ -40,7 +50,7 @@ function Layout({ children, theme, onToggleTheme }: LayoutProps) {
       )}
 
       {/* Contenido principal */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-in-out">
         <Topbar
           theme={theme}
           onToggleTheme={onToggleTheme}

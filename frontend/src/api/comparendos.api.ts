@@ -48,12 +48,17 @@ export async function getComparendosByPlaca(placa: string): Promise<Comparendo[]
 
 export async function createComparendo(
   data: CreateComparendoPayload,
-): Promise<Comparendo> {
-  const response = await apiClient.post<ApiResponse<Comparendo>>(
+): Promise<Comparendo | Comparendo[]> {
+  const response = await apiClient.post<ApiResponse<Comparendo | Comparendo[]>>(
     `${API_URLS.comparendos}/comparendos`,
     data,
   )
   const resData = response.data.data
+  
+  if (Array.isArray(resData)) {
+    return resData.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  }
+  
   return { ...resData, comparendo_id: (resData as any).id }
 }
 
@@ -95,4 +100,11 @@ export async function updateComparendo(id: UUID, data: Partial<CreateComparendoP
   )
   const resData = response.data.data
   return { ...resData, comparendo_id: (resData as any).id }
+}
+
+export async function getSiguienteNumeroComparendo(): Promise<string> {
+  const response = await apiClient.get<ApiResponse<string>>(
+    `${API_URLS.comparendos}/comparendos/siguiente-numero`,
+  )
+  return response.data.data
 }

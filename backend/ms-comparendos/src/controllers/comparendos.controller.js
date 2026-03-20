@@ -10,6 +10,7 @@ import {
   anularComparendo,
   revertirAPendiente,
   actualizarComparendo,
+  obtenerSiguienteNumero,
 } from "../services/comparendos.service.js";
 
 export async function healthCheck(req, res) {
@@ -176,6 +177,19 @@ export async function actualizarComparendoController(req, res) {
   } catch (error) {
     const status = error.message.includes("permiso") ? 403 : 400;
     return res.status(status).json({
+      message: error.message,
+    });
+  }
+}
+
+export async function obtenerSiguienteNumeroController(req, res) {
+  try {
+    const siguienteNumero = await obtenerSiguienteNumero();
+    return res.status(200).json({
+      data: siguienteNumero,
+    });
+  } catch (error) {
+    return res.status(500).json({
       message: error.message,
     });
   }

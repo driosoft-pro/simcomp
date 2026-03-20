@@ -12,6 +12,7 @@ import {
   anularComparendoController,
   revertirAPendienteController,
   actualizarComparendoController,
+  obtenerSiguienteNumeroController,
 } from "../controllers/comparendos.controller.js";
 
 const router = Router();
@@ -236,6 +237,25 @@ router.get("/health", healthCheck);
  *                   items:
  *                     $ref: '#/components/schemas/Comparendo'
  */
+/**
+ * @swagger
+ * /api/comparendos/siguiente-numero:
+ *   get:
+ *     summary: Obtener el siguiente número de comparendo disponible (global)
+ *     tags: [Comparendos]
+ *     responses:
+ *       200:
+ *         description: El siguiente número disponible
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: string
+ */
+router.get("/comparendos/siguiente-numero", obtenerSiguienteNumeroController);
+
 router.get("/comparendos", listarComparendosController);
 
 /**

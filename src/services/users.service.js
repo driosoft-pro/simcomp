@@ -13,6 +13,13 @@ export async function getUserById(id) {
   });
 }
 
+export async function getUserByEmail(email) {
+  return await User.findOne({
+    where: { email },
+    attributes: { exclude: ["password_hash"] },
+  });
+}
+
 export async function createUser(data) {
   const existingByEmail = await User.findOne({
     where: { email: data.email },

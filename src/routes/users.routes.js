@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   listUsers,
   getUser,
+  getUserByEmailController,
   createUserController,
   updateUserController,
   changeUserStatusController,
@@ -70,6 +71,26 @@ router.post("/", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"),
  *         description: Usuario encontrado
  */
 router.get("/:id", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), getUser);
+
+/**
+ * @swagger
+ * /Usuarios/email/{email}:
+ *   get:
+ *     summary: Obtener usuario por email (uso interno entre microservicios)
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.get("/email/:email", getUserByEmailController);
 
 /**
  * @swagger

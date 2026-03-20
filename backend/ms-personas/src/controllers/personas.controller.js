@@ -28,7 +28,7 @@ export async function crearPersonaController(req, res) {
       try {
         const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
         const authBaseUrl = authServiceUrl.replace("/auth", "");
-        
+
         await fetch(`${authBaseUrl}/Usuarios`, {
           method: "POST",
           headers: {
@@ -79,7 +79,7 @@ export async function listarPersonasController(req, res) {
     // Si es supervisor o agente, solo puede ver personas que correspondan a usuarios permitidos
     if (userRole === "supervisor" || userRole === "agente") {
       console.log(`Filtrando lista de personas para ${userRole}.`);
-      
+
       try {
         const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
         const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
@@ -93,7 +93,7 @@ export async function listarPersonasController(req, res) {
           const result = await response.json();
           const allowedUsers = result.data || [];
           const allowedEmails = new Set(allowedUsers.map(u => u.email.toLowerCase()));
-          
+
           personas = personas.filter(p => p.email && allowedEmails.has(p.email.toLowerCase()));
           console.log(`Personas filtradas para ${userRole}: ${personas.length}`);
         } else {
@@ -139,34 +139,39 @@ export async function obtenerPersonaPorIdController(req, res) {
 
     // Restricción para agentes y supervisores: solo pueden ver personas que correspondan a usuarios permitidos
     const userRole = req.headers["x-user-role"];
-    if (userRole === "agente" || userRole === "supervisor") {
-      try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-        const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
-          headers: {
-            "Authorization": req.headers["authorization"],
-            "x-user-role": userRole
-          }
-        });
+    const callerEmail = req.headers["x-user-email"];
 
-        if (response.ok) {
-          const result = await response.json();
-          const allowedUsers = result.data || [];
-          const isAllowed = allowedUsers.some(u => u.email.toLowerCase() === persona.email.toLowerCase());
-          
-          if (!isAllowed) {
-            return res.status(403).json({
-              ok: false,
-              message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-            });
+    if (userRole === "agente" || userRole === "supervisor") {
+      // Short-circuit: si el usuario está accediendo a su propio perfil, permitir directamente
+      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
+        // Es el propio perfil, no necesitamos llamar a ms-auth
+      } else {
+        // Verificar si la persona tiene un usuario con rol permitido usando lookup directo
+        try {
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const encodedEmail = encodeURIComponent(persona.email);
+          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+
+          if (response.ok) {
+            const result = await response.json();
+            const targetUser = result.data;
+            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+              return res.status(403).json({
+                ok: false,
+                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+              });
+            }
+          } else if (response.status === 404) {
+            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
+          } else {
+            console.error(`Error ms-auth (${userRole}): ${response.status}`);
+            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
           }
-        } else {
-          console.error(`Error ms-auth (${userRole}): ${response.status}`);
-          return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
+        } catch (error) {
+          console.error("Error conexión ms-auth:", error.message);
+          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
         }
-      } catch (error) {
-        console.error("Error conexión ms-auth:", error.message);
-        return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
       }
     }
 
@@ -202,32 +207,35 @@ export async function obtenerPersonaPorDocumentoController(req, res) {
 
     // Restricción para agentes y supervisores
     const userRole = req.headers["x-user-role"];
-    if (userRole === "agente" || userRole === "supervisor") {
-      try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-        const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
-          headers: {
-            "Authorization": req.headers["authorization"],
-            "x-user-role": userRole
-          }
-        });
+    const callerEmail = req.headers["x-user-email"];
 
-        if (response.ok) {
-          const result = await response.json();
-          const allowedUsers = result.data || [];
-          const isAllowed = allowedUsers.some(u => u.email.toLowerCase() === persona.email.toLowerCase());
-          
-          if (!isAllowed) {
-            return res.status(403).json({
-              ok: false,
-              message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-            });
+    if (userRole === "agente" || userRole === "supervisor") {
+      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
+        // Es el propio perfil, permitir directamente
+      } else {
+        try {
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const encodedEmail = encodeURIComponent(persona.email);
+          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+
+          if (response.ok) {
+            const result = await response.json();
+            const targetUser = result.data;
+            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+              return res.status(403).json({
+                ok: false,
+                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+              });
+            }
+          } else if (response.status === 404) {
+            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
+          } else {
+            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
           }
-        } else {
-          return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
+        } catch (error) {
+          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
         }
-      } catch (error) {
-        return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
       }
     }
 
@@ -279,32 +287,35 @@ export async function obtenerPersonaPorEmailController(req, res) {
 
     // Restricción para agentes y supervisores
     const userRole = req.headers["x-user-role"];
-    if (userRole === "agente" || userRole === "supervisor") {
-      try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-        const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
-          headers: {
-            "Authorization": req.headers["authorization"],
-            "x-user-role": userRole
-          }
-        });
+    const callerEmail = req.headers["x-user-email"];
 
-        if (response.ok) {
-          const result = await response.json();
-          const allowedUsers = result.data || [];
-          const isAllowed = allowedUsers.some(u => u.email.toLowerCase() === persona.email.toLowerCase());
-          
-          if (!isAllowed) {
-            return res.status(403).json({
-              ok: false,
-              message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-            });
+    if (userRole === "agente" || userRole === "supervisor") {
+      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
+        // Es el propio perfil, permitir directamente
+      } else {
+        try {
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const encodedEmail = encodeURIComponent(persona.email);
+          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+
+          if (response.ok) {
+            const result = await response.json();
+            const targetUser = result.data;
+            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+              return res.status(403).json({
+                ok: false,
+                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+              });
+            }
+          } else if (response.status === 404) {
+            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
+          } else {
+            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
           }
-        } else {
-          return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
+        } catch (error) {
+          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
         }
-      } catch (error) {
-        return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
       }
     }
 
@@ -404,14 +415,14 @@ export async function actualizarPersonaController(req, res) {
 
     // Handle state update restriction for non-admins
     if (updateData.estado === "inactivo" && requesterRole !== "admin") {
-       if (requesterRole === "supervisor" && targetRole === "agente") {
-         // Supervisor can inactive agente, this is allowed
-       } else {
-         return res.status(403).json({
-           ok: false,
-           message: "Solo los administradores y supervisores (para agentes) pueden inhabilitar personas",
-         });
-       }
+      if (requesterRole === "supervisor" && targetRole === "agente") {
+        // Supervisor can inactive agente, this is allowed
+      } else {
+        return res.status(403).json({
+          ok: false,
+          message: "Solo los administradores y supervisores (para agentes) pueden inhabilitar personas",
+        });
+      }
     }
 
     const persona = await actualizarPersona(persona_id, req.body);

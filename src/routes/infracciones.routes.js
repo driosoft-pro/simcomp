@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   listInfracciones,
   getInfraccion,
+  getInfraccionByCodigoController,
   createInfraccionController,
   updateInfraccionController,
   deleteInfraccionController,
@@ -84,6 +85,29 @@ router.get(
   validateRequest,
   getInfraccion
 );
+
+/**
+ * @swagger
+ * /infracciones/codigo/{codigo}:
+ *   get:
+ *     summary: Obtener una infracción por código
+ *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: codigo
+ *         required: true
+ *         description: Código de la infracción
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Infracción encontrada
+ *       404:
+ *         description: Infracción no encontrada
+ */
+router.get("/infracciones/codigo/:codigo", getInfraccionByCodigoController);
 
 /**
  * @swagger

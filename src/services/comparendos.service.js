@@ -42,6 +42,8 @@ export async function crearComparendo(data, { userRole } = {}) {
         ? `${data.numero_comparendo}-${i + 1}` 
         : data.numero_comparendo;
 
+      console.log(`[comparendos] Intentando crear comparendo número: ${numeroComparendo}`);
+
       const nuevoComparendo = await Comparendo.create(
         {
           numero_comparendo: numeroComparendo,
@@ -124,9 +126,11 @@ export async function crearComparendo(data, { userRole } = {}) {
     await transaction.rollback();
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      throw new Error("El número de comparendo ya existe");
+      console.error(`[comparendos] Error de duplicidad: El número de comparendo ya existe.`);
+      throw new Error(`El número de comparendo ya existe (${data.numero_comparendo}).`);
     }
 
+    console.error(`[comparendos] Error inesperado en crearComparendo:`, error.message);
     throw error;
   }
 }
@@ -197,6 +201,38 @@ export async function listarComparendos({ userRole, username, email } = {}) {
     where,
     order: [["fecha_comparendo", "DESC"]],
   });
+}
+
+export async function obtenerSiguienteNumero() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay).toString().padStart(3, "0");
+  const year = now.getFullYear();
+  const prefix = `COMP-${year}-${dayOfYear}-`;
+
+  // Buscamos todos los que empiecen con el prefijo de hoy
+  const todayComparendos = await Comparendo.findAll({
+    where: {
+      numero_comparendo: {
+        [Op.like]: `${prefix}%`,
+      },
+    },
+    attributes: ["numero_comparendo"],
+  });
+
+  const maxSeq = todayComparendos.reduce((max, c) => {
+    const parts = c.numero_comparendo.split("-");
+    if (parts.length >= 4) {
+      const seq = parseInt(parts[3], 10);
+      return isNaN(seq) ? max : Math.max(max, seq);
+    }
+    return max;
+  }, 0);
+
+  const nextSeq = (maxSeq + 1).toString().padStart(3, "0");
+  return `${prefix}${nextSeq}`;
 }
 
 export async function obtenerComparendoPorId(id) {

@@ -82,8 +82,9 @@ export function useAnularComparendo() {
 
   return useMutation({
     mutationFn: (id: UUID) => anularComparendo(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
     },
   })
 }
@@ -93,8 +94,9 @@ export function useRevertirComparendo() {
 
   return useMutation({
     mutationFn: (id: UUID) => revertirComparendo(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
     },
   })
 }

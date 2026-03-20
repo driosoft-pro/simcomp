@@ -8,7 +8,7 @@ function validarTransicionEstado(estadoActual, nuevoEstado) {
   const transicionesValidas = {
     PENDIENTE: ["PAGADO", "ANULADO"],
     PAGADO: ["PENDIENTE"],
-    ANULADO: [],
+    ANULADO: ["PENDIENTE"],
   };
 
   return transicionesValidas[estadoActual]?.includes(nuevoEstado);

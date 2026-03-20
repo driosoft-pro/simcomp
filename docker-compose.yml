@@ -1,11 +1,11 @@
 services:
   # Databases
   db-auth:
-    image: postgres:14-alpine
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: usuarios_db
+      POSTGRES_DB: auth_db
     ports:
       - "5432:5432"
     volumes:
@@ -13,7 +13,7 @@ services:
       - ./backend/ms-auth-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   db-personas:
-    image: postgres:14-alpine
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -25,11 +25,11 @@ services:
       - ./backend/ms-personas/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   db-automotores:
-    image: postgres:14-alpine
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: vehiculos_db
+      POSTGRES_DB: automotores_db
     ports:
       - "5434:5432"
     volumes:
@@ -37,7 +37,7 @@ services:
       - ./backend/ms-automotores/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   db-infracciones:
-    image: postgres:14-alpine
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -49,7 +49,7 @@ services:
       - ./backend/ms-infracciones/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   db-comparendos:
-    image: postgres:14-alpine
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -67,12 +67,14 @@ services:
       - PORT=8001
       - DB_HOST=db-auth
       - DB_PORT=5432
-      - DB_NAME=usuarios_db
+      - DB_NAME=auth_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
-      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - JWT_REFRESH_EXPIRES_DAYS=${JWT_REFRESH_EXPIRES_DAYS}
+    ports:
+      - "8001:8001"
     depends_on:
       - db-auth
 
@@ -85,6 +87,8 @@ services:
       - DB_NAME=personas_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "8002:8002"
     depends_on:
       - db-personas
 
@@ -94,10 +98,12 @@ services:
       - PORT=8003
       - DB_HOST=db-automotores
       - DB_PORT=5432
-      - DB_NAME=vehiculos_db
+      - DB_NAME=automotores_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - PERSONAS_SERVICE_URL=${PERSONAS_SERVICE_URL}
+    ports:
+      - "8003:8003"
     depends_on:
       - db-automotores
 
@@ -110,6 +116,8 @@ services:
       - DB_NAME=infracciones_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "8004:8004"
     depends_on:
       - db-infracciones
 
@@ -123,8 +131,10 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - PERSONAS_SERVICE_URL=${PERSONAS_SERVICE_URL}
-      - VEHICULOS_SERVICE_URL=${VEHICULOS_SERVICE_URL}
+      - AUTOMOTORES_SERVICE_URL=${AUTOMOTORES_SERVICE_URL}
       - INFRACCIONES_SERVICE_URL=${INFRACCIONES_SERVICE_URL}
+    ports:
+      - "8005:8005"
     depends_on:
       - db-comparendos
 

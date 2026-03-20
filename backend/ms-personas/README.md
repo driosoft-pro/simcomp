@@ -72,53 +72,31 @@ La tabla `personas` administra la información base de ciudadanos y conductores.
 
 Campos principales:
 
-- `persona_id`
-- `tipo_documento`
-- `numero_documento`
-- `primer_nombre`
-- `segundo_nombre`
-- `primer_apellido`
-- `segundo_apellido`
+- `id` (PK, UUID)
+- `tipo_documento` (ENUM)
+- `numero_documento` (Único)
+- `nombres`
+- `apellidos`
+- `fecha_nacimiento`
+- `genero` (ENUM)
 - `direccion`
 - `telefono`
-- `email`
-- `created_at`
-- `updated_at`
-
-Tipos de documento permitidos:
-
-- `CC`
-- `CE`
-- `PAS`
-- `TI`
+- `email` (Único)
+- `estado` (ENUM)
 
 ### 3. Entidad LicenciaConduccion
 La tabla `licencias_conduccion` permite almacenar licencias históricas por persona.
 
 Campos principales:
 
-- `licencia_id`
-- `persona_id`
-- `numero_licencia`
-- `categoria`
+- `id` (PK, UUID)
+- `persona_id` (FK -> personas.id)
+- `numero_licencia` (Único)
+- `categoria` (ENUM: A1, A2, B1, B2, B3, C1, C2, C3)
 - `fecha_expedicion`
 - `fecha_vencimiento`
-- `estado`
-
-Categorías permitidas:
-
-- `A1`
-- `A2`
-- `B1`
-- `B2`
-- `C1`
-
-Estados permitidos:
-
-- `VIGENTE`
-- `SUSPENDIDA`
-- `VENCIDA`
-- `CANCELADA`
+- `estado` (ENUM: VIGENTE, SUSPENDIDA, VENCIDA, CANCELADA)
+- `observaciones`
 
 ### 4. Integración con otros servicios
 Este microservicio es consumido por otros módulos para validar si una persona existe antes de registrar automotores o comparendos.
@@ -141,10 +119,10 @@ SERVICE_NAME=ms-personas
 PORT=8002
 
 DB_HOST=localhost
-DB_PORT=5434
+DB_PORT=5433
 DB_NAME=personas_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=personas_user
+DB_PASSWORD=personas_pass
 ```
 
 ---
@@ -253,6 +231,18 @@ GET /api/personas
 
 ```http
 GET /api/personas/documento/:numero
+```
+
+### Buscar persona por email
+
+```http
+GET /api/personas/email/:email
+```
+
+### Validar existencia de persona
+
+```http
+GET /api/personas/existe/:numero
 ```
 
 ### Crear licencia

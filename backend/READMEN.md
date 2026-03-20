@@ -210,8 +210,8 @@ npm install
 | username | VARCHAR(50) | UNIQUE | Nombre de usuario para login |
 | email | VARCHAR(150) | UNIQUE | Correo electrónico |
 | password_hash | VARCHAR(255) |  | Contraseña hasheada con bcrypt |
-| rol | ENUM |  | `admin`, `agente`, `supervisor` |
-| activo | BOOLEAN |  | Estado del usuario |
+| rol | ENUM |  | `admin`, `agente`, `supervisor`, `ciudadano` |
+| estado | ENUM |  | `activo`, `inactivo` |
 | created_at | TIMESTAMP |  | Fecha de registro en el sistema |
 | updated_at | TIMESTAMP |  | Última modificación |
 
@@ -220,10 +220,11 @@ npm install
 | Campo | Tipo de dato | Etiqueta | Descripción / restricción |
 |---|---|---|---|
 | id | UUID | PK | Identificador único |
-| usuario_id | VARCHAR(3) | FK | Propietario del token |
-| token | VARCHAR(60) |  | Refresh token (UUID v4 o hash) |
-| expires_at | TIMESTAMP |  | Expiración del refresh token (7d) |
+| usuario_id | UUID | FK | Propietario del token |
+| token | VARCHAR(255) |  | Refresh token (JWT o hash) |
+| expires_at | TIMESTAMP |  | Expiración del refresh token |
 | revocado | BOOLEAN |  | Estado del token |
+| created_at | TIMESTAMP |  | Fecha de creación |
 | updated_at | TIMESTAMP |  | Última modificación |
 
 ---
@@ -234,30 +235,32 @@ npm install
 
 | Campo | Tipo de dato | Etiqueta | Descripción / restricción |
 |---|---|---|---|
-| persona_id | UUID | PK | Identificador único interno del sistema |
-| tipo_documento | VARCHAR(3) | ENUM | `CC`, `CE`, `PAS`, `TI` |
-| numero_documento | VARCHAR(20) | IDX | Número único del documento; índice único en la BD |
-| primer_nombre | VARCHAR(60) |  | Primer nombre |
-| segundo_nombre | VARCHAR(60) | NULL | Opcional |
-| primer_apellido | VARCHAR(60) |  | Primer apellido |
-| segundo_apellido | VARCHAR(60) | NULL | Opcional |
-| direccion | TEXT |  | Dirección de residencia actual |
-| telefono | VARCHAR(15) |  | Teléfono de contacto |
-| email | VARCHAR(120) |  | Correo electrónico |
-| created_at | TIMESTAMP |  | Fecha de registro en el sistema |
+| id | UUID | PK | Identificador único interno del sistema |
+| tipo_documento | VARCHAR(10) | ENUM | `CC`, `CE`, `PASAPORTE`, `TI` |
+| numero_documento | VARCHAR(20) | IDX | Número único del documento; índice único |
+| nombres | VARCHAR(100) |  | Nombres completos |
+| apellidos | VARCHAR(100) |  | Apellidos completos |
+| fecha_nacimiento | DATE |  | Fecha de nacimiento |
+| genero | ENUM |  | `M`, `F`, `O` |
+| direccion | VARCHAR(200) |  | Dirección de residencia |
+| telefono | VARCHAR(20) |  | Teléfono de contacto |
+| email | VARCHAR(150) | UNIQUE | Correo electrónico |
+| estado | ENUM |  | `activo`, `inactivo` |
+| created_at | TIMESTAMP |  | Fecha de registro |
 | updated_at | TIMESTAMP |  | Última modificación |
 
 ### Entidad: `LicenciaConduccion`
 
 | Campo | Tipo de dato | Etiqueta | Descripción / restricción |
 |---|---|---|---|
-| licencia_id | UUID | PK | Identificador único de la licencia |
-| persona_id | UUID | FK | FK lógica → `Persona`; una persona puede tener múltiples licencias históricas |
+| id | UUID | PK | Identificador único de la licencia |
+| persona_id | UUID | FK | Referencia a `Persona` |
 | numero_licencia | VARCHAR(30) | IDX | Número oficial; índice único |
+| categoria | ENUM |  | `A1`, `A2`, `B1`, `B2`, `B3`, `C1`, `C2`, `C3` |
 | fecha_expedicion | DATE |  | Fecha de expedición |
-| categoria | VARCHAR(5) | ENUM | `A1`, `A2`, `B1`, `B2`, `C1` |
 | fecha_vencimiento | DATE |  | Fecha de vencimiento |
-| estado | VARCHAR(15) | ENUM | `VIGENTE`, `SUSPENDIDA`, `VENCIDA`, `CANCELADA` |
+| estado | ENUM |  | `vigente`, `suspendida`, `vencida`, `cancelada` |
+| observaciones | TEXT |  | Notas adicionales |
 
 ---
 
@@ -267,16 +270,21 @@ npm install
 
 | Campo | Tipo de dato | Etiqueta | Descripción / restricción |
 |---|---|---|---|
-| automotor_id | UUID | PK | Identificador único del automotor |
-| placa | VARCHAR(8) | IDX | Placa Única Nacional; índice único |
-| tipo | VARCHAR(20) | ENUM | `MOTO`, `CARRO`, `BUS`, `BUSETA`, `CAMION`, `TRACTOMULA`, `CUATRIMOTO` |
+| id | UUID | PK | Identificador único del automotor |
+| placa | VARCHAR(10) | IDX | Placa Única Nacional; índice único |
+| vin | VARCHAR(30) | UNIQUE | Número de identificación vehicular |
+| numero_motor | VARCHAR(30) | UNIQUE | Número de motor |
+| numero_chasis | VARCHAR(30) | UNIQUE | Número de chasis |
 | marca | VARCHAR(50) |  | Marca del vehículo |
-| modelo | VARCHAR(50) |  | Modelo del vehículo |
-| anio | SMALLINT |  | Año de fabricación |
+| linea | VARCHAR(50) |  | Línea/Referencia del vehículo |
+| modelo | INTEGER |  | Año del modelo |
 | color | VARCHAR(30) |  | Color |
-| cilindraje | INTEGER |  | En centímetros cúbicos (cc) |
-| estado | VARCHAR(50) |  | `LEGAL`, `REPORTADO_ROBO`, `RECUPERADO`, `EMBARGADO` |
-| propietario_id | UUID | FK | Referencia lógica a `ms-personas.Persona` |
+| clase | ENUM |  | `AUTOMOVIL`, `MOTOCICLETA`, `CAMIONETA`, `CAMPERO`, `BUS`, `CAMION` |
+| servicio | ENUM |  | `PARTICULAR`, `PUBLICO`, `OFICIAL` |
+| propietario_documento | VARCHAR(20) |  | Documento del propietario |
+| propietario_nombre | VARCHAR(200) |  | Nombre del propietario |
+| estado | ENUM |  | `activo`, `inactivo`, `inmovilizado` |
+| condicion | ENUM |  | `LEGAL`, `REPORTADO_ROBO`, `RECUPERADO`, `EMBARGADO` |
 | created_at | TIMESTAMP |  | Fecha de registro |
 | updated_at | TIMESTAMP |  | Última modificación |
 
@@ -294,12 +302,13 @@ npm install
 | infraccion_id | UUID | PK | Identificador único |
 | codigo | VARCHAR(10) | IDX | Código único de la infracción según CNT; ej. `C001`, `D002` |
 | descripcion | TEXT |  | Descripción oficial de la infracción |
-| articulo_codigo | VARCHAR(30) |  | Artículo del Código Nacional de Tránsito (Ley 769/2002) |
-| tipo_sancion | VARCHAR(20) | ENUM | `MONETARIA`, `SUSPENSION_LICENCIA`, `INMOVILIZACION`, `MIXTA` |
-| valor_multa | DECIMAL(12,2) |  | Valor de la multa en pesos |
-| dias_suspension | INTEGER | NULL | Días de suspensión de licencia si aplica |
-| aplica_descuento | BOOLEAN |  | Indica si puede tener descuentos por pronto pago o curso |
-| vigente | BOOLEAN |  | `FALSE` = infracción derogada o modificada |
+| articulo_codigo | VARCHAR(30) |  | Artículo del Código Nacional de Tránsito |
+| tipo_sancion | ENUM |  | `MONETARIA`, `SUSPENSION_LICENCIA`, `INMOVILIZACION`, `MIXTA` |
+| valor_multa | DECIMAL(12,2) |  | Valor de la multa |
+| dias_suspension | INTEGER | NULL | Días de suspensión si aplica |
+| estado | VARCHAR(20) |  | `activo`, `inactivo` |
+| aplica_descuento | BOOLEAN |  | Si aplica descuento |
+| vigente | BOOLEAN |  | Estado de vigencia normativa |
 
 ---
 
@@ -309,18 +318,34 @@ npm install
 
 | Campo | Tipo de dato | Etiqueta | Descripción / restricción |
 |---|---|---|---|
-| comparendo_id | UUID | PK | Identificador único |
-| numero_comparendo | VARCHAR(20) | IDX | Número único impreso en el comparendo físico; índice único |
-| fecha_hora | TIMESTAMP | IDX | Fecha y hora exacta de la infracción |
-| automotor_id | UUID | FK | FK lógica → `ms-automotores.Automotor` |
-| persona_id | UUID | FK | FK lógica → `ms-personas.Persona` |
-| infraccion_id | UUID | FK | FK lógica → `ms-infracciones.Infraccion` |
-| direccion_exacta | TEXT |  | Dirección completa del lugar de la infracción |
-| estado | VARCHAR(25) | ENUM | `VIGENTE`, `EN_PROCESO_DE_PAGO`, `PAGADO`, `CERRADO`, `EN_COBRO_COACTIVO`, `IMPUGNADO`, `EXONERADO` |
-| valor_multa | DECIMAL(14,2) | CALC | Suma de tarifas de todas las infracciones del comparendo |
-| observaciones | TEXT | NULL | Notas adicionales del policía o funcionario |
-| created_at | TIMESTAMP |  | Fecha de creación del registro |
-| updated_at | TIMESTAMP |  | Última modificación del registro |
+| id | UUID | PK | Identificador único |
+| numero_comparendo | VARCHAR(30) | IDX | Número único; índice único |
+| ciudadano_documento | VARCHAR(20) |  | Documento del ciudadano infractor |
+| ciudadano_nombre | VARCHAR(200) |  | Nombre del ciudadano infractor |
+| agente_documento | VARCHAR(20) |  | Documento del agente de tránsito |
+| agente_nombre | VARCHAR(200) |  | Nombre del agente de tránsito |
+| placa_vehiculo | VARCHAR(10) |  | Placa del vehículo vinculado |
+| infraccion_codigo | VARCHAR(10) |  | Código de la infracción según CNT |
+| infraccion_descripcion | TEXT |  | Descripción de la infracción |
+| valor_multa | DECIMAL(12,2) |  | Valor total de la multa |
+| fecha_comparendo | TIMESTAMP | IDX | Fecha y hora del comparendo |
+| lugar | VARCHAR(200) |  | Dirección/Lugar de la infracción |
+| ciudad | VARCHAR(100) |  | Ciudad de la infracción |
+| observaciones | TEXT | NULL | Notas adicionales |
+| estado | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| created_at | TIMESTAMP |  | Fecha de creación |
+| updated_at | TIMESTAMP |  | Última modificación |
+
+### Entidad: `ComparendoEstadoHistorial`
+
+| Campo | Tipo de dato | Etiqueta | Descripción / restricción |
+|---|---|---|---|
+| id | UUID | PK | Identificador único |
+| comparendo_id | UUID | FK | Referencia al comparendo |
+| estado_anterior | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| estado_nuevo | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| observacion | TEXT |  | Razón del cambio |
+| fecha_evento | TIMESTAMP |  | Fecha del cambio |
 
 > Los campos `persona_id`, `automotor_id` e `infraccion_id` son referencias lógicas
 > y deben validarse consultando los microservicios correspondientes vía HTTP/REST.
@@ -340,6 +365,7 @@ npm install
 | POST | /api/auth/login | Inicio de sesión |
 | POST | /api/auth/refresh | Renovación de token |
 | POST | /api/auth/logout | Cierre de sesión |
+| POST | /api/auth/validate | Validar token para gateway |
 | GET | /api/usuarios | Listar usuarios |
 | POST | /api/usuarios | Crear usuario |
 | GET | /api/usuarios/:id | Obtener usuario por ID |
@@ -354,13 +380,14 @@ npm install
 |---|---|---|
 | GET | /api/personas | Listar personas |
 | POST | /api/personas | Registrar persona |
-| GET | /api/personas/:id | Obtener persona por ID |
+| GET | /api/personas/:persona_id | Obtener persona por ID |
 | GET | /api/personas/documento/:numero | Buscar por documento |
-| PUT | /api/personas/:id | Actualizar persona |
-| GET | /api/personas/:id/licencias | Listar licencias de una persona |
-| POST | /api/personas/:id/licencias | Registrar licencia |
-| GET | /api/licencias/:id | Obtener licencia por ID |
-| PUT | /api/licencias/:id | Actualizar licencia |
+| GET | /api/personas/existe/:numero | Validar existencia por documento |
+| GET | /api/personas/email/:email | Buscar por email |
+| PUT | /api/personas/:persona_id | Actualizar persona |
+| POST | /api/licencias | Registrar licencia |
+| GET | /api/licencias/persona/:persona_id | Historial de licencias de una persona |
+| GET | /api/licencias/:numero | Buscar por número oficial de licencia |
 | GET | /api/health | Health check |
 | GET | /api/docs | Swagger UI |
 
@@ -372,8 +399,9 @@ npm install
 | POST | /api/automotores | Registrar automotor |
 | GET | /api/automotores/:id | Obtener automotor por ID |
 | GET | /api/automotores/placa/:placa | Buscar por placa |
-| GET | /api/automotores/propietario/:personaId | Listar por propietario |
 | PUT | /api/automotores/:id | Actualizar automotor |
+| PATCH | /api/automotores/:id/estado | Cambiar estado (activo/inactivo) |
+| DELETE | /api/automotores/:id | Borrado lógico |
 | GET | /api/health | Health check |
 | GET | /api/docs | Swagger UI |
 
@@ -397,7 +425,7 @@ npm install
 | GET | /api/comparendos | Listar comparendos |
 | POST | /api/comparendos | Registrar comparendo |
 | GET | /api/comparendos/:id | Obtener comparendo por ID |
-| GET | /api/comparendos/numero/:numero | Buscar por número de comparendo |
+| GET | /api/comparendos/numero/:numero | Buscar por número |
 | GET | /api/comparendos/persona/:personaId | Comparendos por persona |
 | GET | /api/comparendos/automotor/:automotorId | Comparendos por automotor |
 | PATCH | /api/comparendos/:id/pagar | Registrar pago |
@@ -412,14 +440,11 @@ npm install
 ```text
 ms-comparendos (srv-simcomp-api:8005)
         │
-        ├── GET http://srv-simcomp-api:8002/api/personas/:persona_id
-        │      └── valida que la persona exista
+        ├── POST /api/comparendos
+        │      └── Recibe datos denormalizados (nombres, documentos, placa)
         │
-        ├── GET http://srv-simcomp-api:8003/api/automotores/:automotor_id
-        │      └── valida que el automotor exista
-        │
-        ├── GET http://srv-simcomp-api:8004/api/infracciones/:infraccion_id
-        │      └── obtiene valor de multa y vigencia
+        ├── GET http://srv-simcomp-api:8002/api/personas/email/:email
+        │      └── (En listado) Identifica al agente/ciudadano para filtrar
         │
         └── persiste el comparendo en Postgres Cluster 'comparendos' (puerto 5436)
 ```
@@ -432,7 +457,7 @@ Para garantizar un aislamiento total de los datos en una misma VM (`srv-simcomp-
 
 | Cluster Name | Puerto | Base de Datos | Servicio Asociado |
 |--------------|--------|---------------|-------------------|
-| auth         | 5432   | usuarios_db   | ms-auth-service   |
+| auth         | 5432   | auth_db       | ms-auth-service   |
 | personas     | 5433   | personas_db   | ms-personas       |
 | automotores  | 5434   | vehiculos_db  | ms-automotores    |
 | infracciones | 5435   | infracciones_db| ms-infracciones   |
@@ -460,9 +485,10 @@ El documento de requerimientos incluye una máquina de estados base para el comp
 
 | Estado origen | Estado destino | Condición / trigger |
 |---|---|---|
-| CREADO | PAGADO | El ciudadano realiza el pago del comparendo |
-| CREADO | ANULADO | El comparendo es invalidado por la autoridad de tránsito |
-| PAGADO | CREADO | Se realiza una reversión o corrección administrativa del pago |
+| PENDIENTE | PAGADO | El ciudadano realiza el pago del comparendo |
+| PENDIENTE | ANULADO | El comparendo es invalidado por la autoridad de tránsito |
+| PAGADO | PENDIENTE | Se realiza una reversión o corrección administrativa del pago |
+| ANULADO | PENDIENTE | Se realiza una reversión administrativa de la anulación |
 
 > Aunque en la tabla de entidad aparecen estados más amplios como `VIGENTE`,
 > `EN_PROCESO_DE_PAGO`, `PAGADO`, `CERRADO`, `EN_COBRO_COACTIVO`, `IMPUGNADO`

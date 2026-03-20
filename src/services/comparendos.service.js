@@ -281,30 +281,64 @@ export async function pagarComparendo(comparendoId, { userRole, username } = {})
     `Pago registrado por usuario ${username} (Rol: ${userRole})`
   );
 
-  // Al pagar, restaurar el vehículo a "activo" (best-effort)
+  // Al pagar, restaurar vehículo y/o licencia según tipo_sancion (best-effort)
   try {
-    await axios.patch(
-      `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}/inmovilizar`,
-      {},
-      { timeout: 5000 }
-    ).catch(() => {
-      // Si no existe el endpoint de inmovilizar, usar el genérico por placa
-    });
-
-    // Buscar el vehículo primero para obtener su ID y usar el endpoint de estado
-    const vehiculoRes = await axios.get(
-      `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}`
+    const infraccionRes = await axios.get(
+      `${process.env.INFRACCIONES_SERVICE_URL}/infracciones/codigo/${comparendoPagado.infraccion_codigo}`
     );
-    const vehiculoId = vehiculoRes.data?.data?.id;
-    if (vehiculoId) {
-      await axios.patch(
-        `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/${vehiculoId}/estado`,
-        { estado: "activo" }
-      );
-      console.log(`[comparendos] Vehículo ${comparendoPagado.placa_vehiculo} reactivado tras pago del comparendo ${comparendoId}`);
+    const tipos = infraccionRes.data?.data?.tipo_sancion;
+
+    const reactivarVehiculo = tipos === "INMOVILIZACION" || tipos === "MIXTA";
+    const reactivarLicencia  = tipos === "SUSPENSION_LICENCIA" || tipos === "MIXTA";
+
+    // Reactivar vehículo
+    if (reactivarVehiculo) {
+      try {
+        const vehiculoRes = await axios.get(
+          `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}`
+        );
+        const vehiculoId = vehiculoRes.data?.data?.id;
+        if (vehiculoId) {
+          await axios.patch(
+            `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/${vehiculoId}/estado`,
+            { estado: "activo" }
+          );
+          console.log(`[comparendos] Vehículo ${comparendoPagado.placa_vehiculo} reactivado tras pago del comparendo ${comparendoId}`);
+        }
+      } catch (err) {
+        console.error(`[comparendos] Error reactivando vehículo ${comparendoPagado.placa_vehiculo} tras pago:`, err.message);
+      }
+    }
+
+    // Reactivar licencia
+    if (reactivarLicencia) {
+      try {
+        await axios.patch(
+          `${process.env.PERSONAS_SERVICE_URL}/Licencias/reactivar/${comparendoPagado.ciudadano_documento}`
+        );
+        console.log(`[comparendos] Licencias reactivadas para ${comparendoPagado.ciudadano_documento} tras pago del comparendo ${comparendoId}`);
+      } catch (err) {
+        console.error(`[comparendos] Error reactivando licencias para ${comparendoPagado.ciudadano_documento} tras pago:`, err.message);
+      }
     }
   } catch (err) {
-    console.error(`[comparendos] Error reactivando vehículo ${comparendoPagado.placa_vehiculo} tras pago:`, err.message);
+    // Fallback: si falla consulta de infracción, intentar reactivar vehículo de todas formas
+    console.error(`[comparendos] Error consultando tipo_sancion al pagar comparendo ${comparendoId}:`, err.message);
+    try {
+      const vehiculoRes = await axios.get(
+        `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}`
+      );
+      const vehiculoId = vehiculoRes.data?.data?.id;
+      if (vehiculoId) {
+        await axios.patch(
+          `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/${vehiculoId}/estado`,
+          { estado: "activo" }
+        );
+        console.log(`[comparendos] Vehículo ${comparendoPagado.placa_vehiculo} reactivado (fallback) tras pago del comparendo ${comparendoId}`);
+      }
+    } catch (e) {
+      console.error(`[comparendos] Error reactivando vehículo en fallback:`, e.message);
+    }
   }
 
   return comparendoPagado;

@@ -10,9 +10,10 @@ interface PersonaFormProps {
   defaultDocumento?: string
   persona?: Persona // If provided, we are in EDIT mode
   requireLicense?: boolean
+  submitLabel?: string
 }
 
-function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLicense }: PersonaFormProps) {
+function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLicense, submitLabel }: PersonaFormProps) {
   const isEdit = Boolean(persona)
   const { mutateAsync: createPersona, isPending: isCreatingPersona } = useCreatePersona()
   const { mutateAsync: updatePersona, isPending: isUpdatingPersona } = useUpdatePersona()
@@ -310,7 +311,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
         )}
         <button disabled={isPending} type="submit" className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-70 dark:bg-emerald-500 dark:hover:bg-emerald-600">
           {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          {isEdit ? 'Guardar Cambios' : 'Registrar Persona'}
+          {isEdit ? 'Guardar Cambios' : (submitLabel || 'Registrar Persona')}
         </button>
       </div>
     </form>

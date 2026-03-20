@@ -31,6 +31,7 @@ export interface UpdateUsuarioPayload {
   username?: string
   email?: string
   rol?: UserRole
+  password?: string
 }
 
 export interface LoginPayload {

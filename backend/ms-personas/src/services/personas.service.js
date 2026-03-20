@@ -92,6 +92,9 @@ export async function actualizarPersona(id, data) {
     throw new Error("Persona no encontrada");
   }
 
+  const oldEmail = persona.email;
+  const oldDocumento = persona.numero_documento;
+
   await persona.update({
     tipo_documento: data.tipo_documento,
     numero_documento: data.numero_documento,
@@ -104,6 +107,51 @@ export async function actualizarPersona(id, data) {
     email: data.email,
     estado: data.estado,
   });
+
+  // Cascading update to ms-auth-service
+  if ((data.email && data.email !== oldEmail) || (data.numero_documento && data.numero_documento !== oldDocumento)) {
+    try {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
+      const authBaseUrl = authServiceUrl.replace("/auth", "");
+      
+      // Find user by old email or old username
+      const findResponse = await fetch(`${authBaseUrl}/Usuarios/email/${oldEmail}`);
+      if (findResponse.ok) {
+        const userData = await findResponse.json();
+        const userId = userData.data?.id;
+        if (userId) {
+          const updatePayload = {};
+          if (data.email && data.email !== oldEmail) updatePayload.email = data.email;
+          if (data.numero_documento && data.numero_documento !== oldDocumento) {
+             updatePayload.username = data.numero_documento;
+             // If document changed, typically password is also reset to document by default or similar logic
+          }
+
+          if (Object.keys(updatePayload).length > 0) {
+            await fetch(`${authBaseUrl}/Usuarios/${userId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updatePayload),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error synchronizing with ms-auth-service:", error.message);
+    }
+  }
+
+  // Cascading update to Licencias
+  if (data.numero_documento && data.numero_documento !== oldDocumento) {
+    try {
+      await Licencia.update(
+        { numero_licencia: data.numero_documento },
+        { where: { persona_id: id } }
+      );
+    } catch (error) {
+      console.error("Error updating licenses:", error.message);
+    }
+  }
 
   return persona;
 }

@@ -22,6 +22,35 @@ export async function crearPersonaController(req, res) {
 
     const persona = await crearPersona(req.body);
 
+    // Si el creador es supervisor, crear automáticamente el usuario Agente
+    const requesterRole = req.headers["x-user-role"];
+    if (requesterRole === "supervisor") {
+      try {
+        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
+        const authBaseUrl = authServiceUrl.replace("/auth", "");
+        
+        await fetch(`${authBaseUrl}/Usuarios`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": req.headers["authorization"],
+            "x-user-role": requesterRole
+          },
+          body: JSON.stringify({
+            username: persona.numero_documento,
+            email: persona.email,
+            password: persona.numero_documento, // Password por defecto = documento
+            rol: "agente",
+            estado: "activo"
+          })
+        });
+        console.log(`Usuario Agente auto-creado para persona ${persona.numero_documento}`);
+      } catch (authError) {
+        console.error("Error al auto-crear usuario para supervisor:", authError.message);
+        // No bloqueamos la creación de persona si falla el auth, pero informamos en logs
+      }
+    }
+
     return res.status(201).json({
       ok: true,
       message: "Persona creada correctamente",
@@ -303,45 +332,86 @@ export async function actualizarPersonaController(req, res) {
       });
     }
 
-    const userRole = req.headers["x-user-role"];
-    if (req.body.estado === "inactivo" && userRole !== "admin") {
-      if (userRole === "supervisor") {
-        // Un supervisor solo puede inactivar agentes. 
-        // Primero obtenemos la persona para tener su email
-        const personaActual = await obtenerPersonaPorId(persona_id);
-        if (!personaActual) {
-          return res.status(404).json({ ok: false, message: "Persona no encontrada" });
-        }
+    const requesterRole = req.headers["x-user-role"];
+    const requesterId = req.headers["x-user-id"];
 
-        if (personaActual.email) {
-          try {
-            const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-            const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
-              headers: { "Authorization": req.headers["authorization"] }
-            });
+    const personaActual = await obtenerPersonaPorId(persona_id);
+    if (!personaActual) {
+      return res.status(404).json({ ok: false, message: "Persona no encontrada" });
+    }
 
-            if (response.ok) {
-              const result = await response.json();
-              const userInAuth = result.data.find(u => u.email.toLowerCase() === personaActual.email.toLowerCase());
-              
-              if (!userInAuth || userInAuth.rol !== "agente") {
-                return res.status(403).json({
-                  ok: false,
-                  message: "Un supervisor solo puede inhabilitar personas con rol de agente",
-                });
-              }
-            }
-          } catch (error) {
-            console.error("Error validando rol en ms-auth-service para supervisor:", error.message);
-            return res.status(500).json({ ok: false, message: "Error al validar permisos con el servicio de autenticación" });
-          }
-        }
-      } else {
-        return res.status(403).json({
-          ok: false,
-          message: "Solo los administradores y supervisores (para agentes) pueden inhabilitar personas",
-        });
+    // Determine target role by calling ms-auth-service
+    let targetRole = "ciudadano"; // Default
+    try {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
+      const authBaseUrl = authServiceUrl.replace("/auth", "");
+      const response = await fetch(`${authBaseUrl}/Usuarios/email/${personaActual.email}`);
+      if (response.ok) {
+        const result = await response.json();
+        targetRole = result.data?.rol || "ciudadano";
       }
+    } catch (error) {
+      console.error("Error fetching target role from ms-auth-service:", error.message);
+    }
+
+    const isOwnProfile = personaActual.email === req.headers["x-user-email"]; // Assuming we pass email in headers or can find by ID
+
+    // Permission check
+    let canUpdate = false;
+    let allowedFields = [];
+
+    if (requesterRole === "admin") {
+      canUpdate = true;
+      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+    } else if (isOwnProfile) {
+      canUpdate = true;
+      if (requesterRole === "agente") {
+        allowedFields = ["nombres", "apellidos", "email", "direccion", "telefono"];
+      } else if (requesterRole === "supervisor") {
+        allowedFields = ["nombres", "apellidos", "email", "direccion", "telefono"];
+      } else if (requesterRole === "ciudadano") {
+        allowedFields = ["email", "direccion"];
+      }
+    } else if (requesterRole === "agente" && targetRole === "ciudadano") {
+      canUpdate = true;
+      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+    } else if (requesterRole === "supervisor" && targetRole === "agente") {
+      canUpdate = true;
+      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+    }
+
+    if (!canUpdate) {
+      return res.status(403).json({
+        ok: false,
+        message: "No tienes permiso para actualizar este perfil",
+      });
+    }
+
+    // Filter body based on allowed fields
+    const updateData = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        ok: false,
+        message: "No hay campos válidos para actualizar",
+      });
+    }
+
+    // Handle state update restriction for non-admins
+    if (updateData.estado === "inactivo" && requesterRole !== "admin") {
+       if (requesterRole === "supervisor" && targetRole === "agente") {
+         // Supervisor can inactive agente, this is allowed
+       } else {
+         return res.status(403).json({
+           ok: false,
+           message: "Solo los administradores y supervisores (para agentes) pueden inhabilitar personas",
+         });
+       }
     }
 
     const persona = await actualizarPersona(persona_id, req.body);

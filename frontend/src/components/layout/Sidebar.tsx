@@ -30,6 +30,13 @@ const navItems: NavItem[] = [
     color: 'text-blue-400',
   },
   {
+    label: 'Usuarios',
+    path: '/usuarios',
+    icon: UserCog,
+    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
+    color: 'text-rose-400',
+  },
+  {
     label: 'Personas',
     path: '/personas',
     icon: Users,
@@ -57,14 +64,8 @@ const navItems: NavItem[] = [
     roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-emerald-400',
   },
-  {
-    label: 'Usuarios',
-    path: '/usuarios',
-    icon: UserCog,
-    roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
-    color: 'text-rose-400',
-  },
 ]
+
 
 interface SidebarProps {
   onClose?: () => void

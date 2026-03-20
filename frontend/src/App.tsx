@@ -17,6 +17,7 @@ import NuevoComparendo from './pages/comparendos/NuevoComparendo'
 import EditarComparendo from './pages/comparendos/EditarComparendo'
 import UsuariosList from './pages/usuarios/UsuariosList'
 import UsuarioDetail from './pages/usuarios/UsuarioDetail'
+import Perfil from './pages/usuarios/Profile'
 
 type Theme = 'light' | 'dark'
 
@@ -189,6 +190,17 @@ function App() {
             <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <UsuarioDetail />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
+              <Layout theme={theme} onToggleTheme={toggleTheme}>
+                <Perfil />
               </Layout>
             </ProtectedRoute>
           }

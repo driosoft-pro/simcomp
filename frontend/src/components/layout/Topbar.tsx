@@ -109,6 +109,16 @@ function Topbar({ theme, onToggleTheme, onToggleMobileMenu }: TopbarProps) {
                   <span className="text-xs text-slate-400 truncate">{user?.username}@simcomp</span>
                 </div>
               </div>
+
+              <a
+                href="/perfil"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+                  <UserCircle2 size={16} />
+                </div>
+                Mi Perfil
+              </a>
               
               <button
                 onClick={() => void logout()}

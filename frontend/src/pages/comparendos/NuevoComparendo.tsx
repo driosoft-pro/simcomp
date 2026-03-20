@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useCreateComparendo, useComparendos } from '../../hooks/useComparendos'
-import { getPersonaByDocumento } from '../../api/personas.api'
+import { useCreateComparendo, useSiguienteNumeroComparendo } from '../../hooks/useComparendos'
+import { getPersonaByDocumento, getPersonaByEmail } from '../../api/personas.api'
 import { getAutomotoresByPropietario, searchAutomotorByPlaca } from '../../api/automotores.api'
 import { useInfracciones } from '../../hooks/useInfracciones'
-import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X, Car, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X, Car, ShieldAlert, RefreshCw } from 'lucide-react'
 import PersonaForm from '../../components/forms/PersonaForm'
 import VehiculoForm from '../../components/forms/VehiculoForm'
 
@@ -43,8 +43,8 @@ function NuevoComparendo() {
   const navigate = useNavigate()
   const createComparendo = useCreateComparendo()
   const { data: infracciones } = useInfracciones()
-  const { data: comparendos } = useComparendos()
-
+  const { data: siguienteNumero, refetch: refetchNumero } = useSiguienteNumeroComparendo()
+  
   const { user } = useAuth()
   const { addToast } = useToast()
 
@@ -65,32 +65,36 @@ function NuevoComparendo() {
     observaciones: '',
   })
 
+  // Resolver identidad del agente logueado paso 1
+  useEffect(() => {
+    async function resolverAgente() {
+      if (user?.email && user?.rol === 'agente') {
+        try {
+          const persona = await getPersonaByEmail(user.email)
+          if (persona) {
+            const nombreCompleto = `${persona.nombres} ${persona.apellidos}`
+            setFormData(prev => ({
+              ...prev,
+              agente_documento: persona.numero_documento,
+              agente_nombre: nombreCompleto
+            }))
+          }
+        } catch (error) {
+          console.error('Error al resolver identidad del agente:', error)
+          // Fallback al username si falla la API
+        }
+      }
+    }
+    resolverAgente()
+  }, [user])
+
   const [selectedInfractions, setSelectedInfractions] = useState<SelectedInfraction[]>([])
 
   useEffect(() => {
-    if (comparendos && !formData.numero_comparendo) {
-      const now = new Date()
-      const start = new Date(now.getFullYear(), 0, 0)
-      const diff = now.getTime() - start.getTime()
-      const oneDay = 1000 * 60 * 60 * 24
-      const dayOfYear = Math.floor(diff / oneDay).toString().padStart(3, '0')
-      const year = now.getFullYear()
-      const prefix = `COMP-${year}-${dayOfYear}-`
-
-      const todayComparendos = comparendos.filter(c => c.numero_comparendo.startsWith(prefix))
-      const maxSeq = todayComparendos.reduce((max, c) => {
-        const parts = c.numero_comparendo.split('-')
-        if (parts.length >= 4) {
-          const seq = parseInt(parts[3], 10)
-          return isNaN(seq) ? max : Math.max(max, seq)
-        }
-        return max
-      }, 0)
-
-      const newSeq = (maxSeq + 1).toString().padStart(3, '0')
-      setFormData(prev => ({ ...prev, numero_comparendo: `${prefix}${newSeq}` }))
+    if (siguienteNumero && formData.numero_comparendo !== siguienteNumero) {
+      setFormData(prev => ({ ...prev, numero_comparendo: siguienteNumero }))
     }
-  }, [comparendos, formData.numero_comparendo])
+  }, [siguienteNumero, formData.numero_comparendo])
   
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -357,14 +361,27 @@ function NuevoComparendo() {
             <label htmlFor="numero_comparendo" className={labelClass}>
               Número de comparendo
             </label>
-            <input
-              id="numero_comparendo"
-              name="numero_comparendo"
-              type="text"
-              value={formData.numero_comparendo}
-              readOnly
-              className={`${inputClass} bg-slate-100 dark:bg-slate-800 cursor-not-allowed text-slate-500`}
-            />
+            <div className="flex gap-2">
+              <input
+                id="numero_comparendo"
+                name="numero_comparendo"
+                type="text"
+                value={formData.numero_comparendo}
+                readOnly
+                className={`${inputClass} bg-slate-100 dark:bg-slate-800 cursor-not-allowed text-slate-500 flex-1`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                   addToast('Refrescando número...', 'info')
+                   refetchNumero()
+                }}
+                className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
+                title="Refrescar número"
+              >
+                <RefreshCw size={18} className={createComparendo.isPending ? 'animate-spin' : ''} />
+              </button>
+            </div>
           </div>
 
           {/* Fecha y hora */}
@@ -584,7 +601,6 @@ function NuevoComparendo() {
                     name="infraccion_codigo"
                     value={formData.infraccion_codigo}
                     onChange={handleChange}
-                    required
                     className={inputClass}
                   >
                     <option value="">Seleccione una infracción</option>

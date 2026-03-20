@@ -88,6 +88,7 @@ function PersonasList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nombre</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tipo doc.</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">N° documento</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Teléfono</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acción</th>
               </tr>
@@ -96,7 +97,7 @@ function PersonasList() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                    {Array.from({ length: 5 }).map((__, j) => (
+                    {Array.from({ length: 6 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-28 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
                       </td>
@@ -119,6 +120,9 @@ function PersonasList() {
                   </td>
                   <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">
                     {persona.numero_documento}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                    {persona.email}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                     {persona.telefono || '—'}

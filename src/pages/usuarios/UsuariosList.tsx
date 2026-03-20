@@ -68,6 +68,7 @@ function UsuariosList() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const isAdmin = user?.rol === 'admin'
+  const isSupervisor = user?.rol === 'supervisor'
   const searchedData = useSearch(data, searchTerm, ['username', 'email', 'rol'])
 
   const {
@@ -162,7 +163,7 @@ function UsuariosList() {
             Gestión de cuentas de acceso al sistema.
           </p>
         </div>
-        {isAdmin && (
+        {(isAdmin || isSupervisor) && (
           <button
             type="button"
             onClick={() => setShowForm((s) => !s)}
@@ -263,7 +264,7 @@ function UsuariosList() {
                       onClick={() => setShowPersonaForm(true)}
                       className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 active:scale-95"
                     >
-                      <UserPlus size={14} /> Registrar Infractor
+                      <UserPlus size={14} /> {isSupervisor ? 'Registrar Agente' : 'Registrar Infractor'}
                     </button>
                   </div>
                 )}
@@ -314,7 +315,8 @@ function UsuariosList() {
                     name="rol"
                     value={form.rol}
                     onChange={handleChange}
-                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                    disabled={isSupervisor}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20 disabled:opacity-60"
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -352,8 +354,14 @@ function UsuariosList() {
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between mb-6 border-b pb-4 dark:border-slate-800">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Registrar Nueva Persona</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Automáticamente se creará un usuario asociado.</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {isSupervisor ? 'Registrar Nuevo Agente' : 'Registrar Nueva Persona'}
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {isSupervisor 
+                    ? 'Se creará la persona y automáticamente su cuenta con rol agente.' 
+                    : 'Automáticamente se creará un usuario asociado.'}
+                </p>
               </div>
               <button
                 onClick={() => setShowPersonaForm(false)}
@@ -366,6 +374,7 @@ function UsuariosList() {
             <PersonaForm 
               onSuccess={handlePersonaSuccess}
               onCancel={() => setShowPersonaForm(false)}
+              submitLabel={isSupervisor ? 'Registrar Agente' : 'Registrar Persona'}
             />
           </div>
         </div>

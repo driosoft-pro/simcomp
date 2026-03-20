@@ -111,6 +111,11 @@ function UsuarioDetail() {
 
   const isAdmin = user?.rol === 'admin'
   const isSupervisor = user?.rol === 'supervisor'
+  const isAgente = user?.rol === 'agente'
+  
+  const canUpdate = isAdmin || 
+    (isAgente && usuario?.rol === 'ciudadano')
+    
   const canChangeStatus = isAdmin || (isSupervisor && usuario?.rol === 'agente')
 
   return (
@@ -185,8 +190,8 @@ function UsuarioDetail() {
         </div>
 
         <div className="space-y-6">
-          {/* Formulario: actualizar datos (PUT) - solo admin */}
-          {isAdmin && (
+          {/* Formulario: actualizar datos (PUT) */}
+          {canUpdate && (
             <form
               onSubmit={handleUpdate}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-5"

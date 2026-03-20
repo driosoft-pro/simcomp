@@ -675,6 +675,7 @@ function NuevoComparendo() {
                 onSuccess={handlePersonaCreated} 
                 onCancel={() => setIsPersonaModalOpen(false)}
                 defaultDocumento={formData.ciudadano_documento}
+                requireLicense={true}
               />
             </div>
           </div>

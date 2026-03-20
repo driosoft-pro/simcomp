@@ -7,13 +7,16 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatDate(date: string | Date): string {
-  const parsedDate = typeof date === 'string' ? new Date(date) : date
+  const parsedDate = typeof date === 'string' 
+    ? new Date(date.replace(/(Z|[+-]\d{2}:\d{2})$/, '')) 
+    : date
 
   if (Number.isNaN(parsedDate.getTime())) {
     return 'Fecha no válida'
   }
 
   return new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -22,10 +25,13 @@ export function formatDate(date: string | Date): string {
 
 export function formatDateShort(date?: string | Date | null): string {
   if (!date) return '—'
-  const parsedDate = typeof date === 'string' ? new Date(date) : date
+  const parsedDate = typeof date === 'string' 
+    ? new Date(date.replace(/(Z|[+-]\d{2}:\d{2})$/, '')) 
+    : date
   if (Number.isNaN(parsedDate.getTime())) return '—'
 
   return new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(parsedDate)

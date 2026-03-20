@@ -6,6 +6,7 @@ import {
   listarComparendosController,
   obtenerComparendoPorIdController,
   obtenerComparendoPorNumeroController,
+  obtenerComparendosPorPlacaController,
   obtenerHistorialComparendoController,
   pagarComparendoController,
   anularComparendoController,
@@ -257,6 +258,38 @@ router.get("/comparendos", listarComparendosController);
  *         description: Comparendo no encontrado
  */
 router.get("/comparendos/numero/:numero", obtenerComparendoPorNumeroController);
+
+/**
+ * @swagger
+ * /comparendos/placa/{placa}:
+ *   get:
+ *     summary: Obtener comparendos por placa de vehículo
+ *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: placa
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: ABC123
+ *     responses:
+ *       200:
+ *         description: Lista de comparendos para la placa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comparendo'
+ *       500:
+ *         description: Error del servidor
+ */
+router.get("/comparendos/placa/:placa", obtenerComparendosPorPlacaController);
 
 /**
  * @swagger

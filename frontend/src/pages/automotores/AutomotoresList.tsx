@@ -6,7 +6,6 @@ import {
   useCreateAutomotor,
   useUpdateAutomotor,
   useDeleteAutomotor,
-  useToggleEstadoAutomotor,
 } from '../../hooks/useAutomotores'
 import { useAuth } from '../../hooks/useAuth'
 import { useSearch } from '../../hooks/useSearch'
@@ -97,7 +96,6 @@ function AutomotoresList() {
   const createAutomotor = useCreateAutomotor()
   const updateAutomotor = useUpdateAutomotor()
   const deleteAutomotor = useDeleteAutomotor()
-  const toggleEstado = useToggleEstadoAutomotor()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -214,16 +212,6 @@ function AutomotoresList() {
     }
   }
 
-  const handleToggleEstado = async (id: string) => {
-    try {
-      await toggleEstado.mutateAsync(id)
-      addToast('Estado actualizado exitosamente', 'success')
-    } catch (err: any) {
-      console.error('Error toggling estado:', err)
-      addToast(err.response?.data?.message || 'Error al cambiar estado', 'error')
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Encabezado */}
@@ -311,16 +299,9 @@ function AutomotoresList() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleToggleEstado(automotor.id)}
-                      disabled={toggleEstado.isPending || user?.rol === 'supervisor' || user?.rol === 'ciudadano'}
-                      className="transition opacity-90 hover:opacity-100 disabled:opacity-50"
-                      title={user?.rol === 'supervisor' || user?.rol === 'ciudadano' ? 'Sin permisos para cambiar estado' : 'Cambiar estado'}
-                    >
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ring-current/10 ${estadoStyles[automotor.estado] ?? 'bg-slate-100 text-slate-600'}`}>
-                        {automotor.estado.replace(/_/g, ' ')}
-                      </span>
-                    </button>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ring-current/10 ${estadoStyles[automotor.estado] ?? 'bg-slate-100 text-slate-600'}`}>
+                      {automotor.estado.replace(/_/g, ' ')}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(automotor.created_at)}</div>

@@ -39,6 +39,13 @@ export async function getComparendosByAutomotor(automotorId: UUID): Promise<Comp
   return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
 }
 
+export async function getComparendosByPlaca(placa: string): Promise<Comparendo[]> {
+  const response = await apiClient.get<ApiResponse<Comparendo[]>>(
+    `${API_URLS.comparendos}/comparendos/placa/${placa}`,
+  )
+  return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+}
+
 export async function createComparendo(
   data: CreateComparendoPayload,
 ): Promise<Comparendo> {

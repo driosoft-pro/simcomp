@@ -6,6 +6,7 @@ import {
   createInfraccionController,
   updateInfraccionController,
   deleteInfraccionController,
+  activateInfraccionController,
   changeInfraccionStatusController,
 } from "../controllers/infracciones.controllers.js";
 
@@ -193,6 +194,41 @@ router.delete(
   idParamValidator,
   validateRequest,
   deleteInfraccionController
+);
+
+/**
+ * @swagger
+ * /api/infracciones/{id}/activar:
+ *   patch:
+ *     summary: Activar una infracción (borrado lógico inverso)
+ *     tags: [Infracciones]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la infracción
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Infracción activada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       404:
+ *         description: Infracción no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.patch(
+  "/infracciones/:id/activar",
+  idParamValidator,
+  validateRequest,
+  activateInfraccionController
 );
 
 /**

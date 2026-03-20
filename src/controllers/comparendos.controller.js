@@ -4,6 +4,7 @@ import {
   listarComparendos,
   obtenerComparendoPorId,
   obtenerComparendoPorNumero,
+  obtenerComparendosPorPlaca,
   obtenerHistorialComparendo,
   pagarComparendo,
   anularComparendo,
@@ -77,6 +78,17 @@ export async function obtenerComparendoPorNumeroController(req, res) {
     return res.json({ data });
   } catch (error) {
     return res.status(404).json({
+      message: error.message,
+    });
+  }
+}
+
+export async function obtenerComparendosPorPlacaController(req, res) {
+  try {
+    const data = await obtenerComparendosPorPlaca(req.params.placa);
+    return res.json({ data });
+  } catch (error) {
+    return res.status(500).json({
       message: error.message,
     });
   }

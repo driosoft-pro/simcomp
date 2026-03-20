@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { LockKeyhole, UserCircle2, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { APP_VERSION } from '../utils/constants'
 
 function Login() {
   const { login, isAuthenticated } = useAuth()
@@ -120,7 +121,7 @@ function Login() {
         </form>
 
         <p className="mt-6 text-center text-xs text-slate-500">
-          © 2026 SIMCOMP · Sistema de Comparendos de Tránsito
+          © {new Date().getFullYear()} SIMCOMP v{APP_VERSION} · Sistema de Comparendos de Tránsito
         </p>
       </div>
     </div>

@@ -27,8 +27,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/usuarios", usersRoutes);
+app.use("/api/Auth", authRoutes);
+app.use("/api/Usuarios", usersRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

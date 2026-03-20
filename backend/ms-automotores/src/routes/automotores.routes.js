@@ -14,71 +14,18 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/automotores:
+ * /automotores:
  *   post:
  *     summary: Crear un automotor
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - placa
- *               - vin
- *               - numero_motor
- *               - numero_chasis
- *               - marca
- *               - linea
- *               - modelo
- *               - color
- *               - clase
- *               - propietario_documento
- *               - propietario_nombre
- *             properties:
- *               placa:
- *                 type: string
- *                 example: ABC123
- *               vin:
- *                 type: string
- *                 example: 1HB5H1234567890
- *               numero_motor:
- *                 type: string
- *                 example: MOT-123456
- *               numero_chasis:
- *                 type: string
- *                 example: CHA-123456
- *               marca:
- *                 type: string
- *                 example: Toyota
- *               linea:
- *                 type: string
- *                 example: Corolla
- *               modelo:
- *                 type: integer
- *                 example: 2022
- *               color:
- *                 type: string
- *                 example: Rojo
- *               clase:
- *                 type: string
- *                 enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION]
- *                 example: AUTOMOVIL
- *               servicio:
- *                 type: string
- *                 enum: [PARTICULAR, PUBLICO, OFICIAL]
- *                 example: PARTICULAR
- *               propietario_documento:
- *                 type: string
- *                 example: "12345678"
- *               propietario_nombre:
- *                 type: string
- *                 example: Juan Perez
- *               estado:
- *                 type: string
- *                 enum: [activo, inactivo, inmovilizado]
- *                 example: activo
+ *             $ref: '#/components/schemas/CreateAutomotor'
  *     responses:
  *       201:
  *         description: Automotor creado correctamente
@@ -87,28 +34,32 @@ const router = express.Router();
  *       400:
  *         description: Datos inválidos
  */
-router.post("/automotores", createAutomotorController);
+router.post("/", createAutomotorController);
 
 /**
  * @swagger
- * /api/automotores:
+ * /automotores:
  *   get:
  *     summary: Listar todos los automotores
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de automotores
  *       500:
  *         description: Error del servidor
  */
-router.get("/automotores", getAutomotores);
+router.get("/", getAutomotores);
 
 /**
  * @swagger
- * /api/automotores/placa/{placa}:
+ * /Automotores/placa/{placa}:
  *   get:
  *     summary: Obtener automotor por placa
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: placa
@@ -122,14 +73,16 @@ router.get("/automotores", getAutomotores);
  *       404:
  *         description: Automotor no encontrado
  */
-router.get("/automotores/placa/:placa", getAutomotorByPlacaController);
+router.get("/placa/:placa", getAutomotorByPlacaController);
 
 /**
  * @swagger
- * /api/automotores/{id}:
+ * /automotores/{id}:
  *   get:
  *     summary: Obtener automotor por ID
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -137,6 +90,7 @@ router.get("/automotores/placa/:placa", getAutomotorByPlacaController);
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *         description: ID del automotor
  *     responses:
  *       200:
@@ -144,14 +98,16 @@ router.get("/automotores/placa/:placa", getAutomotorByPlacaController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.get("/automotores/:id", getAutomotorByIdController);
+router.get("/:id", getAutomotorByIdController);
 
 /**
  * @swagger
- * /api/automotores/{id}:
+ * /automotores/{id}:
  *   put:
  *     summary: Actualizar un automotor
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -159,55 +115,28 @@ router.get("/automotores/:id", getAutomotorByIdController);
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               placa:
- *                 type: string
- *               vin:
- *                 type: string
- *               numero_motor:
- *                 type: string
- *               numero_chasis:
- *                 type: string
- *               marca:
- *                 type: string
- *               linea:
- *                 type: string
- *               modelo:
- *                 type: integer
- *               color:
- *                 type: string
- *               clase:
- *                 type: string
- *                 enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION]
- *               servicio:
- *                 type: string
- *                 enum: [PARTICULAR, PUBLICO, OFICIAL]
- *               propietario_documento:
- *                 type: string
- *               propietario_nombre:
- *                 type: string
- *               estado:
- *                 type: string
- *                 enum: [activo, inactivo, inmovilizado]
+ *             $ref: '#/components/schemas/UpdateAutomotor'
  *     responses:
  *       200:
  *         description: Automotor actualizado
  *       404:
  *         description: Automotor no encontrado
  */
-router.put("/automotores/:id", updateAutomotorController);
+router.put("/:id", updateAutomotorController);
 
 /**
  * @swagger
- * /api/automotores/{id}:
+ * /automotores/{id}:
  *   delete:
  *     summary: Eliminar un automotor (soft delete)
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -215,20 +144,23 @@ router.put("/automotores/:id", updateAutomotorController);
  *         schema:
  *           type: string
  *           format: uuid
- *     responses:
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
+     responses:
  *       200:
  *         description: Automotor eliminado correctamente
  *       404:
  *         description: Automotor no encontrado
  */
-router.delete("/automotores/:id", deleteAutomotorController);
+router.delete("/:id", deleteAutomotorController);
 
 /**
  * @swagger
- * /api/automotores/{id}/estado:
+ * /Automotores/{id}/estado:
  *   patch:
  *     summary: Cambiar estado de un automotor
  *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -236,6 +168,7 @@ router.delete("/automotores/:id", deleteAutomotorController);
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       required: true
  *       content:
@@ -255,6 +188,6 @@ router.delete("/automotores/:id", deleteAutomotorController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.patch("/automotores/:id/estado", changeAutomotorStatusController);
+router.patch("/:id/estado", changeAutomotorStatusController);
 
 export default router;

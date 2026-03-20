@@ -2,6 +2,7 @@ import { Router } from "express";
 import { body, param } from "express-validator";
 import {
   crearLicenciaController,
+  listarLicenciasController,
   listarLicenciasPorPersonaController,
   obtenerLicenciaPorNumeroController,
   actualizarLicenciaController,
@@ -18,50 +19,24 @@ const router = Router();
 
 /**
  * @swagger
- * /licencias:
+ * /Licencias:
  *   post:
  *     summary: Crear licencia de conducción
  *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - persona_id
- *               - numero_licencia
- *               - categoria
- *               - fecha_expedicion
- *               - fecha_vencimiento
- *               - estado
- *             properties:
- *               persona_id:
- *                 type: integer
- *                 example: 1
- *               numero_licencia:
- *                 type: string
- *                 example: LIC-1001
- *               categoria:
- *                 type: string
- *                 example: B1
- *               fecha_expedicion:
- *                 type: string
- *                 format: date
- *                 example: 2025-01-01
- *               fecha_vencimiento:
- *                 type: string
- *                 format: date
- *                 example: 2030-01-01
- *               estado:
- *                 type: string
- *                 example: VIGENTE
+ *             $ref: '#/components/schemas/Licencia'
  *     responses:
  *       201:
  *         description: Licencia creada correctamente
  */
 router.post(
-  "/licencias",
+  "/",
   [
     body("persona_id").notEmpty().isUUID(),
     body("numero_licencia").notEmpty().isString(),
@@ -79,32 +54,52 @@ router.post(
 
 /**
  * @swagger
- * /licencias/persona/{persona_id}:
+ * /Licencias:
+ *   get:
+ *     summary: Listar todas las licencias
+ *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de licencias
+ */
+router.get("/", listarLicenciasController);
+
+/**
+ * @swagger
+ * /Licencias/persona/{persona_id}:
  *   get:
  *     summary: Listar licencias por persona
  *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: persona_id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Lista de licencias
  */
 router.get(
-  "/licencias/persona/:persona_id",
+  "/persona/:persona_id",
   [param("persona_id").isUUID()],
   listarLicenciasPorPersonaController
 );
 
 /**
  * @swagger
- * /licencias/{numero}:
+ * /Licencias/{numero}:
  *   get:
  *     summary: Buscar licencia por número
  *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: numero
@@ -117,46 +112,31 @@ router.get(
  *       404:
  *         description: Licencia no encontrada
  */
-router.get("/licencias/:numero", obtenerLicenciaPorNumeroController);
+router.get("/:numero", obtenerLicenciaPorNumeroController);
 
 
 /**
  * @swagger
- * /licencias/{licencia_id}:
+ * /Licencias/{id}:
  *   put:
  *     summary: Actualizar licencia de conducción
  *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: licencia_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               numero_licencia:
- *                 type: string
- *                 example: LIC-1001
- *               categoria:
- *                 type: string
- *                 example: B1
- *               fecha_expedicion:
- *                 type: string
- *                 format: date
- *                 example: 2025-01-01
- *               fecha_vencimiento:
- *                 type: string
- *                 format: date
- *                 example: 2030-01-01
- *               estado:
- *                 type: string
- *                 example: vigente
+ *             $ref: '#/components/schemas/Licencia'
  *     responses:
  *       200:
  *         description: Licencia actualizada correctamente
@@ -164,7 +144,7 @@ router.get("/licencias/:numero", obtenerLicenciaPorNumeroController);
  *         description: Licencia no encontrada
  */
 router.put(
-  "/licencias/:licencia_id",
+  "/:licencia_id",
   [
     param("licencia_id").isUUID(),
     body("numero_licencia").optional().isString(),

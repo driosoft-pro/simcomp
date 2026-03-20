@@ -21,6 +21,18 @@ export async function crearLicencia(data) {
   return licencia;
 }
 
+export async function listarLicencias() {
+  return await Licencia.findAll({
+    order: [["created_at", "DESC"]],
+    include: [
+      {
+        model: Persona,
+        as: "persona",
+      },
+    ],
+  });
+}
+
 export async function listarLicenciasPorPersona(personaId) {
   return await Licencia.findAll({
     where: {

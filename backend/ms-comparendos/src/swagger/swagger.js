@@ -10,7 +10,21 @@ const options = {
     },
     servers: [
       {
-        url: process.env.SWAGGER_SERVER_URL ? `${process.env.SWAGGER_SERVER_URL}/api` : "http://localhost:8005/api",
+        url: "/api",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },

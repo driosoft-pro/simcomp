@@ -24,7 +24,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use("/api", automotoresRoutes);
+app.use("/api/Automotores", automotoresRoutes);
 
 /* Swagger documentation */
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

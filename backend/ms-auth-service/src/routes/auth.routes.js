@@ -5,10 +5,11 @@ const router = Router();
 
 /**
  * @swagger
- * /api/auth/login:
+ * /Auth/login:
  *   post:
  *     summary: Iniciar sesión
  *     tags: [Auth]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -25,10 +26,11 @@ router.post("/login", login);
 
 /**
  * @swagger
- * /api/auth/refresh:
+ * /Auth/refresh:
  *   post:
  *     summary: Renovar access token
  *     tags: [Auth]
+ *     security: []
  *     responses:
  *       200:
  *         description: Token renovado
@@ -37,10 +39,12 @@ router.post("/refresh", refresh);
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /Auth/logout:
  *   post:
  *     summary: Cerrar sesión
  *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Logout exitoso

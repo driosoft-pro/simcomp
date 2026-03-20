@@ -23,10 +23,12 @@ const router = Router();
 
 /**
  * @swagger
- * /api/infracciones:
+ * /infracciones:
  *   get:
  *     summary: Listar todas las infracciones
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de infracciones obtenida correctamente
@@ -45,10 +47,12 @@ router.get("/infracciones", listInfracciones);
 
 /**
  * @swagger
- * /api/infracciones/{id}:
+ * /infracciones/{id}:
  *   get:
  *     summary: Obtener una infracción por ID
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -57,6 +61,7 @@ router.get("/infracciones", listInfracciones);
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Infracción encontrada
@@ -82,10 +87,12 @@ router.get(
 
 /**
  * @swagger
- * /api/infracciones:
+ * /infracciones:
  *   post:
  *     summary: Crear una nueva infracción
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -121,10 +128,12 @@ router.post(
 
 /**
  * @swagger
- * /api/infracciones/{id}:
+ * /infracciones/{id}:
  *   put:
  *     summary: Actualizar una infracción
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -133,6 +142,7 @@ router.post(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       required: true
  *       content:
@@ -163,10 +173,12 @@ router.put(
 
 /**
  * @swagger
- * /api/infracciones/{id}:
+ * /infracciones/{id}:
  *   delete:
  *     summary: Eliminar una infracción (borrado lógico)
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -175,6 +187,7 @@ router.put(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Infracción eliminada correctamente
@@ -198,10 +211,12 @@ router.delete(
 
 /**
  * @swagger
- * /api/infracciones/{id}/activar:
+ * /infracciones/{id}/activar:
  *   patch:
  *     summary: Activar una infracción (borrado lógico inverso)
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -210,6 +225,7 @@ router.delete(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Infracción activada correctamente
@@ -233,10 +249,12 @@ router.patch(
 
 /**
  * @swagger
- * /api/infracciones/{id}/vigente:
+ * /infracciones/{id}/vigente:
  *   patch:
  *     summary: Cambiar estado de vigencia de una infracción
  *     tags: [Infracciones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -245,6 +263,7 @@ router.patch(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     requestBody:
  *       required: true
  *       content:

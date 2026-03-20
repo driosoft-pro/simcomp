@@ -14,7 +14,7 @@ const options = {
 
     servers: [
       {
-        url: process.env.SWAGGER_SERVER_URL || "http://localhost:8004",
+        url: "/api",
         description: "Servidor de API",
       },
     ],
@@ -27,6 +27,13 @@ const options = {
     ],
 
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
       schemas: {
         Infraccion: {
           type: "object",
@@ -289,6 +296,11 @@ const options = {
         },
       },
     },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
 
   apis: ["./src/routes/*.js"],

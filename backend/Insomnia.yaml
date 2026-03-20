@@ -1,0 +1,1841 @@
+openapi: "3.0.3"
+info:
+  title: SIMCOMP — Sistema de Comparendos
+  description: >
+    Especificación OpenAPI completa para el sistema SIMCOMP.
+    Cubre 5 microservicios: Auth & Usuarios, Personas & Licencias,
+    Automotores, Infracciones y Comparendos.
+    Schemas, enums y ejemplos alineados con el modelo de base de datos real.
+    Todos los endpoints (excepto login, refresh y health) requieren JWT Bearer.
+  version: "1.0.0"
+  contact:
+    name: SIMCOMP
+    email: admin@simcomp.gov.co
+
+servers:
+  - url: http://localhost:8001
+    description: Auth & Usuarios
+  - url: http://localhost:8002
+    description: Personas & Licencias
+  - url: http://localhost:8003
+    description: Automotores
+  - url: http://localhost:8004
+    description: Infracciones
+  - url: http://localhost:8005
+    description: Comparendos
+
+tags:
+  - name: Auth
+    description: Autenticación y gestión de tokens
+  - name: Usuarios
+    description: Gestión de usuarios del sistema
+  - name: Personas
+    description: Registro de ciudadanos
+  - name: Licencias
+    description: Licencias de conducción
+  - name: Automotores
+    description: Gestión de vehículos / vehiculos
+  - name: Infracciones
+    description: Catálogo de infracciones de tránsito
+  - name: Comparendos
+    description: Registro y gestión de comparendos
+  - name: Utilidades
+    description: Health checks y documentación
+
+# ══════════════════════════════════════════════════════════════
+# PATHS
+# ══════════════════════════════════════════════════════════════
+paths:
+
+  # ────────────────────────────────────────────
+  # 1. AUTH  →  http://localhost:8001
+  # ────────────────────────────────────────────
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      description: Autentica a un usuario (admin, agente, supervisor, ciudadano) y retorna access + refresh token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              admin:
+                summary: Admin
+                value:
+                  identifier: admin@simcomp.gov.co
+                  password: Admin123*
+              agente:
+                summary: Agente
+                value:
+                  identifier: carlos.gomez@transito.gov.co
+                  password: Admin123*
+      responses:
+        "200":
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Renovar access token
+      description: Genera un nuevo access token a partir de un refresh token válido y no revocado.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Token renovado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cerrar sesión
+      description: Revoca el refresh token activo del usuario autenticado.
+      responses:
+        "204":
+          description: Sesión cerrada — refresh token revocado
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/validate:
+    post:
+      tags: [Auth]
+      summary: Validar token (uso interno del Gateway)
+      description: Verifica la firma y vigencia del JWT. Usado por el API Gateway en cada request entrante.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: Token válido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ────────────────────────────────────────────
+  # USUARIOS  →  http://localhost:8001
+  # ────────────────────────────────────────────
+  /api/usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar todos los usuarios
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Lista paginada de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsuarios"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Usuarios]
+      summary: Crear un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioCreate"
+            example:
+              username: agente.9006
+              email: nuevo.agente@transito.gov.co
+              password: Agente123*
+              rol: agente
+      responses:
+        "201":
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/usuarios/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UuidParam"
+    get:
+      tags: [Usuarios]
+      summary: Obtener detalle de usuario por ID
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Usuarios]
+      summary: Actualizar datos de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioUpdate"
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/usuarios/{id}/estado:
+    patch:
+      tags: [Usuarios]
+      summary: Activar o desactivar usuario
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstadoUsuarioRequest"
+            example:
+              estado: activo
+      responses:
+        "200":
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ────────────────────────────────────────────
+  # 2. PERSONAS  →  http://localhost:8002
+  # ────────────────────────────────────────────
+  /api/personas:
+    get:
+      tags: [Personas]
+      summary: Listar todas las personas
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Lista paginada de personas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPersonas"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Personas]
+      summary: Registrar nueva persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonaCreate"
+            example:
+              tipo_documento: CC
+              numero_documento: "1010001099"
+              nombres: Carlos
+              apellidos: Muñoz
+              fecha_nacimiento: "1995-03-15"
+              genero: M
+              direccion: "Cra 10 #20-30, Cali"
+              telefono: "3209991000"
+              email: carlos.munoz@gmail.com
+      responses:
+        "201":
+          description: Persona registrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/personas/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UuidParam"
+    get:
+      tags: [Personas]
+      summary: Detalle de persona por UUID
+      responses:
+        "200":
+          description: Persona encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Personas]
+      summary: Actualizar información básica de persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonaUpdate"
+      responses:
+        "200":
+          description: Persona actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/personas/documento/{numero}:
+    get:
+      tags: [Personas]
+      summary: Buscar persona por número de documento
+      description: Busca por CC, CE, TI o Pasaporte.
+      parameters:
+        - name: numero
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Número de documento"
+          example: "1010001001"
+      responses:
+        "200":
+          description: Persona encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ────────────────────────────────────────────
+  # LICENCIAS  →  http://localhost:8002
+  # ────────────────────────────────────────────
+  /api/licencias:
+    post:
+      tags: [Licencias]
+      summary: Registrar licencia de conducción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenciaCreate"
+            example:
+              persona_id: a4316f91-1c71-44df-8b67-0d0a44bba009
+              numero_licencia: LIC-1010001099
+              categoria: B1
+              fecha_expedicion: "2024-01-15"
+              fecha_vencimiento: "2034-01-15"
+      responses:
+        "201":
+          description: Licencia registrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Licencia"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/licencias/persona/{persona_id}:
+    get:
+      tags: [Licencias]
+      summary: Historial de licencias por persona
+      parameters:
+        - name: persona_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID de la persona
+          example: a4316f91-1c71-44df-8b67-0d0a44bba009
+      responses:
+        "200":
+          description: Lista de licencias de la persona
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Licencia"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/licencias/{numero}:
+    get:
+      tags: [Licencias]
+      summary: Buscar licencia por número oficial
+      parameters:
+        - name: numero
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Número oficial de la licencia
+          example: LIC-1010001001
+      responses:
+        "200":
+          description: Licencia encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Licencia"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ────────────────────────────────────────────
+  # 3. AUTOMOTORES  →  http://localhost:8003
+  # ────────────────────────────────────────────
+  /api/automotores:
+    get:
+      tags: [Automotores]
+      summary: Listar todos los vehículos
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Lista paginada de automotores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedAutomotores"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Automotores]
+      summary: Registrar un automotor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomotorCreate"
+            example:
+              placa: KSP999
+              vin: 9BWZZZ377VT099999
+              numero_motor: MTR9992025
+              numero_chasis: CHS9992025
+              marca: Chevrolet
+              linea: Sail
+              modelo: 2025
+              color: Negro
+              clase: AUTOMOVIL
+              servicio: PARTICULAR
+              propietario_documento: "1010001001"
+              propietario_nombre: Juan Perez
+              condicion: LEGAL
+      responses:
+        "201":
+          description: Automotor registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automotor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/automotores/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UuidParam"
+    get:
+      tags: [Automotores]
+      summary: Detalle de automotor por ID
+      responses:
+        "200":
+          description: Automotor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automotor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Automotores]
+      summary: Actualizar datos técnicos del automotor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomotorUpdate"
+      responses:
+        "200":
+          description: Automotor actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automotor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Automotores]
+      summary: Borrado lógico del automotor (soft delete)
+      description: Cambia el campo `estado` a `inactivo` y registra `deleted_at`.
+      responses:
+        "204":
+          description: Automotor desactivado exitosamente
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/automotores/placa/{placa}:
+    get:
+      tags: [Automotores]
+      summary: Buscar automotor por placa
+      parameters:
+        - name: placa
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Placa del vehículo
+          example: KSP214
+      responses:
+        "200":
+          description: Automotor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automotor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/automotores/propietario/{personaId}:
+    get:
+      tags: [Automotores]
+      summary: Listar vehículos por número de documento del propietario
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Número de documento del propietario (campo propietario_documento)
+          example: "1010001001"
+      responses:
+        "200":
+          description: Lista de vehículos del propietario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Automotor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ────────────────────────────────────────────
+  # 4. INFRACCIONES  →  http://localhost:8004
+  # ────────────────────────────────────────────
+  /api/infracciones:
+    get:
+      tags: [Infracciones]
+      summary: Catálogo completo de infracciones
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Lista paginada de infracciones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedInfracciones"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Infracciones]
+      summary: Crear nueva infracción en el catálogo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InfraccionCreate"
+            example:
+              codigo: E01
+              descripcion: No portar documentos del vehículo.
+              articulo_codigo: ART-131-E01
+              tipo_sancion: MONETARIA
+              valor_multa: 390000.00
+              aplica_descuento: true
+      responses:
+        "201":
+          description: Infracción creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Infraccion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/infracciones/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UuidParam"
+    get:
+      tags: [Infracciones]
+      summary: Detalle de infracción por ID
+      responses:
+        "200":
+          description: Infracción encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Infraccion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Infracciones]
+      summary: Actualizar valores o descripción de infracción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InfraccionUpdate"
+      responses:
+        "200":
+          description: Infracción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Infraccion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/infracciones/codigo/{codigo}:
+    get:
+      tags: [Infracciones]
+      summary: Buscar infracción por código CNT
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Código CNT de la infracción (ej. C02, D01)"
+          example: C03
+      responses:
+        "200":
+          description: Infracción encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Infraccion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/infracciones/{id}/vigencia:
+    patch:
+      tags: [Infracciones]
+      summary: Cambiar estado de vigencia de una infracción
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VigenciaRequest"
+            example:
+              vigente: false
+      responses:
+        "200":
+          description: Vigencia actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Infraccion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ────────────────────────────────────────────
+  # 5. COMPARENDOS  →  http://localhost:8005
+  # ────────────────────────────────────────────
+  /api/comparendos:
+    get:
+      tags: [Comparendos]
+      summary: Listar todos los comparendos registrados
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Lista paginada de comparendos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedComparendos"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Comparendos]
+      summary: Registrar comparendo
+      description: >
+        Registra un nuevo comparendo. Valida internamente que el ciudadano,
+        el vehículo (placa) y la infracción (código) existan antes de persistir.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComparendoCreate"
+            example:
+              ciudadano_documento: "1010001001"
+              ciudadano_nombre: Juan Perez
+              agente_documento: "1098700001"
+              agente_nombre: Carlos Gomez
+              placa_vehiculo: KSP214
+              infraccion_codigo: C03
+              infraccion_descripcion: Estacionar en sitio prohibido.
+              valor_multa: 520000.00
+              fecha_comparendo: "2026-03-20T08:15:00"
+              lugar: "Av. 3N con Calle 44"
+              ciudad: Cali
+              observaciones: Vehículo estacionado en zona de restricción.
+      responses:
+        "201":
+          description: Comparendo registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comparendo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Entidad no procesable — ciudadano, vehículo o infracción no encontrados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/comparendos/{id}:
+    parameters:
+      - $ref: "#/components/parameters/UuidParam"
+    get:
+      tags: [Comparendos]
+      summary: Detalle completo de un comparendo
+      responses:
+        "200":
+          description: Comparendo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComparendoDetalle"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/comparendos/numero/{numero}:
+    get:
+      tags: [Comparendos]
+      summary: Buscar comparendo por número de formulario
+      parameters:
+        - name: numero
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Número único del formulario
+          example: CMP-2026-000001
+      responses:
+        "200":
+          description: Comparendo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComparendoDetalle"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/comparendos/persona/{personaId}:
+    get:
+      tags: [Comparendos]
+      summary: Listar multas de un ciudadano
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Número de documento del ciudadano
+          example: "1010001001"
+      responses:
+        "200":
+          description: Lista de comparendos del ciudadano
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comparendo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/comparendos/automotor/{automotorId}:
+    get:
+      tags: [Comparendos]
+      summary: Listar multas por placa de vehículo
+      parameters:
+        - name: automotorId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Placa del vehículo
+          example: KSP214
+      responses:
+        "200":
+          description: Lista de comparendos del automotor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comparendo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/comparendos/{id}/pagar:
+    patch:
+      tags: [Comparendos]
+      summary: Registrar pago exitoso de comparendo
+      description: Cambia el estado de PENDIENTE a PAGADO y agrega entrada en historial_comparendos.
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PagoRequest"
+            example:
+              observacion: Pago realizado por PSE.
+      responses:
+        "200":
+          description: Comparendo marcado como PAGADO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comparendo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: El comparendo ya fue PAGADO o ANULADO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/comparendos/{id}/anular:
+    patch:
+      tags: [Comparendos]
+      summary: Anular comparendo por error administrativo
+      description: Cambia el estado de PENDIENTE a ANULADO y agrega entrada en historial_comparendos.
+      parameters:
+        - $ref: "#/components/parameters/UuidParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnulacionRequest"
+            example:
+              observacion: Anulado por error en identificación del vehículo.
+      responses:
+        "200":
+          description: Comparendo anulado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comparendo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: El comparendo ya fue PAGADO o ANULADO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ────────────────────────────────────────────
+  # UTILIDADES — todos los servicios
+  # ────────────────────────────────────────────
+  /api/health:
+    get:
+      tags: [Utilidades]
+      summary: Health check del servicio
+      description: Disponible en cada microservicio. Retorna estado y dependencias.
+      security: []
+      responses:
+        "200":
+          description: Servicio operativo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Servicio no disponible
+
+  /api/docs:
+    get:
+      tags: [Utilidades]
+      summary: Documentación Swagger UI
+      description: Disponible en cada microservicio en su puerto correspondiente.
+      security: []
+      responses:
+        "200":
+          description: Swagger UI HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+# ══════════════════════════════════════════════════════════════
+# COMPONENTS
+# ══════════════════════════════════════════════════════════════
+components:
+
+  # ── Security ─────────────────────────────────────────────────
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        JWT obtenido en POST /api/auth/login.
+        Incluir como: Authorization: Bearer <token>
+
+  # ── Parameters ───────────────────────────────────────────────
+  parameters:
+    UuidParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID del recurso
+      example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
+
+    PageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: Número de página
+
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+      description: Registros por página
+
+  # ── Responses ────────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: No autenticado o token inválido / revocado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 401
+            message: Token inválido o expirado.
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 404
+            message: Recurso no encontrado.
+    BadRequest:
+      description: Datos de entrada inválidos
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 400
+            message: Datos inválidos.
+            errors:
+              - "El campo email es requerido."
+
+  # ── Schemas ──────────────────────────────────────────────────
+  schemas:
+
+    # ┌─ Auth ───────────────────────────────────────────────────┐
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+          description: Email del usuario
+          example: admin@simcomp.gov.co
+        password:
+          type: string
+          format: password
+          example: Admin123*
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT de acceso (corta duración)
+        refreshToken:
+          type: string
+          description: Token para renovar acceso — se almacena en refresh_tokens
+        expiresIn:
+          type: integer
+          description: Segundos hasta expiración del accessToken
+          example: 3600
+        user:
+          $ref: "#/components/schemas/Usuario"
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    ValidateRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    ValidateResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        userId:
+          type: string
+          format: uuid
+        rol:
+          type: string
+          enum: [admin, supervisor, agente, ciudadano]
+
+    # ┌─ Usuarios ───────────────────────────────────────────────┐
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f9d0d184-40f3-43f4-9f98-41664092b104
+        username:
+          type: string
+          example: agente.9001
+        email:
+          type: string
+          format: email
+          example: carlos.gomez@transito.gov.co
+        rol:
+          type: string
+          enum: [admin, supervisor, agente, ciudadano]
+          example: agente
+        estado:
+          type: string
+          enum: [activo, inactivo]
+          example: activo
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    UsuarioCreate:
+      type: object
+      required: [username, email, password, rol]
+      properties:
+        username:
+          type: string
+          example: agente.9006
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        rol:
+          type: string
+          enum: [admin, supervisor, agente, ciudadano]
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        rol:
+          type: string
+          enum: [admin, supervisor, agente, ciudadano]
+
+    EstadoUsuarioRequest:
+      type: object
+      required: [estado]
+      properties:
+        estado:
+          type: string
+          enum: [activo, inactivo]
+
+    PaginatedUsuarios:
+      allOf:
+        - $ref: "#/components/schemas/Pagination"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/Usuario"
+
+    # ┌─ Personas ───────────────────────────────────────────────┐
+    Persona:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: a4316f91-1c71-44df-8b67-0d0a44bba009
+        tipo_documento:
+          type: string
+          enum: [CC, CE, TI, PASAPORTE]
+          example: CC
+        numero_documento:
+          type: string
+          example: "1010001001"
+        nombres:
+          type: string
+          example: Juan
+        apellidos:
+          type: string
+          example: Perez
+        fecha_nacimiento:
+          type: string
+          format: date
+          example: "1998-04-10"
+        genero:
+          type: string
+          enum: [M, F]
+          example: M
+        direccion:
+          type: string
+          example: "Cra 66 #14-22, Cali"
+        telefono:
+          type: string
+          example: "3201001001"
+        email:
+          type: string
+          format: email
+          example: juan.perez@gmail.com
+        estado:
+          type: string
+          enum: [activo, inactivo]
+          example: activo
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PersonaCreate:
+      type: object
+      required: [tipo_documento, numero_documento, nombres, apellidos, fecha_nacimiento, genero]
+      properties:
+        tipo_documento:
+          type: string
+          enum: [CC, CE, TI, PASAPORTE]
+        numero_documento:
+          type: string
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        fecha_nacimiento:
+          type: string
+          format: date
+        genero:
+          type: string
+          enum: [M, F]
+        direccion:
+          type: string
+        telefono:
+          type: string
+        email:
+          type: string
+          format: email
+
+    PersonaUpdate:
+      type: object
+      properties:
+        direccion:
+          type: string
+        telefono:
+          type: string
+        email:
+          type: string
+          format: email
+
+    PaginatedPersonas:
+      allOf:
+        - $ref: "#/components/schemas/Pagination"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/Persona"
+
+    # ┌─ Licencias ──────────────────────────────────────────────┐
+    Licencia:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: f8f13ed1-e3ba-40d7-8f0e-0e2fdd1f1001
+        persona_id:
+          type: string
+          format: uuid
+          example: a4316f91-1c71-44df-8b67-0d0a44bba009
+        numero_licencia:
+          type: string
+          example: LIC-1010001001
+        categoria:
+          type: string
+          enum: [A1, A2, B1, B2, B3, C1, C2, C3]
+          example: B1
+        fecha_expedicion:
+          type: string
+          format: date
+          example: "2022-01-10"
+        fecha_vencimiento:
+          type: string
+          format: date
+          example: "2032-01-10"
+        estado:
+          type: string
+          enum: [vigente, vencida, suspendida]
+          example: vigente
+        observaciones:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    LicenciaCreate:
+      type: object
+      required: [persona_id, numero_licencia, categoria, fecha_expedicion, fecha_vencimiento]
+      properties:
+        persona_id:
+          type: string
+          format: uuid
+        numero_licencia:
+          type: string
+        categoria:
+          type: string
+          enum: [A1, A2, B1, B2, B3, C1, C2, C3]
+        fecha_expedicion:
+          type: string
+          format: date
+        fecha_vencimiento:
+          type: string
+          format: date
+        observaciones:
+          type: string
+
+    # ┌─ Automotores ────────────────────────────────────────────┐
+    Automotor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 5c1cfdd9-01ed-4c4d-89d2-b0cb7771a001
+        placa:
+          type: string
+          example: KSP214
+        vin:
+          type: string
+          example: 9BWZZZ377VT004321
+        numero_motor:
+          type: string
+          example: MTR2142020
+        numero_chasis:
+          type: string
+          example: CHS2142020
+        marca:
+          type: string
+          example: Chevrolet
+        linea:
+          type: string
+          example: Onix
+        modelo:
+          type: integer
+          description: Año modelo
+          example: 2020
+        color:
+          type: string
+          example: Gris Plata
+        clase:
+          type: string
+          enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION, BICICLETA]
+          example: AUTOMOVIL
+        servicio:
+          type: string
+          enum: [PARTICULAR, PUBLICO, OFICIAL, DIPLOMATICO]
+          example: PARTICULAR
+        propietario_documento:
+          type: string
+          description: Número de documento del propietario
+          example: "1010001001"
+        propietario_nombre:
+          type: string
+          example: Juan Perez
+        condicion:
+          type: string
+          enum: [LEGAL, IRREGULAR]
+          example: LEGAL
+        estado:
+          type: string
+          enum: [activo, inactivo]
+          example: activo
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    AutomotorCreate:
+      type: object
+      required: [placa, marca, linea, modelo, clase, servicio, propietario_documento, propietario_nombre]
+      properties:
+        placa:
+          type: string
+        vin:
+          type: string
+        numero_motor:
+          type: string
+        numero_chasis:
+          type: string
+        marca:
+          type: string
+        linea:
+          type: string
+        modelo:
+          type: integer
+        color:
+          type: string
+        clase:
+          type: string
+          enum: [AUTOMOVIL, MOTOCICLETA, CAMIONETA, CAMPERO, BUS, CAMION, BICICLETA]
+        servicio:
+          type: string
+          enum: [PARTICULAR, PUBLICO, OFICIAL, DIPLOMATICO]
+        propietario_documento:
+          type: string
+        propietario_nombre:
+          type: string
+        condicion:
+          type: string
+          enum: [LEGAL, IRREGULAR]
+          default: LEGAL
+
+    AutomotorUpdate:
+      type: object
+      properties:
+        color:
+          type: string
+        propietario_documento:
+          type: string
+        propietario_nombre:
+          type: string
+        condicion:
+          type: string
+          enum: [LEGAL, IRREGULAR]
+
+    PaginatedAutomotores:
+      allOf:
+        - $ref: "#/components/schemas/Pagination"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/Automotor"
+
+    # ┌─ Infracciones ───────────────────────────────────────────┐
+    Infraccion:
+      type: object
+      properties:
+        infraccion_id:
+          type: string
+          format: uuid
+          example: 8b8e53d8-76c1-4f0c-a5d8-25eea52b2001
+        codigo:
+          type: string
+          example: C01
+        descripcion:
+          type: string
+          example: Presentar licencia de conducción vencida.
+        articulo_codigo:
+          type: string
+          example: ART-131-C01
+        tipo_sancion:
+          type: string
+          enum: [MONETARIA, INMOVILIZACION, MIXTA]
+          example: MONETARIA
+        valor_multa:
+          type: number
+          format: float
+          description: Valor de la multa en COP
+          example: 650000.00
+        dias_suspension:
+          type: integer
+          nullable: true
+          description: Días de suspensión (solo sanciones MIXTA)
+          example: null
+        estado:
+          type: string
+          enum: [activo, inactivo]
+          example: activo
+        aplica_descuento:
+          type: boolean
+          example: true
+        vigente:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    InfraccionCreate:
+      type: object
+      required: [codigo, descripcion, articulo_codigo, tipo_sancion, valor_multa]
+      properties:
+        codigo:
+          type: string
+        descripcion:
+          type: string
+        articulo_codigo:
+          type: string
+        tipo_sancion:
+          type: string
+          enum: [MONETARIA, INMOVILIZACION, MIXTA]
+        valor_multa:
+          type: number
+          format: float
+        dias_suspension:
+          type: integer
+          nullable: true
+        aplica_descuento:
+          type: boolean
+          default: true
+
+    InfraccionUpdate:
+      type: object
+      properties:
+        descripcion:
+          type: string
+        articulo_codigo:
+          type: string
+        tipo_sancion:
+          type: string
+          enum: [MONETARIA, INMOVILIZACION, MIXTA]
+        valor_multa:
+          type: number
+          format: float
+        dias_suspension:
+          type: integer
+          nullable: true
+        aplica_descuento:
+          type: boolean
+
+    VigenciaRequest:
+      type: object
+      required: [vigente]
+      properties:
+        vigente:
+          type: boolean
+
+    PaginatedInfracciones:
+      allOf:
+        - $ref: "#/components/schemas/Pagination"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/Infraccion"
+
+    # ┌─ Comparendos ────────────────────────────────────────────┐
+    Comparendo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
+        numero_comparendo:
+          type: string
+          example: CMP-2026-000001
+        ciudadano_documento:
+          type: string
+          example: "1010001001"
+        ciudadano_nombre:
+          type: string
+          example: Juan Perez
+        agente_documento:
+          type: string
+          example: "1098700001"
+        agente_nombre:
+          type: string
+          example: Carlos Gomez
+        placa_vehiculo:
+          type: string
+          example: KSP214
+        infraccion_codigo:
+          type: string
+          example: C03
+        infraccion_descripcion:
+          type: string
+          example: Estacionar en sitio prohibido.
+        valor_multa:
+          type: number
+          format: float
+          example: 520000.00
+        fecha_comparendo:
+          type: string
+          format: date-time
+          example: "2026-01-10T08:15:00"
+        lugar:
+          type: string
+          example: "Av. 3N con Calle 44"
+        ciudad:
+          type: string
+          example: Cali
+        observaciones:
+          type: string
+          nullable: true
+        estado:
+          type: string
+          enum: [PENDIENTE, PAGADO, ANULADO]
+          example: PENDIENTE
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ComparendoDetalle:
+      allOf:
+        - $ref: "#/components/schemas/Comparendo"
+        - type: object
+          properties:
+            historial:
+              type: array
+              description: Entradas de historial_comparendos
+              items:
+                $ref: "#/components/schemas/HistorialComparendo"
+
+    ComparendoCreate:
+      type: object
+      required:
+        - ciudadano_documento
+        - ciudadano_nombre
+        - agente_documento
+        - agente_nombre
+        - placa_vehiculo
+        - infraccion_codigo
+        - infraccion_descripcion
+        - valor_multa
+        - fecha_comparendo
+        - lugar
+        - ciudad
+      properties:
+        ciudadano_documento:
+          type: string
+        ciudadano_nombre:
+          type: string
+        agente_documento:
+          type: string
+        agente_nombre:
+          type: string
+        placa_vehiculo:
+          type: string
+        infraccion_codigo:
+          type: string
+        infraccion_descripcion:
+          type: string
+        valor_multa:
+          type: number
+          format: float
+        fecha_comparendo:
+          type: string
+          format: date-time
+        lugar:
+          type: string
+        ciudad:
+          type: string
+        observaciones:
+          type: string
+          nullable: true
+
+    PagoRequest:
+      type: object
+      properties:
+        observacion:
+          type: string
+          description: Descripción del método o referencia de pago
+          example: Pago realizado por PSE.
+
+    AnulacionRequest:
+      type: object
+      required: [observacion]
+      properties:
+        observacion:
+          type: string
+          description: Motivo de la anulación administrativa
+          example: Anulado por error en identificación del vehículo.
+
+    HistorialComparendo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        comparendo_id:
+          type: string
+          format: uuid
+        estado_anterior:
+          type: string
+          enum: [PENDIENTE, PAGADO, ANULADO]
+          nullable: true
+        estado_nuevo:
+          type: string
+          enum: [PENDIENTE, PAGADO, ANULADO]
+        observacion:
+          type: string
+        fecha_evento:
+          type: string
+          format: date-time
+
+    PaginatedComparendos:
+      allOf:
+        - $ref: "#/components/schemas/Pagination"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/Comparendo"
+
+    # ┌─ Utilidades ─────────────────────────────────────────────┐
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+          example: ok
+        service:
+          type: string
+          example: comparendos-service
+        version:
+          type: string
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+        dependencies:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            database: ok
+            cache: ok
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Datos inválidos.
+        errors:
+          type: array
+          items:
+            type: string
+          example: ["El campo placa_vehiculo es requerido."]
+
+    # ┌─ Shared ─────────────────────────────────────────────────┐
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 50
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalPages:
+          type: integer
+          example: 3
+
+# Seguridad global — se anula con security: [] en endpoints públicos
+security:
+  - BearerAuth: []

@@ -12,18 +12,24 @@ const options = {
 
     servers: [
       {
-        url: process.env.SWAGGER_SERVER_URL || "http://localhost:8003",
+        url: "/api",
         description: "Servidor de API",
       },
     ],
 
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
       schemas: {
-
         Automotor: {
           type: "object",
           properties: {
-            automotor_id: {
+            id: {
               type: "string",
               format: "uuid",
               example: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3",
@@ -32,28 +38,27 @@ const options = {
               type: "string",
               example: "ABC123",
             },
-            tipo: {
+            vin: {
               type: "string",
-              enum: [
-                "MOTO",
-                "CARRO",
-                "BUS",
-                "BUSETA",
-                "CAMION",
-                "TRACTOMULA",
-                "CUATRIMOTO",
-              ],
-              example: "CARRO",
+              example: "9BWZZZ377VT004321",
+            },
+            numero_motor: {
+              type: "string",
+              example: "MTR2142020",
+            },
+            numero_chasis: {
+              type: "string",
+              example: "CHS2142020",
             },
             marca: {
               type: "string",
               example: "Toyota",
             },
-            modelo: {
+            linea: {
               type: "string",
               example: "Corolla",
             },
-            anio: {
+            modelo: {
               type: "integer",
               example: 2022,
             },
@@ -61,24 +66,33 @@ const options = {
               type: "string",
               example: "Rojo",
             },
-            cilindraje: {
-              type: "integer",
-              example: 1800,
+            clase: {
+              type: "string",
+              enum: ["AUTOMOVIL", "MOTOCICLETA", "CAMIONETA", "CAMPERO", "BUS", "CAMION"],
+              example: "AUTOMOVIL",
+            },
+            servicio: {
+              type: "string",
+              enum: ["PARTICULAR", "PUBLICO", "OFICIAL"],
+              example: "PARTICULAR",
+            },
+            propietario_documento: {
+              type: "string",
+              example: "1010001001",
+            },
+            propietario_nombre: {
+              type: "string",
+              example: "Juan Perez",
+            },
+            condicion: {
+              type: "string",
+              enum: ["LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"],
+              example: "LEGAL",
             },
             estado: {
               type: "string",
-              enum: [
-                "LEGAL",
-                "REPORTADO_ROBO",
-                "RECUPERADO",
-                "EMBARGADO",
-              ],
-              example: "LEGAL",
-            },
-            propietario_id: {
-              type: "string",
-              format: "uuid",
-              example: "d1c8c3c2-1f0c-4c11-8d5a-7f0b8c1e9f22",
+              enum: ["activo", "inactivo", "inmovilizado"],
+              example: "activo",
             },
             created_at: {
               type: "string",
@@ -90,129 +104,66 @@ const options = {
               format: "date-time",
               example: "2025-01-10T10:20:30.000Z",
             },
-            deleted_at: {
-              type: "string",
-              format: "date-time",
-              nullable: true,
-            },
           },
         },
-
         CreateAutomotor: {
           type: "object",
           required: [
             "placa",
-            "tipo",
+            "vin",
+            "numero_motor",
+            "numero_chasis",
             "marca",
+            "linea",
             "modelo",
-            "anio",
             "color",
-            "cilindraje",
-            "propietario_id",
+            "clase",
+            "propietario_documento",
+            "propietario_nombre",
           ],
           properties: {
-            placa: {
-              type: "string",
-              example: "ABC123",
-            },
-            tipo: {
-              type: "string",
-              enum: [
-                "MOTO",
-                "CARRO",
-                "BUS",
-                "BUSETA",
-                "CAMION",
-                "TRACTOMULA",
-                "CUATRIMOTO",
-              ],
-              example: "CARRO",
-            },
-            marca: {
-              type: "string",
-              example: "Toyota",
-            },
-            modelo: {
-              type: "string",
-              example: "Corolla",
-            },
-            anio: {
-              type: "integer",
-              example: 2022,
-            },
-            color: {
-              type: "string",
-              example: "Negro",
-            },
-            cilindraje: {
-              type: "integer",
-              example: 1800,
-            },
-            estado: {
-              type: "string",
-              enum: [
-                "LEGAL",
-                "REPORTADO_ROBO",
-                "RECUPERADO",
-                "EMBARGADO",
-              ],
-              example: "LEGAL",
-            },
-            propietario_id: {
-              type: "string",
-              format: "uuid",
-              example: "d1c8c3c2-1f0c-4c11-8d5a-7f0b8c1e9f22",
-            },
+            placa: { type: "string", example: "KLS908" },
+            vin: { type: "string", example: "9BWZZZ377VT001234" },
+            numero_motor: { type: "string", example: "MTR123456" },
+            numero_chasis: { type: "string", example: "CHS123456" },
+            marca: { type: "string", example: "Mazda" },
+            linea: { type: "string", example: "CX-5" },
+            modelo: { type: "integer", example: 2024 },
+            color: { type: "string", example: "Gris" },
+            clase: { type: "string", enum: ["AUTOMOVIL", "MOTOCICLETA", "CAMIONETA", "CAMPERO", "BUS", "CAMION"], example: "CAMIONETA" },
+            servicio: { type: "string", enum: ["PARTICULAR", "PUBLICO", "OFICIAL"], example: "PARTICULAR" },
+            propietario_documento: { type: "string", example: "1010001001" },
+            propietario_nombre: { type: "string", example: "Juan Perez" },
+            condicion: { type: "string", enum: ["LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"], example: "LEGAL" },
           },
         },
 
         UpdateAutomotor: {
           type: "object",
           properties: {
-            placa: {
-              type: "string",
-              example: "ABC123",
-            },
-            tipo: {
-              type: "string",
-            },
-            marca: {
-              type: "string",
-            },
-            modelo: {
-              type: "string",
-            },
-            anio: {
-              type: "integer",
-            },
-            color: {
-              type: "string",
-            },
-            cilindraje: {
-              type: "integer",
-            },
-            estado: {
-              type: "string",
-            },
-            propietario_id: {
-              type: "string",
-              format: "uuid",
-            },
+            placa: { type: "string", example: "KLS908" },
+            vin: { type: "string", example: "9BWZZZ377VT001234" },
+            numero_motor: { type: "string", example: "MTR123456" },
+            numero_chasis: { type: "string", example: "CHS123456" },
+            marca: { type: "string", example: "Mazda" },
+            linea: { type: "string", example: "CX-5" },
+            modelo: { type: "integer", example: 2024 },
+            color: { type: "string", example: "Blanco" },
+            clase: { type: "string", enum: ["AUTOMOVIL", "MOTOCICLETA", "CAMIONETA", "CAMPERO", "BUS", "CAMION"], example: "CAMIONETA" },
+            servicio: { type: "string", enum: ["PARTICULAR", "PUBLICO", "OFICIAL"], example: "PARTICULAR" },
+            propietario_documento: { type: "string", example: "1010001001" },
+            propietario_nombre: { type: "string", example: "Juan Perez" },
+            condicion: { type: "string", enum: ["LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"], example: "LEGAL" },
+            estado: { type: "string", enum: ["activo", "inactivo", "inmovilizado"], example: "activo" },
           },
         },
-
         ChangeEstado: {
           type: "object",
-          required: ["estado"],
+          required: ["condicion"],
           properties: {
-            estado: {
+            condicion: {
               type: "string",
-              enum: [
-                "LEGAL",
-                "REPORTADO_ROBO",
-                "RECUPERADO",
-                "EMBARGADO",
-              ],
+              enum: ["LEGAL", "REPORTADO_ROBO", "RECUPERADO", "EMBARGADO"],
               example: "REPORTADO_ROBO",
             },
           },
@@ -237,6 +188,11 @@ const options = {
 
       },
     },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
 
   apis: ["./src/routes/*.js"],

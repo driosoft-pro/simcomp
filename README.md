@@ -67,15 +67,16 @@ La tabla `infracciones` define las infracciones reconocidas por el sistema.
 
 Campos principales:
 
-- `infraccion_id`
-- `codigo`
+- `infraccion_id` (PK, UUID)
+- `codigo` (Único)
 - `descripcion`
 - `articulo_codigo`
-- `tipo_sancion`
+- `tipo_sancion` (ENUM: MONETARIA, SUSPENSION_LICENCIA, INMOVILIZACION, MIXTA)
 - `valor_multa`
 - `dias_suspension`
 - `aplica_descuento`
 - `vigente`
+- `estado` (ENUM: activo, inactivo)
 - `created_at`
 - `updated_at`
 
@@ -108,10 +109,10 @@ SERVICE_NAME=ms-infracciones
 PORT=8004
 
 DB_HOST=localhost
-DB_PORT=5436
+DB_PORT=5435
 DB_NAME=infracciones_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=infracciones_user
+DB_PASSWORD=infracciones_pass
 ```
 
 ---
@@ -220,6 +221,12 @@ POST /api/infracciones
 
 ```http
 PATCH /api/infracciones/:id/vigencia
+```
+
+### Eliminar infracción (Soft delete)
+
+```http
+DELETE /api/infracciones/:id
 ```
 
 ---

@@ -286,22 +286,22 @@ function AutomotoresList() {
                       >
                         Ver detalle
                       </Link>
+                      {automotor.estado !== 'inactivo' && !isCiudadano && user?.rol !== 'supervisor' && (
+                        <button
+                          onClick={() => handleOpenModal(automotor)}
+                          className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
+                        >
+                          Editar
+                        </button>
+                      )}
                       {!isCiudadano && user?.rol !== 'supervisor' && (
-                        <>
-                          <button
-                            onClick={() => handleOpenModal(automotor)}
-                            className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDelete(automotor.id)}
-                            disabled={deleteAutomotor.isPending}
-                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
-                          >
-                            Eliminar
-                          </button>
-                        </>
+                        <button
+                          onClick={() => handleDelete(automotor.id)}
+                          disabled={deleteAutomotor.isPending}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
+                        >
+                          Eliminar
+                        </button>
                       )}
                     </div>
                   </td>
@@ -382,7 +382,7 @@ function AutomotoresList() {
                       <option value="OFICIAL">Oficial</option>
                     </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="md:grid md:grid-cols-1">
                     <div>
                       <label className={labelClass}>Condición</label>
                       <select
@@ -396,20 +396,6 @@ function AutomotoresList() {
                         <option value="REPORTADO_ROBO">Reportado Robo</option>
                         <option value="RECUPERADO">Recuperado</option>
                         <option value="EMBARGADO">Embargado</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className={labelClass}>Estado</label>
-                      <select
-                        name="estado"
-                        required
-                        value={formData.estado}
-                        onChange={handleFormChange}
-                        className={inputClass}
-                      >
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="inmovilizado">Inmovilizado</option>
                       </select>
                     </div>
                   </div>

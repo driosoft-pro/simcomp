@@ -38,7 +38,8 @@ function VehiculoForm({ onSuccess, onCancel, defaultPlaca, defaultPropietarioDoc
       servicio: (fd.get('servicio') as any) || 'PARTICULAR',
       propietario_documento: fd.get('propietario_documento') as string,
       propietario_nombre: fd.get('propietario_nombre') as string,
-      estado: (fd.get('estado') as any) || 'activo',
+      estado: 'activo' as const,
+      condicion: (fd.get('condicion') as any) || 'LEGAL',
     }
 
     try {
@@ -95,10 +96,19 @@ function VehiculoForm({ onSuccess, onCancel, defaultPlaca, defaultPropietarioDoc
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1">
             <label className={labelClass}>Color <span className="text-red-500">*</span></label>
             <input required type="text" name="color" className={inputClass} placeholder="Ej: Rojo" />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Condición <span className="text-red-500">*</span></label>
+            <select required name="condicion" className={inputClass} defaultValue="LEGAL">
+              <option value="LEGAL">Legal</option>
+              <option value="REPORTADO_ROBO">Reportado Robo</option>
+              <option value="RECUPERADO">Recuperado</option>
+              <option value="EMBARGADO">Embargado</option>
+            </select>
           </div>
           <div className="space-y-1">
             <label className={labelClass}>Clase de Vehículo <span className="text-red-500">*</span></label>

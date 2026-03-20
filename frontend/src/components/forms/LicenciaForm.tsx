@@ -1,17 +1,22 @@
 import React, { useState } from 'react'
-import { useCreateLicencia } from '../../hooks/usePersonas'
+import { useCreateLicencia, useUpdateLicencia } from '../../hooks/usePersonas'
 import { Save, Loader2, AlertCircle } from 'lucide-react'
-import type { UUID } from '../../types'
+import type { UUID, LicenciaConduccion } from '../../types'
 
 interface LicenciaFormProps {
   personaId: UUID
+  licencia?: LicenciaConduccion
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-function LicenciaForm({ personaId, onSuccess, onCancel }: LicenciaFormProps) {
-  const { mutateAsync: createLicencia, isPending } = useCreateLicencia()
+function LicenciaForm({ personaId, licencia, onSuccess, onCancel }: LicenciaFormProps) {
+  const { mutateAsync: createLicencia, isPending: isCreating } = useCreateLicencia()
+  const { mutateAsync: updateLicencia, isPending: isUpdating } = useUpdateLicencia()
   const [error, setError] = useState<string | null>(null)
+
+  const isPending = isCreating || isUpdating
+  const isEdit = Boolean(licencia)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -28,10 +33,14 @@ function LicenciaForm({ personaId, onSuccess, onCancel }: LicenciaFormProps) {
     }
 
     try {
-      await createLicencia(data)
+      if (isEdit && licencia) {
+        await updateLicencia({ id: licencia.licencia_id, data })
+      } else {
+        await createLicencia(data)
+      }
       onSuccess?.()
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Error al crear licencia')
+      setError(err.response?.data?.message || err.message || `Error al ${isEdit ? 'actualizar' : 'crear'} licencia`)
     }
   }
 
@@ -47,12 +56,23 @@ function LicenciaForm({ personaId, onSuccess, onCancel }: LicenciaFormProps) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Número de Licencia <span className="text-red-500">*</span></label>
-          <input required type="text" name="numero_licencia" className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+          <input 
+            required 
+            type="text" 
+            name="numero_licencia" 
+            defaultValue={licencia?.numero_licencia}
+            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" 
+          />
         </div>
         
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Categoría <span className="text-red-500">*</span></label>
-          <select required name="categoria" className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <select 
+            required 
+            name="categoria" 
+            defaultValue={licencia?.categoria || 'B1'}
+            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          >
             <option value="A1">A1</option>
             <option value="A2">A2</option>
             <option value="B1">B1</option>
@@ -68,18 +88,35 @@ function LicenciaForm({ personaId, onSuccess, onCancel }: LicenciaFormProps) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Fecha de Expedición <span className="text-red-500">*</span></label>
-          <input required type="date" name="fecha_expedicion" className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+          <input 
+            required 
+            type="date" 
+            name="fecha_expedicion" 
+            defaultValue={licencia?.fecha_expedicion}
+            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" 
+          />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Fecha de Vencimiento <span className="text-red-500">*</span></label>
-          <input required type="date" name="fecha_vencimiento" className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+          <input 
+            required 
+            type="date" 
+            name="fecha_vencimiento" 
+            defaultValue={licencia?.fecha_vencimiento}
+            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" 
+          />
         </div>
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Estado Inicial <span className="text-red-500">*</span></label>
-        <select required name="estado" defaultValue="vigente" className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Estado <span className="text-red-500">*</span></label>
+        <select 
+          required 
+          name="estado" 
+          defaultValue={licencia?.estado || 'vigente'} 
+          className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+        >
           <option value="vigente">Vigente</option>
           <option value="suspendida">Suspendida</option>
           <option value="vencida">Vencida</option>
@@ -95,7 +132,7 @@ function LicenciaForm({ personaId, onSuccess, onCancel }: LicenciaFormProps) {
         )}
         <button disabled={isPending} type="submit" className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:opacity-70 dark:bg-violet-500 dark:hover:bg-violet-600">
           {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          Guardar Licencia
+          {isEdit ? 'Actualizar Licencia' : 'Guardar Licencia'}
         </button>
       </div>
     </form>

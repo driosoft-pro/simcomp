@@ -67,38 +67,25 @@ La tabla `automotores` registra la información de cada vehículo y su propietar
 
 Campos principales:
 
-- `automotor_id`
-- `placa`
-- `tipo`
+- `id` (PK, UUID)
+- `placa` (Único)
+- `vin` (Único)
+- `numero_motor` (Único)
+- `numero_chasis` (Único)
 - `marca`
-- `modelo`
-- `anio`
+- `linea`
+- `modelo` (Año del vehículo)
 - `color`
 - `cilindraje`
-- `estado`
-- `propietario_id`
-- `created_at`
-- `updated_at`
+- `clase` (ENUM: MOTO, CARRO, BUS, etc.)
+- `servicio` (ENUM: PARTICULAR, PUBLICO, etc.)
+- `propietario_documento`
+- `propietario_nombre`
+- `condicion` (ENUM: LEGAL, REPORTADO_ROBO, etc.)
+- `estado` (ENUM: activo, inactivo)
 
-Tipos de automotor permitidos:
-
-- `MOTO`
-- `CARRO`
-- `BUS`
-- `BUSETA`
-- `CAMION`
-- `TRACTOMULA`
-- `CUATRIMOTO`
-
-### 3. Estado del automotor
-El campo `estado` representa la condición legal o administrativa del vehículo.
-
-Estados manejados:
-
-- `LEGAL`
-- `REPORTADO_ROBO`
-- `RECUPERADO`
-- `EMBARGADO`
+### 3. Condición y Estado
+El campo `condicion` representa la situación legal del vehículo (LEGAL, EMBARGADO, etc.), mientras que `estado` indica si el registro está activo o ha sido dado de baja (soft delete).
 
 ### 4. Relación lógica con personas
 El campo `propietario_id` representa una referencia lógica hacia `ms-personas.Persona`, por lo que este servicio puede validar si el propietario existe antes de registrar el automotor.
@@ -121,10 +108,10 @@ SERVICE_NAME=ms-automotores
 PORT=8003
 
 DB_HOST=localhost
-DB_PORT=5435
+DB_PORT=5434
 DB_NAME=automotores_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=automotores_user
+DB_PASSWORD=automotores_pass
 ```
 
 ---
@@ -169,7 +156,7 @@ docker ps
 ### Entrar a PostgreSQL
 
 ```bash
-docker exec -it automotores-db psql -U postgres -d automotores_db
+docker exec -it db-ms-automotores psql -U automotores_user -d automotores_db
 ```
 
 ### Consultar automotores
@@ -233,6 +220,12 @@ GET /api/automotores/placa/:placa
 
 ```http
 PATCH /api/automotores/:id/estado
+```
+
+### Eliminar automotor (Soft delete)
+
+```http
+DELETE /api/automotores/:id
 ```
 
 ---
@@ -302,7 +295,7 @@ Verifica que exista esta ruta en `app.js`:
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 ```
 
-### 4. Cambié `automotores_db.sql` y no se refleja
+### 4. Cambié `init.sql` y no se refleja
 PostgreSQL ejecuta el script solo al crear el volumen por primera vez.
 
 Recrear base:

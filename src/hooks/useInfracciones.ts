@@ -7,6 +7,7 @@ import {
   updateInfraccion,
   deleteInfraccion,
   toggleVigenciaInfraccion,
+  activateInfraccion,
 } from '../api/infracciones.api'
 import type { Infraccion, UUID } from '../types'
 
@@ -64,6 +65,17 @@ export function useToggleVigenciaInfraccion() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: UUID) => toggleVigenciaInfraccion(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['infracciones'] })
+      queryClient.invalidateQueries({ queryKey: ['infraccion'] })
+    },
+  })
+}
+
+export function useActivateInfraccion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: UUID) => activateInfraccion(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['infracciones'] })
       queryClient.invalidateQueries({ queryKey: ['infraccion'] })

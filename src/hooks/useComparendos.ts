@@ -12,6 +12,7 @@ import {
   revertirComparendo,
   getComparendoHistorial,
   updateComparendo,
+  getSiguienteNumeroComparendo,
 } from '../api/comparendos.api'
 import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial } from '../types'
 
@@ -72,6 +73,7 @@ export function useCreateComparendo() {
     mutationFn: (data: CreateComparendoPayload) => createComparendo(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendos', 'siguiente-numero'] })
     },
   })
 }
@@ -130,5 +132,14 @@ export function useUpdateComparendo() {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
       queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
     },
+  })
+}
+
+export function useSiguienteNumeroComparendo() {
+  return useQuery({
+    queryKey: ['comparendos', 'siguiente-numero'],
+    queryFn: getSiguienteNumeroComparendo,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
   })
 }

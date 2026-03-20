@@ -20,6 +20,17 @@ export function formatDate(date: string | Date): string {
   }).format(parsedDate)
 }
 
+export function formatDateShort(date?: string | Date | null): string {
+  if (!date) return '—'
+  const parsedDate = typeof date === 'string' ? new Date(date) : date
+  if (Number.isNaN(parsedDate.getTime())) return '—'
+
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(parsedDate)
+}
+
 export function capitalize(text: string): string {
   if (!text) return ''
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()

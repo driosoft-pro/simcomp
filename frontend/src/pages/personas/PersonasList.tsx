@@ -8,6 +8,7 @@ import { usePagination } from '../../hooks/usePagination'
 import SearchInput from '../../components/ui/SearchInput'
 import Pagination from '../../components/ui/Pagination'
 import PersonaForm from '../../components/forms/PersonaForm'
+import { formatDateShort } from '../../utils/formatters'
 
 const tipoDocBadge: Record<string, string> = {
   CC: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -90,6 +91,7 @@ function PersonasList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">N° documento</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Teléfono</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fechas (C: Creado, A: Act.)</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acción</th>
               </tr>
             </thead>
@@ -97,7 +99,7 @@ function PersonasList() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 7 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-28 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
                       </td>
@@ -126,6 +128,10 @@ function PersonasList() {
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                     {persona.telefono || '—'}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(persona.created_at)}</div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">A:</span> {formatDateShort(persona.updated_at)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <Link

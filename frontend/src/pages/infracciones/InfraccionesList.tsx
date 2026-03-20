@@ -10,7 +10,7 @@ import {
   useActivateInfraccion,
 } from '../../hooks/useInfracciones'
 import { useAuth } from '../../hooks/useAuth'
-import { formatCurrency } from '../../utils/formatters'
+import { formatCurrency, formatDateShort } from '../../utils/formatters'
 import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import { useToast } from '../../context/ToastContext'
@@ -221,6 +221,7 @@ function InfraccionesList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-500">Valor multa</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Vigencia</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fechas (C: Creado, A: Act.)</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acciones</th>
               </tr>
             </thead>
@@ -228,7 +229,7 @@ function InfraccionesList() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                    {Array.from({ length: 7 }).map((__, j) => (
+                    {Array.from({ length: 8 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-24 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
                       </td>
@@ -291,6 +292,10 @@ function InfraccionesList() {
                       )}
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(infraccion.created_at)}</div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">A:</span> {formatDateShort(infraccion.updated_at)}</div>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
@@ -301,19 +306,21 @@ function InfraccionesList() {
                       </Link>
                       {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
                         <>
-                          <button
-                            onClick={() => handleOpenModal(infraccion)}
-                            className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
-                          >
-                            Editar
-                          </button>
+                          {infraccion.estado === 'activo' && (
+                            <button
+                              onClick={() => handleOpenModal(infraccion)}
+                              className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-medium text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded"
+                            >
+                              Editar
+                            </button>
+                          )}
                           {infraccion.estado === 'activo' ? (
                             <button
                               onClick={() => setConfirmDeleteId(infraccion.infraccion_id)}
                               disabled={deleteInfraccion.isPending}
                               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
                             >
-                              Eliminar
+                              Desactivar
                             </button>
                           ) : (
                             <button

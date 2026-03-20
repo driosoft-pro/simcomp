@@ -15,6 +15,7 @@ import { useToast } from '../../context/ToastContext'
 import SearchInput from '../../components/ui/SearchInput'
 import Pagination from '../../components/ui/Pagination'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { formatDateShort } from '../../utils/formatters'
 // import { getPersonaByDocumento } from '../../api/personas.api'
 import type { Automotor } from '../../types'
 
@@ -278,6 +279,7 @@ function AutomotoresList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Modelo</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Condición</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fechas (C: Creado, A: Act.)</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acciones</th>
               </tr>
             </thead>
@@ -320,6 +322,10 @@ function AutomotoresList() {
                       </span>
                     </button>
                   </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(automotor.created_at)}</div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">A:</span> {formatDateShort(automotor.updated_at)}</div>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
@@ -336,7 +342,7 @@ function AutomotoresList() {
                           Editar
                         </button>
                       )}
-                      {!isCiudadano && user?.rol !== 'supervisor' && (
+                      {automotor.estado !== 'inactivo' && !isCiudadano && user?.rol !== 'supervisor' && (
                         <button
                           onClick={() => setConfirmDeleteId(automotor.id)}
                           disabled={deleteAutomotor.isPending}

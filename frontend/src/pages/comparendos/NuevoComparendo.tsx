@@ -11,6 +11,12 @@ import VehiculoForm from '../../components/forms/VehiculoForm'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../context/ToastContext'
 
+interface SelectedInfraction {
+  codigo: string
+  descripcion: string
+  valor_multa: number
+}
+
 interface FormData {
   numero_comparendo: string
   fecha_comparendo: string
@@ -58,6 +64,8 @@ function NuevoComparendo() {
     ciudad: 'Cali',
     observaciones: '',
   })
+
+  const [selectedInfractions, setSelectedInfractions] = useState<SelectedInfraction[]>([])
 
   useEffect(() => {
     if (comparendos && !formData.numero_comparendo) {
@@ -218,13 +226,61 @@ function NuevoComparendo() {
     setVehiculoWarning(null)
   }
 
+  const handleAgregarInfraccion = () => {
+    if (!formData.infraccion_codigo) {
+      addToast('Seleccione una infracción para agregar.', 'warning')
+      return
+    }
+
+    if (selectedInfractions.find(i => i.codigo === formData.infraccion_codigo)) {
+      addToast('Esta infracción ya ha sido agregada.', 'warning')
+      return
+    }
+
+    const infraccion = {
+      codigo: formData.infraccion_codigo,
+      descripcion: formData.infraccion_descripcion,
+      valor_multa: formData.valor_multa
+    }
+
+    setSelectedInfractions(prev => [...prev, infraccion])
+    
+    // Reset current selection
+    setFormData(prev => ({
+      ...prev,
+      infraccion_codigo: '',
+      infraccion_descripcion: '',
+      valor_multa: 0
+    }))
+  }
+
+  const handleRemoverInfraccion = (codigo: string) => {
+    setSelectedInfractions(prev => prev.filter(i => i.codigo !== codigo))
+  }
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    
+    if (selectedInfractions.length === 0 && !formData.infraccion_codigo) {
+      setSubmitError('Debe agregar al menos una infracción.')
+      return
+    }
+
     setSubmitError(null)
     setIsSubmitting(true)
     
     try {
-      const nuevo = await createComparendo.mutateAsync({
+      // Prepare infractions array
+      const allInfractions = [...selectedInfractions]
+      if (formData.infraccion_codigo) {
+        allInfractions.push({
+          codigo: formData.infraccion_codigo,
+          descripcion: formData.infraccion_descripcion,
+          valor_multa: formData.valor_multa
+        })
+      }
+
+      const response = await createComparendo.mutateAsync({
         numero_comparendo: formData.numero_comparendo,
         fecha_comparendo: formData.fecha_comparendo,
         ciudadano_documento: formData.ciudadano_documento,
@@ -233,14 +289,25 @@ function NuevoComparendo() {
         agente_nombre: formData.agente_nombre,
         placa_vehiculo: formData.placa_vehiculo,
         clase_vehiculo: formData.tipo_vehiculo,
-        infraccion_codigo: formData.infraccion_codigo,
-        infraccion_descripcion: formData.infraccion_descripcion,
-        valor_multa: formData.valor_multa,
+        infracciones: allInfractions,
+        // Fallback for safety with older backend if needed, 
+        // though our backend ignores it if infracciones is present
+        infraccion_codigo: allInfractions[0].codigo,
+        infraccion_descripcion: allInfractions[0].descripcion,
+        valor_multa: allInfractions[0].valor_multa,
         lugar: formData.lugar,
         ciudad: formData.ciudad,
         observaciones: formData.observaciones || undefined,
       })
-      navigate(`/comparendos/${nuevo.comparendo_id}`)
+      
+      addToast('Comparendo(s) creado(s) correctamente', 'success')
+      
+      // If multiple were created, response might be an array
+      if (Array.isArray(response)) {
+        navigate(`/comparendos`)
+      } else {
+        navigate(`/comparendos/${response.comparendo_id}`)
+      }
     } catch (error: any) {
       console.error('Error al crear comparendo:', error)
       setSubmitError(error.message || 'Error desconocido al crear comparendo')
@@ -529,14 +596,12 @@ function NuevoComparendo() {
                   </select>
                   <button
                     type="button"
-                    onClick={() => {
-                        const inf = infracciones?.find(i => i.codigo === formData.infraccion_codigo)
-                        if (inf) addToast(inf.descripcion, 'info')
-                    }}
+                    onClick={handleAgregarInfraccion}
                     disabled={!formData.infraccion_codigo}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    Ver Descripción
+                    <UserPlus size={16} />
+                    Agregar Infracción
                   </button>
                 </div>
               </div>
@@ -554,9 +619,54 @@ function NuevoComparendo() {
                 />
               </div>
             </div>
+            {selectedInfractions.length > 0 && (
+              <div className="md:col-span-2 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Infracciones Seleccionadas ({selectedInfractions.length})
+                </p>
+                <div className="grid gap-3">
+                  {selectedInfractions.map((inf) => (
+                    <div 
+                      key={inf.codigo}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-bold dark:bg-emerald-900/30 dark:text-emerald-400">
+                          {inf.codigo}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{inf.descripcion}</p>
+                          <p className="text-xs font-mono text-emerald-600 dark:text-emerald-400">
+                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(inf.valor_multa)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoverInfraccion(inf.codigo)}
+                        className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 transition"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex justify-end p-2">
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Total Multas: <span className="text-emerald-600 dark:text-emerald-400">
+                      {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(
+                        selectedInfractions.reduce((sum, i) => sum + i.valor_multa, 0) + (formData.valor_multa || 0)
+                      )}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+
             {formData.infraccion_descripcion && (
                 <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 dark:border-blue-900/30 dark:bg-blue-950/20">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Descripción de la Infracción</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Descripción de la Infracción Seleccionada</p>
                     <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{formData.infraccion_descripcion}</p>
                 </div>
             )}
@@ -569,7 +679,7 @@ function NuevoComparendo() {
               return (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-950/20">
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
-                    ⚠ Efectos automáticos al registrar este comparendo
+                    ⚠ Efectos automáticos al registrar esta infracción
                   </p>
                   <ul className="space-y-1">
                     {inmoviliza && (

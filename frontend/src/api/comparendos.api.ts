@@ -87,3 +87,12 @@ export async function getComparendoHistorial(id: UUID): Promise<any[]> {
   )
   return response.data.data
 }
+
+export async function updateComparendo(id: UUID, data: Partial<CreateComparendoPayload>): Promise<Comparendo> {
+  const response = await apiClient.put<ApiResponse<Comparendo>>(
+    `${API_URLS.comparendos}/comparendos/${id}`,
+    data,
+  )
+  const resData = response.data.data
+  return { ...resData, comparendo_id: (resData as any).id }
+}

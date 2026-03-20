@@ -6,6 +6,8 @@ import swaggerUi from "swagger-ui-express";
 import comparendosRoutes from "./routes/comparendos.routes.js";
 import swaggerSpec from "./swagger/swagger.js";
 
+import { verifyToken } from "./middlewares/auth.middleware.js";
+
 const app = express();
 
 app.use(helmet({
@@ -15,6 +17,7 @@ app.use(helmet({
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(verifyToken);
 
 app.use("/api", comparendosRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -130,6 +130,6 @@ router.put("/:id", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"
  *       200:
  *         description: Estado actualizado
  */
-router.patch("/:id/estado", authMiddleware, roleMiddleware("admin"), changeUserStatusController);
+router.patch("/:id/estado", authMiddleware, roleMiddleware("admin", "supervisor"), changeUserStatusController);
 
 export default router;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useComparendos } from '../../hooks/useComparendos'
 import { useAuth } from '../../hooks/useAuth'
-import { formatDate } from '../../utils/formatters'
+import { formatDate, formatDateShort } from '../../utils/formatters'
 import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import SearchInput from '../../components/ui/SearchInput'
@@ -101,6 +101,7 @@ function ComparendosList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fecha</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Lugar</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Fechas (C: Creado, A: Act.)</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acción</th>
               </tr>
             </thead>
@@ -108,7 +109,7 @@ function ComparendosList() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 7 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-28 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />
                       </td>
@@ -138,6 +139,10 @@ function ComparendosList() {
                   </td>
                   <td className="px-4 py-3 max-w-[150px] truncate text-slate-600 dark:text-slate-400 text-xs" title={`${comparendo.lugar}, ${comparendo.ciudad}`}>
                     {comparendo.lugar}, {comparendo.ciudad}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(comparendo.created_at)}</div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">A:</span> {formatDateShort(comparendo.updated_at)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <Link

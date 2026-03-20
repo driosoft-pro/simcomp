@@ -9,6 +9,7 @@ import PersonaForm from '../../components/forms/PersonaForm'
 import VehiculoForm from '../../components/forms/VehiculoForm'
 
 import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../context/ToastContext'
 
 interface FormData {
   numero_comparendo: string
@@ -39,6 +40,7 @@ function NuevoComparendo() {
   const { data: comparendos } = useComparendos()
 
   const { user } = useAuth()
+  const { addToast } = useToast()
 
   const [formData, setFormData] = useState<FormData>({
     numero_comparendo: '',
@@ -307,6 +309,7 @@ function NuevoComparendo() {
               id="fecha_comparendo"
               name="fecha_comparendo"
               type="datetime-local"
+              autoFocus
               value={formData.fecha_comparendo.slice(0, 16)}
               onChange={(e) => {
                 const date = new Date(e.target.value).toISOString()
@@ -528,7 +531,7 @@ function NuevoComparendo() {
                     type="button"
                     onClick={() => {
                         const inf = infracciones?.find(i => i.codigo === formData.infraccion_codigo)
-                        if (inf) alert(`Descripción: ${inf.descripcion}`)
+                        if (inf) addToast(inf.descripcion, 'info')
                     }}
                     disabled={!formData.infraccion_codigo}
                     className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"

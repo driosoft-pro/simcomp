@@ -9,6 +9,12 @@ import {
   useToggleEstadoAutomotor,
 } from '../../hooks/useAutomotores'
 import { useAuth } from '../../hooks/useAuth'
+import { useSearch } from '../../hooks/useSearch'
+import { usePagination } from '../../hooks/usePagination'
+import { useToast } from '../../context/ToastContext'
+import SearchInput from '../../components/ui/SearchInput'
+import Pagination from '../../components/ui/Pagination'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 // import { getPersonaByDocumento } from '../../api/personas.api'
 import type { Automotor } from '../../types'
 
@@ -59,18 +65,41 @@ function LoadingRow() {
 function AutomotoresList() {
   const { user } = useAuth()
   const { data, isLoading, isError, error } = useAutomotores()
-
   const isCiudadano = user?.rol === 'ciudadano'
 
-  const filteredData = isCiudadano
+  const [searchTerm, setSearchTerm] = useState('')
+  const { addToast } = useToast()
+
+  const roleFilteredData = isCiudadano
     ? data?.filter((v) => v.propietario_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : data
+
+  const searchedData = useSearch(roleFilteredData, searchTerm, [
+    'placa',
+    'propietario_nombre',
+    'propietario_documento',
+    'marca',
+    'linea',
+    'modelo',
+  ])
+
+  const {
+    currentPage: pgCurrentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(searchedData)
+
   const createAutomotor = useCreateAutomotor()
   const updateAutomotor = useUpdateAutomotor()
   const deleteAutomotor = useDeleteAutomotor()
   const toggleEstado = useToggleEstadoAutomotor()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [editingAutomotor, setEditingAutomotor] = useState<Automotor | null>(null)
 
   const [formData, setFormData] = useState<Partial<Automotor>>({
@@ -157,31 +186,40 @@ function AutomotoresList() {
     try {
       if (editingAutomotor) {
         await updateAutomotor.mutateAsync({ id: editingAutomotor.id, data: formData as any })
+        addToast('Automotor actualizado exitosamente', 'success')
       } else {
         await createAutomotor.mutateAsync(formData as any)
+        addToast('Automotor creado exitosamente', 'success')
       }
       handleCloseModal()
     } catch (err: any) {
       console.error('Error saving automotor:', err)
-      setSubmitError(err.response?.data?.message || err.message || 'Ocurrió un error al guardar.')
+      const msg = err.response?.data?.message || err.message || 'Ocurrió un error al guardar.'
+      setSubmitError(msg)
+      addToast(msg, 'error')
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Está seguro de eliminar este automotor?')) {
-      try {
-        await deleteAutomotor.mutateAsync(id)
-      } catch (err) {
-        console.error('Error deleting automotor:', err)
-      }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return
+    try {
+      await deleteAutomotor.mutateAsync(confirmDeleteId)
+      addToast('Automotor eliminado exitosamente', 'success')
+    } catch (err: any) {
+      console.error('Error deleting automotor:', err)
+      addToast(err.response?.data?.message || 'Error al eliminar automotor', 'error')
+    } finally {
+      setConfirmDeleteId(null)
     }
   }
 
   const handleToggleEstado = async (id: string) => {
     try {
       await toggleEstado.mutateAsync(id)
-    } catch (err) {
+      addToast('Estado actualizado exitosamente', 'success')
+    } catch (err: any) {
       console.error('Error toggling estado:', err)
+      addToast(err.response?.data?.message || 'Error al cambiar estado', 'error')
     }
   }
 
@@ -210,6 +248,10 @@ function AutomotoresList() {
             Nuevo Automotor
           </button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por placa, marca, propietario..." />
       </div>
 
       {/* Error */}
@@ -241,7 +283,7 @@ function AutomotoresList() {
             </thead>
             <tbody>
               {isLoading && Array.from({ length: 4 }).map((_, i) => <LoadingRow key={i} />)}
-              {filteredData?.map((automotor) => (
+              {paginatedItems?.map((automotor) => (
                 <tr
                   key={automotor.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -296,7 +338,7 @@ function AutomotoresList() {
                       )}
                       {!isCiudadano && user?.rol !== 'supervisor' && (
                         <button
-                          onClick={() => handleDelete(automotor.id)}
+                          onClick={() => setConfirmDeleteId(automotor.id)}
                           disabled={deleteAutomotor.isPending}
                           className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
                         >
@@ -310,12 +352,20 @@ function AutomotoresList() {
             </tbody>
           </table>
 
-          {!isLoading && filteredData?.length === 0 && (
+          {!isLoading && paginatedItems?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay automotores registrados.</p>
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={pgCurrentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
 
       {/* Modal / Formulario */}
@@ -345,6 +395,7 @@ function AutomotoresList() {
                       type="text"
                       name="placa"
                       required
+                      autoFocus
                       value={formData.placa}
                       onChange={handleFormChange}
                       className={inputClass}
@@ -552,6 +603,16 @@ function AutomotoresList() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(confirmDeleteId)}
+        title="Eliminar Automotor"
+        message="¿Está seguro de que desea eliminar este automotor? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        type="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   )
 }

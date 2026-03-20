@@ -2,8 +2,13 @@ import { Link } from 'react-router-dom'
 import { useComparendos } from '../../hooks/useComparendos'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDate } from '../../utils/formatters'
+import { useSearch } from '../../hooks/useSearch'
+import { usePagination } from '../../hooks/usePagination'
+import SearchInput from '../../components/ui/SearchInput'
+import Pagination from '../../components/ui/Pagination'
 import type { Comparendo } from '../../types'
 import { Plus } from 'lucide-react'
+import { useState } from 'react'
 
 const estadoStyles: Record<Comparendo['estado'], string> = {
   PENDIENTE: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
@@ -20,11 +25,31 @@ const estadoStyles: Record<Comparendo['estado'], string> = {
 function ComparendosList() {
   const { user } = useAuth()
   const { data: allData, isLoading, isError, error } = useComparendos()
+  const [searchTerm, setSearchTerm] = useState('')
 
   const isCiudadano = user?.rol === 'ciudadano'
-  const data = isCiudadano
+  const roleFilteredData = isCiudadano
     ? allData?.filter((c) => c.ciudadano_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : allData
+
+  const searchedData = useSearch(roleFilteredData, searchTerm, [
+    'numero_comparendo',
+    'ciudadano_nombre',
+    'ciudadano_documento',
+    'lugar',
+    'ciudad',
+    'placa_vehiculo',
+  ])
+
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(searchedData)
 
   return (
     <div className="space-y-6">
@@ -50,6 +75,10 @@ function ComparendosList() {
             Nuevo comparendo
           </Link>
         )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por número, infractor, lugar, placa..." />
       </div>
 
       {/* Error */}
@@ -87,7 +116,7 @@ function ComparendosList() {
                   </tr>
                 ))}
 
-              {data?.map((comparendo) => (
+              {paginatedItems?.map((comparendo) => (
                 <tr
                   key={comparendo.comparendo_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -123,7 +152,7 @@ function ComparendosList() {
             </tbody>
           </table>
 
-          {!isLoading && data?.length === 0 && (
+          {!isLoading && paginatedItems?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 No hay comparendos registrados.
@@ -131,6 +160,14 @@ function ComparendosList() {
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
     </div>
   )

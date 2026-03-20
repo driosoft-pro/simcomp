@@ -71,6 +71,7 @@ function VehiculoForm({ onSuccess, onCancel, defaultPlaca, defaultPropietarioDoc
             <label className={labelClass}>Placa <span className="text-red-500">*</span></label>
             <input 
               required 
+              autoFocus
               type="text" 
               name="placa" 
               defaultValue={defaultPlaca} 

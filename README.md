@@ -30,9 +30,10 @@ frontend/
 │   │   ├── axios.config.ts          ← Interceptor JWT + refresh automático
 │   │   ├── auth.api.ts              ← login, logout, refresh, me
 │   │   ├── personas.api.ts
-│   │   ├── vehiculos.api.ts
+│   │   ├── automotores.api.ts       ← Gestión de vehículos
 │   │   ├── infracciones.api.ts
-│   │   └── comparendos.api.ts
+│   │   ├── comparendos.api.ts
+│   │   └── usuarios.api.ts          ← Gestión de usuarios internos
 │   │
 │   ├── context/
 │   │   └── AuthContext.tsx          ← Estado global de sesión + tokens
@@ -54,7 +55,7 @@ frontend/
 │   │   │   └── Toast.tsx
 │   │   └── forms/
 │   │       ├── PersonaForm.tsx
-│   │       ├── VehiculoForm.tsx
+│   │       ├── AutomotorForm.tsx
 │   │       ├── InfraccionForm.tsx
 │   │       └── ComparendoForm.tsx
 │   │
@@ -64,20 +65,23 @@ frontend/
 │   │   ├── personas/
 │   │   │   ├── PersonasList.tsx
 │   │   │   └── PersonaDetail.tsx
-│   │   ├── vehiculos/
-│   │   │   ├── VehiculosList.tsx
-│   │   │   └── VehiculoDetail.tsx
+│   │   ├── automotores/             ← Gestión de vehículos
+│   │   │   ├── AutomotoresList.tsx
+│   │   │   └── AutomotorDetail.tsx
 │   │   ├── infracciones/
 │   │   │   └── InfraccionesList.tsx
-│   │   └── comparendos/
-│   │       ├── ComparendosList.tsx
-│   │       ├── ComparendoDetail.tsx
-│   │       └── NuevoComparendo.tsx
+│   │   ├── comparendos/
+│   │   │   ├── ComparendosList.tsx
+│   │   │   ├── ComparendoDetail.tsx
+│   │   │   └── NuevoComparendo.tsx
+│   │   └── usuarios/                ← Gestión de usuarios
+│   │       ├── UsuariosList.tsx
+│   │       └── UsuarioDetail.tsx
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.ts               ← Acceso al AuthContext
 │   │   ├── usePersonas.ts
-│   │   ├── useVehiculos.ts
+│   │   ├── useAutomotores.ts
 │   │   ├── useInfracciones.ts
 │   │   └── useComparendos.ts
 │   │
@@ -103,21 +107,19 @@ frontend/
 ### Desarrollo local (`.env`)
 ```env
 VITE_AUTH_API=http://localhost:8001/api/auth
-VITE_PERSONAS_API=http://localhost:8002/api/personas
-VITE_VEHICULOS_API=http://localhost:8003/api/vehiculos
-VITE_INFRACCIONES_API=http://localhost:8004/api/infracciones
-VITE_COMPARENDOS_API=http://localhost:8005/api/comparendos
+VITE_PERSONAS_API=http://localhost:8002/api
+VITE_AUTOMOTORES_API=http://localhost:8003/api
+VITE_INFRACCIONES_API=http://localhost:8004/api
+VITE_COMPARENDOS_API=http://localhost:8005/api
 ```
-
-> Nota: En desarrollo local puedes apuntar directamente a los puertos del backend (8001-8005) o al Gateway de Docker si está configurado.
 
 ### Producción Vagrant (`.env.production`)
 ```env
 VITE_AUTH_API=http://api.simcomp.co:3001/api/auth
-VITE_PERSONAS_API=http://api.simcomp.co:3002/api/personas
-VITE_VEHICULOS_API=http://api.simcomp.co:3003/api/vehiculos
-VITE_INFRACCIONES_API=http://api.simcomp.co:3004/api/infracciones
-VITE_COMPARENDOS_API=http://api.simcomp.co:3005/api/comparendos
+VITE_PERSONAS_API=http://api.simcomp.co:3002/api
+VITE_AUTOMOTORES_API=http://api.simcomp.co:3003/api
+VITE_INFRACCIONES_API=http://api.simcomp.co:3004/api
+VITE_COMPARENDOS_API=http://api.simcomp.co:3005/api
 ```
 
 ---
@@ -184,7 +186,7 @@ pnpm preview
 const { user, role, isAuthenticated, login, logout } = useAuth()
 
 // user   → { id, username, email, rol }
-// role   → 'admin' | 'agente' | 'supervisor'
+// role   → 'admin' | 'agente' | 'supervisor' | 'ciudadano'
 ```
 
 ### Interceptor Axios (`api/axios.config.js`)
@@ -198,33 +200,33 @@ const { user, role, isAuthenticated, login, logout } = useAuth()
 
 ## Rutas y Control de Acceso
 
-| Ruta                    | Componente        | Rol mínimo  | Descripción                      |
-|-------------------------|-------------------|-------------|----------------------------------|
-| `/login`                | Login             | público     | Pantalla de inicio de sesión     |
-| `/`                     | Dashboard         | supervisor  | Panel con estadísticas           |
-| `/personas`             | PersonasList      | agente      | Listado de personas              |
-| `/personas/:id`         | PersonaDetail     | agente      | Detalle y licencias              |
-| `/vehiculos`            | VehiculosList     | agente      | Listado de vehículos             |
-| `/vehiculos/:id`        | VehiculoDetail    | agente      | Detalle del vehículo             |
-| `/infracciones`         | InfraccionesList  | agente      | Catálogo de infracciones         |
-| `/comparendos`          | ComparendosList   | supervisor  | Listado de comparendos           |
-| `/comparendos/nuevo`    | NuevoComparendo   | agente      | Formulario de nuevo comparendo   |
-| `/comparendos/:id`      | ComparendoDetail  | supervisor  | Detalle y acciones               |
+| Ruta                    | Componente        | Roles permitidos             | Descripción                      |
+|-------------------------|-------------------|------------------------------|----------------------------------|
+| `/login`                | Login             | público                      | Pantalla de inicio de sesión     |
+| `/`                     | Dashboard         | todos                        | Panel con estadísticas           |
+| `/personas`             | PersonasList      | todos                        | Listado de personas              |
+| `/personas/:id`         | PersonaDetail     | todos                        | Detalle y licencias              |
+| `/automotores`          | AutomotoresList   | todos                        | Listado de vehículos             |
+| `/automotores/:id`      | AutomotorDetail   | todos                        | Detalle del vehículo             |
+| `/infracciones`         | InfraccionesList  | admin, agente, supervisor    | Catálogo de infracciones         |
+| `/comparendos`          | ComparendosList   | todos                        | Listado de comparendos           |
+| `/comparendos/nuevo`    | NuevoComparendo   | admin, agente                | Formulario de nuevo comparendo   |
+| `/comparendos/:id`      | ComparendoDetail  | todos                        | Detalle y acciones               |
+| `/usuarios`             | UsuariosList      | todos                        | Listado de usuarios del sistema  |
+| `/usuarios/:id`         | UsuarioDetail     | todos                        | Detalle del usuario              |
 
 `ProtectedRoute` verifica `isAuthenticated` y el rol antes de renderizar.
-Si el usuario no tiene el rol requerido, muestra una pantalla de acceso denegado.
 
 ---
 
 ## Flujo de Creación de Comparendo
 
-1. Agente busca la **persona** por número de documento (:3002)
-2. Selecciona el **vehículo** del propietario o busca por placa (:3003)
-3. Selecciona la **infracción** del catálogo (valor viene de :3004)
-4. Completa lugar, fecha e identificación del agente
-5. Envía `POST /api/comparendos` al Gateway (:3005)
-6. Nginx valida el token → enruta a srv-simcomp-api:8005
-7. El sistema muestra el número de comparendo generado
+1. Agente busca o registra la **persona** y obtiene sus datos (documento, nombres).
+2. Selecciona el **vehículo** y obtiene sus datos (placa).
+3. Selecciona la **infracción** (código, descripción, valor).
+4. Completa lugar, fecha e identificación del agente.
+5. Envía `POST /api/comparendos` con los **datos denormalizados** (nombres y documentos incluidos).
+6. El sistema persiste el comparendo y retorna el número generado.
 
 ---
 

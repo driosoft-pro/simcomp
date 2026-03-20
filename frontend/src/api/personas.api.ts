@@ -26,6 +26,15 @@ export async function getPersonaByDocumento(numero: string): Promise<Persona> {
   return { ...data, persona_id: (data as any).id }
 }
 
+export async function getPersonaByEmail(email: string): Promise<Persona> {
+  const response = await apiClient.get<ApiResponse<Persona>>(
+    `${API_URLS.personas}/personas/email/${email}`,
+  )
+  const data = response.data.data
+  if (!data) return null as any
+  return { ...data, persona_id: (data as any).id }
+}
+
 export async function getLicenciasByPersona(personaId: UUID): Promise<LicenciaConduccion[]> {
   const response = await apiClient.get<ApiResponse<LicenciaConduccion[]>>(
     `${API_URLS.personas}/licencias/persona/${personaId}`,

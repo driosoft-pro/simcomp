@@ -5,6 +5,7 @@ import {
   getLicenciaByNumero,
   getLicenciasByPersona,
   getPersonaByDocumento,
+  getPersonaByEmail,
   getPersonaById,
   getPersonas,
   updatePersona,
@@ -32,6 +33,14 @@ export function usePersonaByDocumento(numero: string) {
     queryKey: ['persona-documento', numero],
     queryFn: () => getPersonaByDocumento(numero),
     enabled: Boolean(numero),
+  })
+}
+
+export function usePersonaByEmail(email: string) {
+  return useQuery<Persona>({
+    queryKey: ['persona-email', email],
+    queryFn: () => getPersonaByEmail(email),
+    enabled: Boolean(email),
   })
 }
 

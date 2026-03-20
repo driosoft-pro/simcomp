@@ -151,6 +151,13 @@ export async function obtenerComparendoPorNumero(numero) {
   return comparendo;
 }
 
+export async function obtenerComparendosPorPlaca(placa) {
+  return Comparendo.findAll({
+    where: { placa_vehiculo: placa },
+    order: [["fecha_comparendo", "DESC"]],
+  });
+}
+
 export async function obtenerHistorialComparendo(comparendoId) {
   const comparendo = await Comparendo.findByPk(comparendoId);
 

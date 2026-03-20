@@ -65,36 +65,40 @@ La base de datos PostgreSQL contiene las tablas principales:
 El script `db/comparendos_db.sql` crea la estructura inicial y datos de prueba.
 
 ### 2. Entidad Comparendo
-La tabla `comparendos` registra el comparendo y sus relaciones lógicas con otros servicios.
+La tabla `comparendos` registra el comparendo y almacena datos denormalizados para facilitar consultas y reportes históricos.
 
 Campos principales:
 
-- `comparendo_id`
-- `numero_comparendo`
-- `fecha_hora`
-- `automotor_id`
-- `persona_id`
-- `infraccion_id`
+- `id` (PK, UUID)
+- `numero_comparendo` (Único)
+- `fecha_comparendo`
+- `ciudadano_documento`
+- `ciudadano_nombre`
+- `agente_documento`
+- `agente_nombre`
+- `placa_vehiculo`
+- `infraccion_codigo`
+- `infraccion_descripcion`
+- `ciudad`
 - `direccion_exacta`
-- `estado`
 - `valor_multa`
 - `observaciones`
-- `created_at`
-- `updated_at`
+- `estado` (ENUM: PENDIENTE, PAGADO, ANULADO)
 
 ### 3. Estados del comparendo
 Estados válidos del campo `estado`:
 
-- `CREADO`
+- `PENDIENTE`
 - `PAGADO`
 - `ANULADO`
 
 ### 4. Máquina de estados del comparendo
 El campo `estado` puede cambiar según estas reglas:
 
-- `CREADO -> PAGADO`
-- `CREADO -> ANULADO`
-- `PAGADO -> CREADO`
+- `PENDIENTE -> PAGADO`
+- `PENDIENTE -> ANULADO`
+- `PAGADO -> PENDIENTE` (Reversión)
+- `ANULADO -> PENDIENTE` (Reversión)
 
 ### 5. Reglas de negocio
 
@@ -110,7 +114,7 @@ Si alguno de estos elementos no existe, el sistema debe rechazar la creación de
 #### RN-02 Estado inicial del comparendo
 Todo comparendo registrado en el sistema debe iniciar con el estado:
 
-- `CREADO`
+- `PENDIENTE`
 
 #### RN-03 Pago del comparendo
 Un comparendo solo puede pasar al estado `PAGADO` si:
@@ -145,10 +149,10 @@ SERVICE_NAME=ms-comparendos
 PORT=8005
 
 DB_HOST=localhost
-DB_PORT=5437
+DB_PORT=5436
 DB_NAME=comparendos_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=comparendos_user
+DB_PASSWORD=comparendos_pass
 ```
 
 ---

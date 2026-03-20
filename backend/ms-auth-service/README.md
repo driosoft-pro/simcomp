@@ -8,7 +8,7 @@ Este servicio se encarga de:
 - generación de **access token** con JWT
 - manejo de **refresh tokens**
 - consulta y administración básica de usuarios
-- validación de roles: `admin`, `agente`, `supervisor`
+- validación de roles: `admin`, `agente`, `supervisor`, `ciudadano`
 - documentación de API con Swagger
 
 ---
@@ -31,7 +31,7 @@ Este servicio se encarga de:
 ```text
 ms-auth-service/
 ├── db/
-│   └── auth_db.sql
+│   └── init.sql
 ├── src/
 │   ├── config/
 │   │   └── database.js
@@ -120,10 +120,10 @@ SERVICE_NAME=ms-auth-service
 PORT=8001
 
 DB_HOST=localhost
-DB_PORT=5433
+DB_PORT=5432
 DB_NAME=auth_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+DB_USER=auth_user
+DB_PASSWORD=auth_pass
 
 JWT_SECRET=supersecretkey_auth_2026
 JWT_EXPIRES_IN=1h
@@ -172,7 +172,7 @@ docker ps
 ### Entrar a PostgreSQL
 
 ```bash
-docker exec -it auth-db psql -U postgres -d auth_db
+docker exec -it db-ms-auth-service psql -U auth_user -d auth_db
 ```
 
 ### Consultar usuarios
@@ -271,6 +271,14 @@ Body:
   "refreshToken": "token_generado"
 }
 ```
+
+### Validate token (Gateway)
+
+```http
+POST /api/auth/validate
+```
+
+Requiere token en el header `Authorization`.
 
 ### Listar usuarios
 
@@ -477,8 +485,8 @@ Levantar el contenedor otra vez con Podman
 podman run -d \
   --name auth-db \
   -e POSTGRES_DB=auth_db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_USER=auth_user \
+  -e POSTGRES_PASSWORD=auth_pass \
   -p 5433:5432 \
   -v auth-db-data:/var/lib/postgresql/data \
   docker.io/library/postgres:16

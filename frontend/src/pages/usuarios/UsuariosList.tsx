@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { UserPlus, X } from 'lucide-react'
+import { UserPlus, X, Search, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useUsuarios, useCreateUsuario } from '../../hooks/useUsuarios'
 import { useAuth } from '../../hooks/useAuth'
 import type { UserRole } from '../../types'
@@ -44,31 +44,86 @@ function extractError(err: unknown): string {
   return err instanceof Error ? err.message : 'Error al crear usuario'
 }
 
+import { getPersonaByEmail } from '../../api/personas.api'
+import PersonaForm from '../../components/forms/PersonaForm'
+
 function UsuariosList() {
-  const { data, isLoading, isError, error } = useUsuarios()
+  const { data, isLoading, isError, error, refetch } = useUsuarios()
   const { user } = useAuth()
   const createMutation = useCreateUsuario()
   const [showForm, setShowForm] = useState(false)
+  const [showPersonaForm, setShowPersonaForm] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
 
-  const isCiudadano = user?.rol === 'ciudadano'
+  const isAdmin = user?.rol === 'admin'
   const filteredData = data
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+    if (name === 'email') {
+      setEmailVerified(null)
+      setFormError(null)
+    }
+  }
+
+  async function handleVerifyEmail() {
+    if (!form.email || !form.email.includes('@')) {
+      setFormError('Por favor ingrese un email válido')
+      return
+    }
+
+    setIsVerifyingEmail(true)
+    setFormError(null)
+    try {
+      const persona = await getPersonaByEmail(form.email)
+      if (persona) {
+        setEmailVerified(true)
+        setFormError(null)
+        // Autofill username and password with persona's document number
+        setForm(prev => ({ 
+          ...prev, 
+          username: persona.numero_documento,
+          password: persona.numero_documento 
+        }))
+      } else {
+        setEmailVerified(false)
+        setFormError('No se encontró una persona con este email. Puede registrarla primero.')
+      }
+    } catch (err) {
+      setEmailVerified(false)
+      setFormError('Error al verificar el email. Intente de nuevo.')
+    } finally {
+      setIsVerifyingEmail(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setFormError(null)
+
+    if (emailVerified !== true) {
+      setFormError('Debe verificar que el email pertenezca a una persona registrada.')
+      return
+    }
+
     try {
       await createMutation.mutateAsync(form)
       setForm(emptyForm)
+      setEmailVerified(null)
       setShowForm(false)
     } catch (err) {
       setFormError(extractError(err))
     }
+  }
+
+  const handlePersonaSuccess = () => {
+    setShowPersonaForm(false)
+    setShowForm(false)
+    refetch()
   }
 
   return (
@@ -86,7 +141,7 @@ function UsuariosList() {
             Gestión de cuentas de acceso al sistema.
           </p>
         </div>
-        {!isCiudadano && user?.rol !== 'supervisor' && (
+        {isAdmin && (
           <button
             type="button"
             onClick={() => setShowForm((s) => !s)}
@@ -100,108 +155,193 @@ function UsuariosList() {
 
       {/* Formulario nuevo usuario (Modal) */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <form
             onSubmit={handleSubmit}
-            className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-5"
+            className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-6"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-              <p className="text-lg font-bold text-slate-800 dark:text-slate-100">Crear nuevo usuario</p>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-5 dark:border-slate-800">
+              <div>
+                <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">Crear nuevo usuario</p>
+                <p className="text-sm text-slate-500 mt-1">El usuario debe estar previamente registrado como persona.</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
                 className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors"
                 aria-label="Cerrar formulario"
               >
-                <X size={20} />
+                <X size={24} />
               </button>
             </div>
 
-            {formError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 shadow-sm dark:border-red-900/40 dark:bg-red-950/20">
-                <p className="text-sm font-medium text-red-700 dark:text-red-400">{formError}</p>
-              </div>
-            )}
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="username">
-                  Username
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  required
-                  value={form.username}
-                  onChange={handleChange}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
-                />
-              </div>
+            <div className="space-y-6">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="email">
                   Email
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={handleChange}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
-                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="correo@ejemplo.com"
+                      className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all ${
+                        emailVerified === true
+                          ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10'
+                          : emailVerified === false
+                          ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10'
+                          : 'border-slate-200 bg-slate-50 focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800'
+                      }`}
+                    />
+                    {emailVerified === true && (
+                      <CheckCircle2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVerifyEmail}
+                    disabled={isVerifyingEmail || !form.email}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
+                  >
+                    {isVerifyingEmail ? (
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    ) : (
+                      <Search size={16} />
+                    )}
+                    Validar
+                  </button>
+                </div>
+                
+                {emailVerified === true && (
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 animate-in fade-in slide-in-from-left-1">
+                    ✓ Persona encontrada en el sistema
+                  </p>
+                )}
+
+                {emailVerified === false && (
+                  <div className="flex items-center justify-between rounded-xl bg-amber-50 p-4 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 animate-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={18} className="shrink-0" />
+                      <p>La persona no está registrada en el sistema.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPersonaForm(true)}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 active:scale-95"
+                    >
+                      <UserPlus size={14} /> Registrar Infractor
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="password">
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={form.password}
-                  onChange={handleChange}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="rol">
-                  Rol
-                </label>
-                <select
-                  id="rol"
-                  name="rol"
-                  value={form.rol}
-                  onChange={handleChange}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
-                    </option>
-                  ))}
-                </select>
+
+              {formError && emailVerified === null && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 shadow-sm dark:border-red-900/40 dark:bg-red-950/20 animate-in fade-in duration-200">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-400">{formError}</p>
+                </div>
+              )}
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="username">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    name="username"
+                    required
+                    value={form.username}
+                    onChange={handleChange}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="password">
+                    Contraseña
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={form.password}
+                    onChange={handleChange}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 sm:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="rol">
+                    Rol del Usuario
+                  </label>
+                  <select
+                    id="rol"
+                    name="rol"
+                    value={form.rol}
+                    onChange={handleChange}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <div className="mt-8 flex justify-end gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 hover:shadow disabled:opacity-60 dark:bg-rose-500 dark:hover:bg-rose-600"
+                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 transition hover:bg-rose-700 hover:-translate-y-0.5 disabled:opacity-60 dark:bg-rose-500 dark:hover:bg-rose-600"
               >
-                {createMutation.isPending ? 'Guardando…' : 'Crear usuario'}
+                {createMutation.isPending ? 'Creando…' : 'Crear usuario'}
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Modal para Crear Persona */}
+      {showPersonaForm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between mb-6 border-b pb-4 dark:border-slate-800">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Registrar Nueva Persona</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Automáticamente se creará un usuario asociado.</p>
+              </div>
+              <button
+                onClick={() => setShowPersonaForm(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <PersonaForm 
+              onSuccess={handlePersonaSuccess}
+              onCancel={() => setShowPersonaForm(false)}
+            />
+          </div>
         </div>
       )}
 

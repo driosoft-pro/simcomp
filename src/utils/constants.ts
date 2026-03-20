@@ -1,3 +1,5 @@
+export const APP_VERSION = '1.0'
+
 export const API_URLS = {
   auth: import.meta.env.VITE_AUTH_API || 'http://localhost:3001/api/auth',
   personas: import.meta.env.VITE_PERSONAS_API || 'http://localhost:3002/api',

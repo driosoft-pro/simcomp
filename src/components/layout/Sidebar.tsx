@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { APP_VERSION } from '../../utils/constants'
 import type { UserRole } from '../../types'
 
 interface NavItem {
@@ -169,7 +170,7 @@ function Sidebar({
       {/* Pie del sidebar */}
       <div className="border-t border-slate-800 px-4 py-3">
         <p className="text-center text-[10px] text-slate-600">
-          © 2026 SIMCOMP v1.0
+          © {new Date().getFullYear()} SIMCOMP v{APP_VERSION}
         </p>
       </div>
     </aside>

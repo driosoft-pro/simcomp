@@ -13,7 +13,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/usuarios:
+ * /Usuarios:
  *   get:
  *     summary: Listar usuarios
  *     tags: [Usuarios]
@@ -27,7 +27,7 @@ router.get("/", authMiddleware, roleMiddleware("admin", "supervisor", "agente", 
 
 /**
  * @swagger
- * /api/usuarios:
+ * /Usuarios:
  *   post:
  *     summary: Crear nuevo usuario
  *     tags: [Usuarios]
@@ -51,28 +51,81 @@ router.post("/", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"),
 
 /**
  * @swagger
- * /api/usuarios/{id}:
+ * /Usuarios/{id}:
  *   get:
  *     summary: Obtener usuario por id
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Usuario encontrado
  */
 router.get("/:id", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), getUser);
-// ... existing Swagger ...
+
+/**
+ * @swagger
+ * /Usuarios/{id}:
+ *   put:
+ *     summary: Actualizar usuario
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserRequest'
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado
+ */
 router.put("/:id", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"), updateUserController);
 
 /**
  * @swagger
- * /api/usuarios/{id}/estado:
+ * /Usuarios/{id}/estado:
  *   patch:
  *     summary: Cambiar estado del usuario
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               estado:
+ *                 type: string
+ *                 enum: [activo, inactivo]
+ *                 default: activo
  *     responses:
  *       200:
  *         description: Estado actualizado

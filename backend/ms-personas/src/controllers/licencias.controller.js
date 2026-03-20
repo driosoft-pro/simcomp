@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import {
   crearLicencia,
+  listarLicencias,
   listarLicenciasPorPersona,
   obtenerLicenciaPorNumero,
   actualizarLicencia,
@@ -28,6 +29,22 @@ export async function crearLicenciaController(req, res) {
     const status = error.message.includes("no existe") ? 404 : 500;
 
     return res.status(status).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+
+export async function listarLicenciasController(req, res) {
+  try {
+    const licencias = await listarLicencias();
+
+    return res.json({
+      ok: true,
+      data: licencias,
+    });
+  } catch (error) {
+    return res.status(500).json({
       ok: false,
       message: error.message,
     });

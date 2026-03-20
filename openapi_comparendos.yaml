@@ -1,0 +1,356 @@
+openapi: "3.0.3"
+info:
+  title: Comparendos API Collection
+  description: >
+    OpenAPI specification generated from the Insomnia collection "Comparendos".
+    Covers Auth, Usuarios, Personas, Licencias, Automotores, Infracciones, and Comparendos microservices.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8001
+    description: AuthAPI (Auth & Usuarios)
+  - url: http://localhost:8002
+    description: PersonasAPI (Personas & Licencias)
+  - url: http://localhost:8003
+    description: AutomotoresAPI
+  - url: http://localhost:8004
+    description: InfraccionesAPI
+  - url: http://localhost:8005
+    description: ComparendosAPI
+
+tags:
+  - name: Swaggers
+    description: Swagger / OpenAPI documentation endpoints for each microservice
+  - name: Users
+    description: Authentication and user management
+  - name: Personas
+    description: People and driving licenses
+  - name: Automotores
+    description: Vehicle management
+  - name: Infracciones
+    description: Traffic violations catalogue
+  - name: Comparendos
+    description: Traffic citations
+
+paths:
+
+  # ─────────────────────────────────────────────
+  # Swagger / Docs endpoints
+  # ─────────────────────────────────────────────
+  /api/docs:
+    get:
+      tags:
+        - Swaggers
+      summary: API documentation (generic path — see server list for each service)
+      description: >
+        Each microservice exposes its Swagger UI at `/api/docs`.
+        Use the corresponding server URL to reach the correct service:
+        - AuthAPI → http://localhost:8001/api/docs
+        - PersonasAPI → http://localhost:8002/api/docs
+        - AutomotoresAPI → http://localhost:8003/api/docs
+        - InfraccionesAPI → http://localhost:8004/api/docs
+        - ComparendosAPI → http://localhost:8005/api/docs
+      responses:
+        "200":
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  # ─────────────────────────────────────────────
+  # Auth – server: http://localhost:8001
+  # ─────────────────────────────────────────────
+  /api/Auth/login:
+    post:
+      tags:
+        - Users
+      summary: Login
+      description: Authenticates a user and returns a session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              identifier: admin@simcomp.gov.co
+              password: Admin123*
+      responses:
+        "200":
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+
+  # ─────────────────────────────────────────────
+  # Usuarios – server: http://localhost:8001
+  # ─────────────────────────────────────────────
+  /api/Usuarios/:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Returns a list of all system users.
+      responses:
+        "200":
+          description: Array of user objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  # ─────────────────────────────────────────────
+  # Personas – server: http://localhost:8002
+  # ─────────────────────────────────────────────
+  /api/Personas/:
+    get:
+      tags:
+        - Personas
+      summary: List people
+      description: Returns a list of registered persons.
+      responses:
+        "200":
+          description: Array of person objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Persona"
+        "401":
+          description: Unauthorized
+
+  # ─────────────────────────────────────────────
+  # Licencias – server: http://localhost:8002
+  # ─────────────────────────────────────────────
+  /api/Licencias/:
+    get:
+      tags:
+        - Personas
+      summary: List driving licenses
+      description: Returns a list of registered driving licenses.
+      responses:
+        "200":
+          description: Array of license objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Licencia"
+        "401":
+          description: Unauthorized
+
+  # ─────────────────────────────────────────────
+  # Automotores – server: http://localhost:8003
+  # ─────────────────────────────────────────────
+  /api/Automotores/:
+    get:
+      tags:
+        - Automotores
+      summary: List vehicles
+      description: Returns a list of registered vehicles.
+      responses:
+        "200":
+          description: Array of vehicle objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Automotor"
+        "401":
+          description: Unauthorized
+
+  # ─────────────────────────────────────────────
+  # Infracciones – server: http://localhost:8004
+  # ─────────────────────────────────────────────
+  /api/Infracciones/:
+    get:
+      tags:
+        - Infracciones
+      summary: List traffic violations
+      description: Returns the catalogue of traffic violation types.
+      responses:
+        "200":
+          description: Array of infraction objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Infraccion"
+        "401":
+          description: Unauthorized
+
+  # ─────────────────────────────────────────────
+  # Comparendos – server: http://localhost:8005
+  # ─────────────────────────────────────────────
+  /api/Comparendos/:
+    get:
+      tags:
+        - Comparendos
+      summary: List traffic citations
+      description: Returns a list of issued traffic citations (comparendos).
+      responses:
+        "200":
+          description: Array of citation objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comparendo"
+        "401":
+          description: Unauthorized
+
+# ─────────────────────────────────────────────
+# Reusable schemas
+# ─────────────────────────────────────────────
+components:
+  schemas:
+
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          format: email
+          example: admin@simcomp.gov.co
+        password:
+          type: string
+          format: password
+          example: Admin123*
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT or session token
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        identifier:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+
+    Persona:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        documento:
+          type: string
+          description: National ID number
+        fechaNacimiento:
+          type: string
+          format: date
+
+    Licencia:
+      type: object
+      properties:
+        id:
+          type: integer
+        numero:
+          type: string
+        categoria:
+          type: string
+        fechaExpedicion:
+          type: string
+          format: date
+        fechaVencimiento:
+          type: string
+          format: date
+        personaId:
+          type: integer
+
+    Automotor:
+      type: object
+      properties:
+        id:
+          type: integer
+        placa:
+          type: string
+          description: License plate
+        marca:
+          type: string
+        modelo:
+          type: string
+        año:
+          type: integer
+        propietarioId:
+          type: integer
+
+    Infraccion:
+      type: object
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        descripcion:
+          type: string
+        valor:
+          type: number
+          format: float
+          description: Fine amount in COP
+
+    Comparendo:
+      type: object
+      properties:
+        id:
+          type: integer
+        numero:
+          type: string
+          description: Citation number
+        fecha:
+          type: string
+          format: date-time
+        infraccionId:
+          type: integer
+        automotorId:
+          type: integer
+        personaId:
+          type: integer
+        agente:
+          type: string
+        estado:
+          type: string
+          enum:
+            - PENDIENTE
+            - PAGADO
+            - ANULADO
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

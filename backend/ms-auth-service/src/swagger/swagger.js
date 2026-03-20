@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: process.env.SWAGGER_SERVER_URL || "/",
+        url: "/api",
       },
     ],
     components: {
@@ -25,10 +25,21 @@ const options = {
       schemas: {
         LoginRequest: {
           type: "object",
-          required: ["username", "password"],
+          required: ["identifier", "password"],
           properties: {
-            username: { type: "string", example: "admin" },
+            identifier: { type: "string", example: "admin@simcomp.gov.co" },
             password: { type: "string", example: "Admin123*" },
+          },
+        },
+        UserRequest: {
+          type: "object",
+          required: ["username", "email", "password", "rol"],
+          properties: {
+            username: { type: "string", example: "jdoe" },
+            email: { type: "string", example: "jdoe@example.com" },
+            password: { type: "string", example: "User123*" },
+            rol: { type: "string", enum: ["admin", "agente", "supervisor", "ciudadano"], example: "ciudadano" },
+            estado: { type: "string", enum: ["activo", "inactivo"], example: "activo" },
           },
         },
         User: {
@@ -43,6 +54,11 @@ const options = {
         },
       },
     },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
   apis: ["./src/routes/*.js"],
 };

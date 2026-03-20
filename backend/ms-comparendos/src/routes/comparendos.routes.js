@@ -31,6 +31,7 @@ const router = Router();
  *         id:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *           example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
  *         numero_comparendo:
  *           type: string
@@ -95,10 +96,12 @@ const router = Router();
  *         id:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *           example: e761c37e-0b3d-40e8-9d5c-9e4d8a911001
  *         comparendo_id:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *           example: 3e7f2d93-9c20-4a4d-b2e5-4ff0f1d73001
  *         estado_anterior:
  *           type: string
@@ -194,6 +197,8 @@ const router = Router();
  *   get:
  *     summary: Verificar estado del microservicio
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Servicio activo
@@ -206,6 +211,8 @@ router.get("/health", healthCheck);
  *   get:
  *     summary: Listar todos los comparendos
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de comparendos
@@ -227,6 +234,8 @@ router.get("/comparendos", listarComparendosController);
  *   get:
  *     summary: Obtener comparendo por número
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: numero
@@ -255,6 +264,8 @@ router.get("/comparendos/numero/:numero", obtenerComparendoPorNumeroController);
  *   get:
  *     summary: Obtener comparendo por ID
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -262,6 +273,7 @@ router.get("/comparendos/numero/:numero", obtenerComparendoPorNumeroController);
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Comparendo encontrado
@@ -287,6 +299,8 @@ router.get(
  *   get:
  *     summary: Obtener historial de un comparendo
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -294,6 +308,7 @@ router.get(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Historial del comparendo
@@ -321,6 +336,8 @@ router.get(
  *   post:
  *     summary: Crear un comparendo
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -408,6 +425,8 @@ router.post(
  *   patch:
  *     summary: Marcar comparendo como pagado
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -415,6 +434,7 @@ router.post(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Comparendo pagado correctamente
@@ -443,6 +463,8 @@ router.patch(
  *   patch:
  *     summary: Anular un comparendo
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -450,6 +472,7 @@ router.patch(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Comparendo anulado correctamente
@@ -478,6 +501,8 @@ router.patch(
  *   patch:
  *     summary: Revertir comparendo a estado pendiente
  *     tags: [Comparendos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -485,6 +510,7 @@ router.patch(
  *         schema:
  *           type: string
  *           format: uuid
+ *           default: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3"
  *     responses:
  *       200:
  *         description: Comparendo regresado a estado pendiente

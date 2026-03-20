@@ -54,7 +54,6 @@ router.get("/health", (req, res) => {
  *           schema:
  *             $ref: '#/components/schemas/Persona'
  *     responses:
- *     responses:
  *       201:
  *         description: Persona creada correctamente
  */
@@ -212,7 +211,7 @@ router.put(
   actualizarPersonaController
 );
 
-export default router;
+
 /**
  * @swagger
  * /Personas/email/{email}:
@@ -234,3 +233,5 @@ export default router;
  *         description: Persona no encontrada
  */
 router.get("/email/:email", obtenerPersonaPorEmailController);
+
+export default router;

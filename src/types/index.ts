@@ -223,9 +223,14 @@ export interface CreateComparendoPayload {
   agente_nombre: string
   placa_vehiculo: string
   clase_vehiculo?: string
-  infraccion_codigo: string
-  infraccion_descripcion: string
-  valor_multa: number
+  infraccion_codigo?: string
+  infraccion_descripcion?: string
+  valor_multa?: number
+  infracciones?: {
+    codigo: string
+    descripcion: string
+    valor_multa: number
+  }[]
   fecha_comparendo: string
   lugar: string
   ciudad: string

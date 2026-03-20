@@ -14,6 +14,7 @@ import InfraccionDetail from './pages/infracciones/InfraccionDetail'
 import ComparendosList from './pages/comparendos/ComparendosList'
 import ComparendoDetail from './pages/comparendos/ComparendoDetail'
 import NuevoComparendo from './pages/comparendos/NuevoComparendo'
+import EditarComparendo from './pages/comparendos/EditarComparendo'
 import UsuariosList from './pages/usuarios/UsuariosList'
 import UsuarioDetail from './pages/usuarios/UsuarioDetail'
 
@@ -137,12 +138,23 @@ function App() {
           }
         />
 
-        <Route
+         <Route
           path="/comparendos/nuevo"
           element={
             <ProtectedRoute roles={['admin', 'agente']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <NuevoComparendo />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/comparendos/editar/:id"
+          element={
+            <ProtectedRoute roles={['admin', 'agente']}>
+              <Layout theme={theme} onToggleTheme={toggleTheme}>
+                <EditarComparendo />
               </Layout>
             </ProtectedRoute>
           }

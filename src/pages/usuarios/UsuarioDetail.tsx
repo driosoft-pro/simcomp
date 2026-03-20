@@ -110,6 +110,8 @@ function UsuarioDetail() {
   }
 
   const isAdmin = user?.rol === 'admin'
+  const isSupervisor = user?.rol === 'supervisor'
+  const canChangeStatus = isAdmin || (isSupervisor && usuario?.rol === 'agente')
 
   return (
     <div className="space-y-6">
@@ -283,8 +285,8 @@ function UsuarioDetail() {
             </form>
           )}
 
-          {/* Formulario: cambiar estado (PATCH) - solo admin */}
-          {isAdmin && (
+          {/* Formulario: cambiar estado (PATCH) - admin todo, supervisor solo agentes */}
+          {canChangeStatus && (
             <form
               onSubmit={handleCambiarEstado}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-5"

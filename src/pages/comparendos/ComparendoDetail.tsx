@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../context/ToastContext'
 import { formatCurrency, formatDate } from '../../utils/formatters'
-import { ArrowLeft, ClipboardList, AlertCircle, CheckCircle2, XCircle, RotateCcw, Clock, CreditCard, Receipt, X, Car, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, ClipboardList, AlertCircle, CheckCircle2, XCircle, RotateCcw, Clock, CreditCard, Receipt, X, Car, ShieldAlert, Edit } from 'lucide-react'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import type { Comparendo } from '../../types'
 
@@ -231,6 +231,16 @@ function ComparendoDetail() {
         })()}
         {/* Acciones */}
         <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 px-6 py-4 dark:border-slate-800">
+          {((user?.rol === 'admin' || user?.rol === 'agente') && data.estado === 'PENDIENTE') && (
+            <Link
+              to={`/comparendos/editar/${data.comparendo_id}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+            >
+              <Edit size={16} />
+              Editar Comparendo
+            </Link>
+          )}
+
           {canPagar && (
             <button
               type="button"

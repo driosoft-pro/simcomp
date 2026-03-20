@@ -4,7 +4,7 @@ import { useCreateComparendo, useComparendos } from '../../hooks/useComparendos'
 import { getPersonaByDocumento } from '../../api/personas.api'
 import { getAutomotoresByPropietario, searchAutomotorByPlaca } from '../../api/automotores.api'
 import { useInfracciones } from '../../hooks/useInfracciones'
-import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X, Car } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Search, CheckCircle2, UserPlus, X, Car, ShieldAlert } from 'lucide-react'
 import PersonaForm from '../../components/forms/PersonaForm'
 import VehiculoForm from '../../components/forms/VehiculoForm'
 
@@ -560,6 +560,35 @@ function NuevoComparendo() {
                     <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{formData.infraccion_descripcion}</p>
                 </div>
             )}
+            {formData.infraccion_codigo && (() => {
+              const sel = infracciones?.find(i => i.codigo === formData.infraccion_codigo)
+              const tipo = sel?.tipo_sancion ?? ''
+              const inmoviliza = tipo === 'INMOVILIZACION' || tipo === 'MIXTA'
+              const suspende   = tipo === 'SUSPENSION_LICENCIA' || tipo === 'MIXTA'
+              if (!inmoviliza && !suspende) return null
+              return (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-950/20">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
+                    ⚠ Efectos automáticos al registrar este comparendo
+                  </p>
+                  <ul className="space-y-1">
+                    {inmoviliza && (
+                      <li className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300">
+                        <Car size={14} className="shrink-0" />
+                        El vehículo <strong>{formData.placa_vehiculo || '(placa)'}</strong> será marcado como <strong>Inmovilizado</strong>
+                      </li>
+                    )}
+                    {suspende && (
+                      <li className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300">
+                        <ShieldAlert size={14} className="shrink-0" />
+                        Las licencias vigentes del infractor serán marcadas como <strong>Suspendidas</strong>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )
+            })()}
+
           </div>
 
           {/* Lugar y Ciudad */}

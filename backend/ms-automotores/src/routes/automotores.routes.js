@@ -7,7 +7,8 @@ import {
   getAutomotorByPlacaController,
   updateAutomotorController,
   deleteAutomotorController,
-  changeAutomotorStatusController
+  changeAutomotorStatusController,
+  inmovilizarPorPlacaController
 } from "../controllers/automotores.controllers.js";
 
 const router = express.Router();
@@ -189,5 +190,28 @@ router.delete("/:id", deleteAutomotorController);
  *         description: Automotor no encontrado
  */
 router.patch("/:id/estado", changeAutomotorStatusController);
+
+/**
+ * @swagger
+ * /automotores/placa/{placa}/inmovilizar:
+ *   patch:
+ *     summary: Inmovilizar un automotor por placa
+ *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: placa
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Placa del automotor
+ *     responses:
+ *       200:
+ *         description: Vehículo inmovilizado correctamente
+ *       404:
+ *         description: Automotor no encontrado
+ */
+router.patch("/placa/:placa/inmovilizar", inmovilizarPorPlacaController);
 
 export default router;

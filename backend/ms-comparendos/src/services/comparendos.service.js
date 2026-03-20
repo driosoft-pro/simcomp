@@ -50,6 +50,43 @@ export async function crearComparendo(data) {
     );
 
     await transaction.commit();
+
+    // ── Efectos secundarios según tipo_sancion (best-effort) ─────────────────
+    try {
+      const infraccionRes = await axios.get(
+        `${process.env.INFRACCIONES_SERVICE_URL}/infracciones/codigo/${data.infraccion_codigo}`
+      );
+      const tipos = infraccionRes.data?.data?.tipo_sancion;
+
+      const inmovilizar = tipos === "INMOVILIZACION" || tipos === "MIXTA";
+      const suspender   = tipos === "SUSPENSION_LICENCIA" || tipos === "MIXTA";
+
+      if (inmovilizar) {
+        try {
+          await axios.patch(
+            `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${data.placa_vehiculo}/inmovilizar`
+          );
+          console.log(`[comparendos] Vehículo ${data.placa_vehiculo} inmovilizado por infracción ${data.infraccion_codigo}`);
+        } catch (err) {
+          console.error(`[comparendos] Error inmovilizando vehículo ${data.placa_vehiculo}:`, err.message);
+        }
+      }
+
+      if (suspender) {
+        try {
+          await axios.patch(
+            `${process.env.PERSONAS_SERVICE_URL}/Licencias/suspender/${data.ciudadano_documento}`
+          );
+          console.log(`[comparendos] Licencias suspendidas para documento ${data.ciudadano_documento} por infracción ${data.infraccion_codigo}`);
+        } catch (err) {
+          console.error(`[comparendos] Error suspendiendo licencias para ${data.ciudadano_documento}:`, err.message);
+        }
+      }
+    } catch (err) {
+      console.error(`[comparendos] Error consultando tipo_sancion de infracción ${data.infraccion_codigo}:`, err.message);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     return nuevoComparendo;
   } catch (error) {
     await transaction.rollback();
@@ -61,6 +98,7 @@ export async function crearComparendo(data) {
     throw error;
   }
 }
+
 
 export async function listarComparendos({ userRole, username, email } = {}) {
   const where = {};
@@ -237,11 +275,40 @@ export async function pagarComparendo(comparendoId, { userRole, username } = {})
     }
   }
 
-  return cambiarEstadoComparendo(
+  const comparendoPagado = await cambiarEstadoComparendo(
     comparendoId,
     "PAGADO",
     `Pago registrado por usuario ${username} (Rol: ${userRole})`
   );
+
+  // Al pagar, restaurar el vehículo a "activo" (best-effort)
+  try {
+    await axios.patch(
+      `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}/inmovilizar`,
+      {},
+      { timeout: 5000 }
+    ).catch(() => {
+      // Si no existe el endpoint de inmovilizar, usar el genérico por placa
+    });
+
+    // Buscar el vehículo primero para obtener su ID y usar el endpoint de estado
+    const vehiculoRes = await axios.get(
+      `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/placa/${comparendoPagado.placa_vehiculo}`
+    );
+    const vehiculoId = vehiculoRes.data?.data?.id;
+    if (vehiculoId) {
+      await axios.patch(
+        `${process.env.AUTOMOTORES_SERVICE_URL}/automotores/${vehiculoId}/estado`,
+        { estado: "activo" }
+      );
+      console.log(`[comparendos] Vehículo ${comparendoPagado.placa_vehiculo} reactivado tras pago del comparendo ${comparendoId}`);
+    }
+  } catch (err) {
+    console.error(`[comparendos] Error reactivando vehículo ${comparendoPagado.placa_vehiculo} tras pago:`, err.message);
+  }
+
+  return comparendoPagado;
+
 }
 
 export async function anularComparendo(comparendoId) {

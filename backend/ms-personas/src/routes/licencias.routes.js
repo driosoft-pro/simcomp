@@ -6,6 +6,7 @@ import {
   listarLicenciasPorPersonaController,
   obtenerLicenciaPorNumeroController,
   actualizarLicenciaController,
+  suspenderLicenciasPorDocumentoController,
 } from "../controllers/licencias.controller.js";
 
 const router = Router();
@@ -159,5 +160,28 @@ router.put(
   ],
   actualizarLicenciaController
 );
+
+/**
+ * @swagger
+ * /Licencias/suspender/{documento}:
+ *   patch:
+ *     summary: Suspender todas las licencias vigentes de una persona por documento
+ *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: documento
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Número de documento del infractor
+ *     responses:
+ *       200:
+ *         description: Licencias suspendidas correctamente
+ *       404:
+ *         description: Persona no encontrada
+ */
+router.patch("/suspender/:documento", suspenderLicenciasPorDocumentoController);
 
 export default router;

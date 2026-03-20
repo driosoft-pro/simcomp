@@ -121,3 +121,24 @@ export async function getAutomotorByPlaca(placa) {
     }
   });
 }
+
+export async function inmovilizarAutomotorPorPlaca(placa) {
+  const placaNormalizada = placa.toUpperCase();
+
+  const automotor = await Automotor.findOne({
+    where: {
+      placa: placaNormalizada,
+      deleted_at: null
+    }
+  });
+
+  if (!automotor) {
+    throw new Error(`Automotor con placa ${placa} no encontrado`);
+  }
+
+  automotor.estado = "inmovilizado";
+  automotor.updated_at = new Date();
+  await automotor.save();
+
+  return automotor;
+}

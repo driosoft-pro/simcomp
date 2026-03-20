@@ -80,3 +80,33 @@ export async function obtenerLicenciaPorNumero(numeroLicencia) {
     ],
   });
 }
+
+export async function suspenderLicenciasPorDocumento(documento) {
+  // Buscar la persona por número de documento
+  const persona = await Persona.findOne({
+    where: { numero_documento: documento },
+  });
+
+  if (!persona) {
+    throw new Error(`Persona con documento ${documento} no encontrada`);
+  }
+
+  // Buscar todas las licencias vigentes de esa persona
+  const licencias = await Licencia.findAll({
+    where: {
+      persona_id: persona.id,
+      estado: "vigente",
+    },
+  });
+
+  if (licencias.length === 0) {
+    return { suspendidas: 0, message: "No se encontraron licencias vigentes para suspender" };
+  }
+
+  // Suspender cada licencia
+  for (const licencia of licencias) {
+    await licencia.update({ estado: "suspendida" });
+  }
+
+  return { suspendidas: licencias.length, licencias };
+}

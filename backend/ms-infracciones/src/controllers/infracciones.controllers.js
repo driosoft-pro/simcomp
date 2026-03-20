@@ -1,6 +1,7 @@
 import {
   getAllInfracciones,
   getInfraccionById,
+  getInfraccionByCodigo,
   createInfraccion,
   updateInfraccion,
   deleteInfraccion,
@@ -45,6 +46,30 @@ export async function getInfraccion(req, res) {
     return res.status(500).json({
       success: false,
       message: "Error consultando infracción",
+    });
+  }
+}
+
+export async function getInfraccionByCodigoController(req, res) {
+  try {
+    const infraccion = await getInfraccionByCodigo(req.params.codigo);
+
+    if (!infraccion) {
+      return res.status(404).json({
+        success: false,
+        message: "Infracción no encontrada",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: infraccion,
+    });
+  } catch (error) {
+    console.error("Error in getInfraccionByCodigo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error consultando infracción por código",
     });
   }
 }

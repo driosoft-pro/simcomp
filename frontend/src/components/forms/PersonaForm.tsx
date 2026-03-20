@@ -29,7 +29,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
 
   // Sync documento with licencia logic
   const [docNumber, setDocNumber] = useState(persona?.numero_documento || defaultDocumento || '')
-  const [licNumber, setLicNumber] = useState(firstLicencia?.numero_licencia || '')
+  const [licNumber, setLicNumber] = useState(firstLicencia?.numero_licencia || defaultDocumento || '')
   const [licManuallyEdited, setLicManuallyEdited] = useState(isEdit && !!firstLicencia)
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {

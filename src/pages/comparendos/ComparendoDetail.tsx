@@ -411,6 +411,27 @@ function ComparendoDetail() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={showAnularConfirm}
+        title="Anular Comparendo"
+        message="¿Está seguro que desea anular este comparendo? Esta acción es administrativa y quedará registrada en el historial."
+        confirmText="Anular"
+        type="danger"
+        onConfirm={handleAnular}
+        onCancel={() => setShowAnularConfirm(false)}
+      />
+
+      <ConfirmDialog
+        open={showRevertirConfirm}
+        title="Revertir Estado"
+        message="¿Está seguro que desea revertir el estado de este comparendo a PENDIENTE? Esto permitirá realizar nuevas acciones sobre él."
+        confirmText="Revertir"
+        type="warning"
+        onConfirm={handleRevertir}
+        onCancel={() => setShowRevertirConfirm(false)}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import {
   listarLicenciasPorPersona,
   obtenerLicenciaPorNumero,
   actualizarLicencia,
+  suspenderLicenciasPorDocumento,
 } from "../services/licencias.service.js";
 
 export async function crearLicenciaController(req, res) {
@@ -118,6 +119,25 @@ export async function actualizarLicenciaController(req, res) {
     });
   } catch (error) {
     const status = error.message.includes("no existe") ? 404 : 500;
+    return res.status(status).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+
+export async function suspenderLicenciasPorDocumentoController(req, res) {
+  try {
+    const { documento } = req.params;
+    const result = await suspenderLicenciasPorDocumento(documento);
+
+    return res.json({
+      ok: true,
+      message: `Licencias suspendidas: ${result.suspendidas}`,
+      data: result,
+    });
+  } catch (error) {
+    const status = error.message.includes("no encontrada") ? 404 : 500;
     return res.status(status).json({
       ok: false,
       message: error.message,

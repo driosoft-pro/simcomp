@@ -12,6 +12,14 @@ export async function getInfraccionById(id) {
   });
 }
 
+export async function getInfraccionByCodigo(codigo) {
+  return await Infraccion.findOne({
+    where: {
+      codigo,
+    },
+  });
+}
+
 export async function createInfraccion(data) {
   const existing = await Infraccion.findOne({
     where: { codigo: data.codigo },

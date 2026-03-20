@@ -14,14 +14,20 @@ export async function getUserById(id) {
 }
 
 export async function createUser(data) {
-  const existingUser = await User.findOne({
-    where: {
-      email: data.email,
-    },
+  const existingByEmail = await User.findOne({
+    where: { email: data.email },
   });
 
-  if (existingUser) {
-    throw new Error("El usuario ya existe");
+  if (existingByEmail) {
+    throw new Error("El email ya está registrado");
+  }
+
+  const existingByUsername = await User.findOne({
+    where: { username: data.username },
+  });
+
+  if (existingByUsername) {
+    throw new Error("El nombre de usuario ya existe");
   }
 
   const password_hash = await bcrypt.hash(data.password, 10);

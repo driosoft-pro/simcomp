@@ -27,6 +27,30 @@ router.get("/", authMiddleware, roleMiddleware("admin", "supervisor", "agente", 
 
 /**
  * @swagger
+ * /api/usuarios:
+ *   post:
+ *     summary: Crear nuevo usuario
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserRequest'
+ *     responses:
+ *       201:
+ *         description: Usuario creado
+ *       400:
+ *         description: Datos inválidos
+ *       409:
+ *         description: El usuario ya existe
+ */
+router.post("/", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"), createUserController);
+
+/**
+ * @swagger
  * /api/usuarios/{id}:
  *   get:
  *     summary: Obtener usuario por id

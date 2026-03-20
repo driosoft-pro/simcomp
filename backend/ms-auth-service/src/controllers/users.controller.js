@@ -81,7 +81,8 @@ export async function createUserController(req, res) {
       },
     });
   } catch (error) {
-    const status = error.message.includes("existe") ? 409 : 400;
+    const isConflict = error.message.includes("existe") || error.message.includes("registrado");
+    const status = isConflict ? 409 : 400;
 
     return res.status(status).json({
       success: false,

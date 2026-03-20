@@ -11,6 +11,12 @@ import {
 } from '../../hooks/useInfracciones'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency } from '../../utils/formatters'
+import { useSearch } from '../../hooks/useSearch'
+import { usePagination } from '../../hooks/usePagination'
+import { useToast } from '../../context/ToastContext'
+import SearchInput from '../../components/ui/SearchInput'
+import Pagination from '../../components/ui/Pagination'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import type { Infraccion } from '../../types'
 const tipoSancionStyles: Record<Infraccion['tipo_sancion'], string> = {
   MONETARIA: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -31,9 +37,25 @@ function InfraccionesList() {
   const deleteInfraccion = useDeleteInfraccion()
   const toggleVigencia = useToggleVigenciaInfraccion()
   const activateInfraccion = useActivateInfraccion()
+  const { addToast } = useToast()
 
+  const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [confirmActivateId, setConfirmActivateId] = useState<string | null>(null)
   const [editingInfraccion, setEditingInfraccion] = useState<Infraccion | null>(null)
+
+  const searchedData = useSearch(data, searchTerm, ['codigo', 'descripcion', 'articulo_codigo'])
+
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(searchedData)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -96,40 +118,51 @@ function InfraccionesList() {
     try {
       if (editingInfraccion) {
         await updateInfraccion.mutateAsync({ id: editingInfraccion.infraccion_id, data: formData })
+        addToast('Infracción actualizada', 'success')
       } else {
         await createInfraccion.mutateAsync(formData)
+        addToast('Infracción creada', 'success')
       }
       handleCloseModal()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving infraccion:', err)
+      addToast(err.response?.data?.message || 'Error al guardar', 'error')
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Está seguro de desactivar esta infracción?')) {
-      try {
-        await deleteInfraccion.mutateAsync(id)
-      } catch (err) {
-        console.error('Error deleting:', err)
-      }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return
+    try {
+      await deleteInfraccion.mutateAsync(confirmDeleteId)
+      addToast('Infracción desactivada', 'success')
+    } catch (err: any) {
+      console.error('Error deleting:', err)
+      addToast(err.response?.data?.message || 'Error al desactivar', 'error')
+    } finally {
+      setConfirmDeleteId(null)
     }
   }
 
-  const handleActivate = async (id: string) => {
-    if (window.confirm('¿Está seguro de activar esta infracción?')) {
-      try {
-        await activateInfraccion.mutateAsync(id)
-      } catch (err) {
-        console.error('Error activating:', err)
-      }
+  const handleActivate = async () => {
+    if (!confirmActivateId) return
+    try {
+      await activateInfraccion.mutateAsync(confirmActivateId)
+      addToast('Infracción activada', 'success')
+    } catch (err: any) {
+      console.error('Error activating:', err)
+      addToast(err.response?.data?.message || 'Error al activar', 'error')
+    } finally {
+      setConfirmActivateId(null)
     }
   }
 
   const handleToggleVigencia = async (id: string) => {
     try {
       await toggleVigencia.mutateAsync(id)
-    } catch (err) {
+      addToast('Vigencia actualizada', 'success')
+    } catch (err: any) {
       console.error('Error toggling vigencia:', err)
+      addToast(err.response?.data?.message || 'Error al actualizar vigencia', 'error')
     }
   }
 
@@ -158,6 +191,10 @@ function InfraccionesList() {
             Nueva Infracción
           </button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por código, descripción, artículo..." />
       </div>
 
       {/* Error */}
@@ -199,7 +236,7 @@ function InfraccionesList() {
                   </tr>
                 ))}
 
-              {data?.map((infraccion) => (
+              {paginatedItems?.map((infraccion) => (
                 <tr
                   key={infraccion.infraccion_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -272,7 +309,7 @@ function InfraccionesList() {
                           </button>
                           {infraccion.estado === 'activo' ? (
                             <button
-                              onClick={() => handleDelete(infraccion.infraccion_id)}
+                              onClick={() => setConfirmDeleteId(infraccion.infraccion_id)}
                               disabled={deleteInfraccion.isPending}
                               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
                             >
@@ -280,7 +317,7 @@ function InfraccionesList() {
                             </button>
                           ) : (
                             <button
-                              onClick={() => handleActivate(infraccion.infraccion_id)}
+                              onClick={() => setConfirmActivateId(infraccion.infraccion_id)}
                               disabled={activateInfraccion.isPending}
                               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium text-xs bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded disabled:opacity-50"
                             >
@@ -296,7 +333,7 @@ function InfraccionesList() {
             </tbody>
           </table>
 
-          {!isLoading && data?.length === 0 && (
+          {!isLoading && paginatedItems?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 No hay infracciones registradas.
@@ -304,6 +341,14 @@ function InfraccionesList() {
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
 
       {/* Modal / Formulario */}
@@ -330,6 +375,7 @@ function InfraccionesList() {
                     type="text"
                     name="codigo"
                     required
+                    autoFocus
                     value={formData.codigo}
                     onChange={handleFormChange}
                     className={inputClass}
@@ -445,6 +491,25 @@ function InfraccionesList() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(confirmDeleteId)}
+        title="Desactivar Infracción"
+        message="¿Está seguro de que desea desactivar esta infracción? Esta acción la ocultará de los formularios principales."
+        confirmText="Desactivar"
+        type="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(confirmActivateId)}
+        title="Activar Infracción"
+        message="¿Está seguro de que desea reactivar esta infracción?"
+        confirmText="Activar"
+        onConfirm={handleActivate}
+        onCancel={() => setConfirmActivateId(null)}
+      />
     </div>
   )
 }

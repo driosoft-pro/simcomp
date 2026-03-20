@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { UserPlus, X, Search, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useUsuarios, useCreateUsuario } from '../../hooks/useUsuarios'
 import { useAuth } from '../../hooks/useAuth'
+import { useSearch } from '../../hooks/useSearch'
+import { usePagination } from '../../hooks/usePagination'
+import { useToast } from '../../context/ToastContext'
+import SearchInput from '../../components/ui/SearchInput'
+import Pagination from '../../components/ui/Pagination'
 import type { UserRole } from '../../types'
 import axios from 'axios'
 
@@ -51,15 +56,28 @@ function UsuariosList() {
   const { data, isLoading, isError, error, refetch } = useUsuarios()
   const { user } = useAuth()
   const createMutation = useCreateUsuario()
+  const { addToast } = useToast()
+
   const [showForm, setShowForm] = useState(false)
   const [showPersonaForm, setShowPersonaForm] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const isAdmin = user?.rol === 'admin'
-  const filteredData = data
+  const searchedData = useSearch(data, searchTerm, ['username', 'email', 'rol'])
+
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(searchedData)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target
@@ -115,8 +133,10 @@ function UsuariosList() {
       setForm(emptyForm)
       setEmailVerified(null)
       setShowForm(false)
+      addToast('Usuario creado con éxito', 'success')
     } catch (err) {
       setFormError(extractError(err))
+      addToast(extractError(err), 'error')
     }
   }
 
@@ -153,6 +173,10 @@ function UsuariosList() {
         )}
       </div>
 
+      <div className="flex items-center justify-between gap-4">
+        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por username, email, rol..." />
+      </div>
+
       {/* Formulario nuevo usuario (Modal) */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -187,6 +211,7 @@ function UsuariosList() {
                       name="email"
                       type="email"
                       required
+                      autoFocus
                       value={form.email}
                       onChange={handleChange}
                       placeholder="correo@ejemplo.com"
@@ -389,7 +414,7 @@ function UsuariosList() {
                   </tr>
                 ))}
 
-              {filteredData?.map((usuario) => (
+              {paginatedItems?.map((usuario) => (
                 <tr
                   key={usuario.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -429,12 +454,20 @@ function UsuariosList() {
             </tbody>
           </table>
 
-          {!isLoading && filteredData?.length === 0 && (
+          {!isLoading && paginatedItems?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay usuarios registrados.</p>
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
     </div>
   )

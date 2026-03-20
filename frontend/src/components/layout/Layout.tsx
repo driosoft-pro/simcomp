@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import { ToastContainer } from '../ui/Toast'
 
 interface LayoutProps {
   children: ReactNode
@@ -49,6 +50,7 @@ function Layout({ children, theme, onToggleTheme }: LayoutProps) {
           {children}
         </main>
       </div>
+      <ToastContainer />
     </div>
   )
 }

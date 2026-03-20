@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { usePersonas } from '../../hooks/usePersonas'
 import { useAuth } from '../../hooks/useAuth'
+import { useSearch } from '../../hooks/useSearch'
+import { usePagination } from '../../hooks/usePagination'
+import SearchInput from '../../components/ui/SearchInput'
+import Pagination from '../../components/ui/Pagination'
 import PersonaForm from '../../components/forms/PersonaForm'
 
 const tipoDocBadge: Record<string, string> = {
@@ -16,11 +20,24 @@ function PersonasList() {
   const { data, isLoading, isError, error } = usePersonas()
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const isCiudadano = user?.rol === 'ciudadano'
-  const filteredData = isCiudadano
+  const roleFilteredData = isCiudadano
     ? data?.filter((p) => p.numero_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : data
+
+  const searchedData = useSearch(roleFilteredData, searchTerm, ['nombres', 'apellidos', 'numero_documento', 'email', 'telefono'])
+
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(searchedData)
 
   return (
     <div className="space-y-6">
@@ -46,6 +63,10 @@ function PersonasList() {
             Registrar Persona
           </button>
         )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por nombre, documento, email..." />
       </div>
 
       {/* Error */}
@@ -83,7 +104,7 @@ function PersonasList() {
                   </tr>
                 ))}
 
-              {filteredData?.map((persona) => (
+              {paginatedItems?.map((persona) => (
                 <tr
                   key={persona.persona_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -115,7 +136,7 @@ function PersonasList() {
             </tbody>
           </table>
 
-          {!isLoading && filteredData?.length === 0 && (
+          {!isLoading && paginatedItems?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 No hay personas registradas.
@@ -123,6 +144,14 @@ function PersonasList() {
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
 
       {showForm && (

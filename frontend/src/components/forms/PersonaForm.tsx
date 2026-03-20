@@ -133,7 +133,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona }: Persona
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Tipo Documento <span className="text-red-500">*</span></label>
-            <select required name="tipo_documento" defaultValue={persona?.tipo_documento || 'CC'} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <select required autoFocus name="tipo_documento" defaultValue={persona?.tipo_documento || 'CC'} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
               <option value="CC">Cédula de Ciudadanía (CC)</option>
               <option value="CE">Cédula de Extranjería (CE)</option>
               <option value="PASAPORTE">Pasaporte</option>

@@ -7,6 +7,7 @@ import {
   useUpdateInfraccion,
   useDeleteInfraccion,
   useToggleVigenciaInfraccion,
+  useActivateInfraccion,
 } from '../../hooks/useInfracciones'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency } from '../../utils/formatters'
@@ -29,6 +30,7 @@ function InfraccionesList() {
   const updateInfraccion = useUpdateInfraccion()
   const deleteInfraccion = useDeleteInfraccion()
   const toggleVigencia = useToggleVigenciaInfraccion()
+  const activateInfraccion = useActivateInfraccion()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingInfraccion, setEditingInfraccion] = useState<Infraccion | null>(null)
@@ -104,11 +106,21 @@ function InfraccionesList() {
   }
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('¿Está seguro de eliminar esta infracción?')) {
+    if (window.confirm('¿Está seguro de desactivar esta infracción?')) {
       try {
         await deleteInfraccion.mutateAsync(id)
       } catch (err) {
         console.error('Error deleting:', err)
+      }
+    }
+  }
+
+  const handleActivate = async (id: string) => {
+    if (window.confirm('¿Está seguro de activar esta infracción?')) {
+      try {
+        await activateInfraccion.mutateAsync(id)
+      } catch (err) {
+        console.error('Error activating:', err)
       }
     }
   }
@@ -169,7 +181,8 @@ function InfraccionesList() {
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Descripción</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Artículo</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tipo sanción</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Valor multa</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-500">Valor multa</th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Estado</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Vigencia</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Acciones</th>
               </tr>
@@ -214,6 +227,17 @@ function InfraccionesList() {
                     {formatCurrency(infraccion.valor_multa)}
                   </td>
                   <td className="px-4 py-3">
+                    {infraccion.estado === 'activo' ? (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        Inactivo
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     <button
                       onClick={() => handleToggleVigencia(infraccion.infraccion_id)}
                       disabled={toggleVigencia.isPending}
@@ -246,13 +270,23 @@ function InfraccionesList() {
                           >
                             Editar
                           </button>
-                          <button
-                            onClick={() => handleDelete(infraccion.infraccion_id)}
-                            disabled={deleteInfraccion.isPending}
-                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
-                          >
-                            Eliminar
-                          </button>
+                          {infraccion.estado === 'activo' ? (
+                            <button
+                              onClick={() => handleDelete(infraccion.infraccion_id)}
+                              disabled={deleteInfraccion.isPending}
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
+                            >
+                              Eliminar
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivate(infraccion.infraccion_id)}
+                              disabled={activateInfraccion.isPending}
+                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium text-xs bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded disabled:opacity-50"
+                            >
+                              Activar
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

@@ -4,6 +4,7 @@ import {
   createInfraccion,
   updateInfraccion,
   deleteInfraccion,
+  activateInfraccion,
   changeInfraccionStatus,
 } from "../services/infracciones.service.js";
 
@@ -90,7 +91,26 @@ export async function deleteInfraccionController(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: "Infracción eliminada",
+      message: "Infracción desactivada correctamente",
+    });
+  } catch (error) {
+    const status = error.message === "Infracción no encontrada" ? 404 : 400;
+
+    return res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+export async function activateInfraccionController(req, res) {
+  try {
+    const infraccion = await activateInfraccion(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Infracción activada correctamente",
+      data: infraccion,
     });
   } catch (error) {
     const status = error.message === "Infracción no encontrada" ? 404 : 400;

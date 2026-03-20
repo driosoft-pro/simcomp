@@ -60,11 +60,30 @@ export async function updateInfraccion(id, data) {
 export async function deleteInfraccion(id) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deleted_at) {
+  if (!infraccion) {
     throw new Error("Infracción no encontrada");
   }
 
-  infraccion.deleted_at = new Date();
+  infraccion.estado = "inactivo";
+  infraccion.vigente = false;
+  infraccion.updated_at = new Date();
+  
+  await infraccion.save();
+
+  return infraccion;
+}
+
+export async function activateInfraccion(id) {
+  const infraccion = await Infraccion.findByPk(id);
+
+  if (!infraccion) {
+    throw new Error("Infracción no encontrada");
+  }
+
+  infraccion.estado = "activo";
+  infraccion.vigente = true;
+  infraccion.updated_at = new Date();
+
   await infraccion.save();
 
   return infraccion;

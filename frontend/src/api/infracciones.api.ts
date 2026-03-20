@@ -52,3 +52,10 @@ export async function toggleVigenciaInfraccion(id: UUID): Promise<Infraccion> {
   )
   return response.data.data
 }
+
+export async function activateInfraccion(id: UUID): Promise<Infraccion> {
+  const response = await apiClient.patch<ApiResponse<Infraccion>>(
+    `${API_URLS.infracciones}/infracciones/${id}/activar`,
+  )
+  return response.data.data
+}

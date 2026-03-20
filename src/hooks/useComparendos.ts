@@ -71,8 +71,9 @@ export function usePagarComparendo() {
 
   return useMutation({
     mutationFn: (id: UUID) => pagarComparendo(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['comparendos'] })
+      queryClient.invalidateQueries({ queryKey: ['comparendo', id] })
     },
   })
 }

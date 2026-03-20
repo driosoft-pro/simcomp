@@ -110,3 +110,33 @@ export async function suspenderLicenciasPorDocumento(documento) {
 
   return { suspendidas: licencias.length, licencias };
 }
+
+export async function reactivarLicenciasPorDocumento(documento) {
+  // Buscar la persona por número de documento
+  const persona = await Persona.findOne({
+    where: { numero_documento: documento },
+  });
+
+  if (!persona) {
+    throw new Error(`Persona con documento ${documento} no encontrada`);
+  }
+
+  // Buscar todas las licencias suspendidas de esa persona
+  const licencias = await Licencia.findAll({
+    where: {
+      persona_id: persona.id,
+      estado: "suspendida",
+    },
+  });
+
+  if (licencias.length === 0) {
+    return { reactivadas: 0, message: "No se encontraron licencias suspendidas para reactivar" };
+  }
+
+  // Reactivar cada licencia
+  for (const licencia of licencias) {
+    await licencia.update({ estado: "vigente" });
+  }
+
+  return { reactivadas: licencias.length, licencias };
+}

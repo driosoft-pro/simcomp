@@ -6,7 +6,6 @@ import {
   useCreateInfraccion,
   useUpdateInfraccion,
   useDeleteInfraccion,
-  useToggleVigenciaInfraccion,
   useActivateInfraccion,
 } from '../../hooks/useInfracciones'
 import { useAuth } from '../../hooks/useAuth'
@@ -35,7 +34,6 @@ function InfraccionesList() {
   const createInfraccion = useCreateInfraccion()
   const updateInfraccion = useUpdateInfraccion()
   const deleteInfraccion = useDeleteInfraccion()
-  const toggleVigencia = useToggleVigenciaInfraccion()
   const activateInfraccion = useActivateInfraccion()
   const { addToast } = useToast()
 
@@ -156,16 +154,6 @@ function InfraccionesList() {
     }
   }
 
-  const handleToggleVigencia = async (id: string) => {
-    try {
-      await toggleVigencia.mutateAsync(id)
-      addToast('Vigencia actualizada', 'success')
-    } catch (err: any) {
-      console.error('Error toggling vigencia:', err)
-      addToast(err.response?.data?.message || 'Error al actualizar vigencia', 'error')
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Encabezado */}
@@ -276,21 +264,15 @@ function InfraccionesList() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleToggleVigencia(infraccion.infraccion_id)}
-                      disabled={toggleVigencia.isPending}
-                      className="transition opacity-90 hover:opacity-100 disabled:opacity-50"
-                    >
-                      {infraccion.vigente ? (
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10">
-                          Vigente
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-inset ring-red-600/10">
-                          Inactiva
-                        </span>
-                      )}
-                    </button>
+                    {infraccion.vigente ? (
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10">
+                        Vigente
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-inset ring-red-600/10">
+                        Inactiva
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     <div><span className="font-semibold text-slate-700 dark:text-slate-300">C:</span> {formatDateShort(infraccion.created_at)}</div>

@@ -1,7 +1,8 @@
 import { Link, useParams } from 'react-router-dom'
 import { useAutomotor } from '../../hooks/useAutomotores'
+import { useComparendosByPlaca } from '../../hooks/useComparendos'
 import type { Automotor } from '../../types'
-import { ArrowLeft, Car, Tag, Palette, Calendar, Gauge, Hash, User } from 'lucide-react'
+import { ArrowLeft, Car, Tag, Palette, Calendar, Gauge, Hash, User, AlertTriangle, FileText } from 'lucide-react'
 
 const estadoStyles: Record<Automotor['estado'], string> = {
   activo: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50',
@@ -14,6 +15,12 @@ const condicionStyles: Record<string, string> = {
   REPORTADO_ROBO: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50',
   RECUPERADO: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-900/50',
   EMBARGADO: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50',
+}
+
+const comparendoEstadoStyles: Record<string, string> = {
+  PENDIENTE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  PAGADO: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  ANULADO: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
 }
 
 interface FieldProps {
@@ -40,6 +47,7 @@ function AutomotorDetail() {
   const { id } = useParams()
   const automotorId = id ?? ''
   const { data, isLoading, isError, error } = useAutomotor(automotorId)
+  const { data: comparendos, isLoading: isLoadingComparendos } = useComparendosByPlaca(data?.placa ?? '')
 
   if (isLoading) {
     return (
@@ -141,6 +149,70 @@ function AutomotorDetail() {
               <Field icon={<User size={16}/>} label="Nombre del Propietario" value={data.propietario_nombre} />
               <Field icon={<Hash size={16}/>} label="Documento del Propietario" value={data.propietario_documento} />
             </div>
+          </div>
+
+          {/* Infracciones (Comparendos) */}
+          <div className="border-t border-slate-100 pt-8 dark:border-slate-800">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-400">
+              <AlertTriangle size={18} />
+              Infracciones Registradas
+            </h3>
+            
+            {isLoadingComparendos ? (
+              <div className="flex h-32 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+                <p className="text-sm text-slate-500 animate-pulse">Cargando infracciones...</p>
+              </div>
+            ) : comparendos && comparendos.length > 0 ? (
+              <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-800/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fecha</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Comparendo</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Infracción</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Estado</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
+                    {comparendos.map((comp) => (
+                      <tr key={comp.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                          {new Date(comp.fecha_comparendo).toLocaleDateString()}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-sky-600 dark:text-sky-400">
+                          {comp.numero_comparendo}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                          <div className="flex flex-col">
+                            <span className="font-semibold">{comp.infraccion_codigo}</span>
+                            <span className="truncate max-w-[200px] sm:max-w-[300px]" title={comp.infraccion_descripcion}>
+                              {comp.infraccion_descripcion}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${comparendoEstadoStyles[comp.estado] || 'bg-slate-100 text-slate-600'}`}>
+                            {comp.estado}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-slate-700 dark:text-slate-200">
+                          ${Number(comp.valor_multa).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-800/20">
+                <FileText size={32} className="text-slate-400 dark:text-slate-500" />
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Sin infracciones</h4>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Este vehículo no registra comparendos.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Metadatos */}

@@ -7,11 +7,20 @@ import {
   getComparendos,
   getComparendosByAutomotor,
   getComparendosByPersona,
+  getComparendosByPlaca,
   pagarComparendo,
   revertirComparendo,
   getComparendoHistorial,
 } from '../api/comparendos.api'
 import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial } from '../types'
+
+export function useComparendosByPlaca(placa: string) {
+  return useQuery<Comparendo[]>({
+    queryKey: ['comparendos-placa', placa],
+    queryFn: () => getComparendosByPlaca(placa),
+    enabled: Boolean(placa),
+  })
+}
 
 export function useComparendos() {
   return useQuery<Comparendo[]>({

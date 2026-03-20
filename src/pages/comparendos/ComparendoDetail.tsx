@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../context/ToastContext'
 import { formatCurrency, formatDate } from '../../utils/formatters'
-import { ArrowLeft, ClipboardList, AlertCircle, CheckCircle2, XCircle, RotateCcw, Clock, CreditCard, Receipt, X } from 'lucide-react'
+import { ArrowLeft, ClipboardList, AlertCircle, CheckCircle2, XCircle, RotateCcw, Clock, CreditCard, Receipt, X, Car, ShieldAlert } from 'lucide-react'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import type { Comparendo } from '../../types'
 
@@ -202,7 +202,33 @@ function ComparendoDetail() {
             </div>
           </div>
         </div>
-
+        {/* Efectos automáticos del comparendo */}
+        {(() => {
+          const desc = (data.infraccion_descripcion ?? '').toUpperCase()
+          const showInmov = desc.includes('INMOVILIZ')
+          const showSusp  = desc.includes('SUSPENS') || desc.includes('LICENCIA')
+          if (!showInmov && !showSusp) return null
+          return (
+            <div className="flex flex-wrap gap-3 px-6 pb-4">
+              {showInmov && (
+                <div className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 dark:border-orange-800/50 dark:bg-orange-950/30">
+                  <Car size={16} className="text-orange-600 dark:text-orange-400" />
+                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                    Vehículo Inmovilizado
+                  </span>
+                </div>
+              )}
+              {showSusp && (
+                <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 dark:border-red-800/50 dark:bg-red-950/30">
+                  <ShieldAlert size={16} className="text-red-600 dark:text-red-400" />
+                  <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+                    Licencia Suspendida
+                  </span>
+                </div>
+              )}
+            </div>
+          )
+        })()}
         {/* Acciones */}
         <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 px-6 py-4 dark:border-slate-800">
           {canPagar && (

@@ -11,9 +11,26 @@ export async function listUsers(req, res) {
     let users = await getAllUsers();
 
     // Si es ciudadano, solo puede ver su propio perfil en la lista
-    if (req.user.rol === "ciudadano") {
-      console.log("Filtrando lista de usuarios para ciudadano. Sub:", req.user.sub);
-      users = users.filter((u) => String(u.id) === String(req.user.sub));
+    const userRole = req.user.rol || req.headers["x-user-role"];
+    const userId = req.user.sub || req.headers["x-user-id"];
+
+    if (userRole === "ciudadano") {
+      console.log("Filtrando lista de usuarios para ciudadano. Sub:", userId);
+      users = users.filter((u) => String(u.id) === String(userId));
+      console.log("Usuarios encontrados tras filtro:", users.length);
+    }
+
+    // Si es supervisor, solo puede ver agentes y ciudadanos
+    if (userRole === "supervisor") {
+      console.log("Filtrando lista de usuarios para supervisor.");
+      users = users.filter((u) => ["agente", "ciudadano"].includes(u.rol));
+      console.log("Usuarios encontrados tras filtro:", users.length);
+    }
+
+    // Si es agente, solo puede ver ciudadanos y su propio usuario
+    if (userRole === "agente") {
+      console.log("Filtrando lista de usuarios para agente. Sub:", userId);
+      users = users.filter((u) => u.rol === "ciudadano" || String(u.id) === String(userId));
       console.log("Usuarios encontrados tras filtro:", users.length);
     }
 
@@ -52,6 +69,18 @@ export async function getUser(req, res) {
         success: false,
         message: "Usuario no encontrado",
       });
+    }
+
+    // Restricción adicional para agentes: solo pueden ver ciudadanos o a sí mismos
+    if (req.user.rol === "agente") {
+      const isTargetCitizen = user.rol === "ciudadano";
+      if (!isTargetCitizen && !isOwnProfile) {
+        console.log("Agente restricted from viewing non-citizen/non-self profile");
+        return res.status(403).json({
+          success: false,
+          message: "No tienes permiso para ver este perfil",
+        });
+      }
     }
 
     return res.status(200).json({
@@ -125,6 +154,26 @@ export async function updateUserController(req, res) {
 
 export async function changeUserStatusController(req, res) {
   try {
+    const userRole = req.user.rol || req.headers["x-user-role"];
+
+    // Si es supervisor, solo puede inactivar agentes
+    if (userRole === "supervisor") {
+      const targetUser = await getUserById(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Usuario no encontrado",
+        });
+      }
+
+      if (targetUser.rol !== "agente") {
+        return res.status(403).json({
+          success: false,
+          message: "Un supervisor solo puede cambiar el estado de usuarios con rol agente",
+        });
+      }
+    }
+
     const user = await changeUserStatus(req.params.id, req.body.estado);
 
     return res.status(200).json({

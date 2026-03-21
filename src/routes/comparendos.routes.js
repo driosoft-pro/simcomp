@@ -14,6 +14,7 @@ import {
   actualizarComparendoController,
   obtenerSiguienteNumeroController,
 } from "../controllers/comparendos.controller.js";
+import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
 
@@ -352,6 +353,7 @@ router.get("/comparendos/placa/:placa", obtenerComparendosPorPlacaController);
 router.get(
   "/comparendos/:id",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
   obtenerComparendoPorIdController
 );
 
@@ -389,6 +391,7 @@ router.get(
 router.get(
   "/comparendos/:id/historial",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
   obtenerHistorialComparendoController
 );
 
@@ -486,6 +489,7 @@ router.post(
       .isString()
       .withMessage("observaciones debe ser texto"),
   ],
+  validateRequest,
   crearComparendoController
 );
 
@@ -524,6 +528,7 @@ router.post(
 router.patch(
   "/comparendos/:id/pagar",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
   pagarComparendoController
 );
 
@@ -562,6 +567,7 @@ router.patch(
 router.patch(
   "/comparendos/:id/anular",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
   anularComparendoController
 );
 
@@ -600,6 +606,7 @@ router.patch(
 router.patch(
   "/comparendos/:id/revertir",
   [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
   revertirAPendienteController
 );
 
@@ -679,6 +686,7 @@ router.put(
     body("fecha_comparendo").optional().isISO8601().withMessage("fecha_comparendo debe ser fecha válida"),
     body("observaciones").optional().isString(),
   ],
+  validateRequest,
   actualizarComparendoController
 );
 

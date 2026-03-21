@@ -1,0 +1,73 @@
+{
+  "hash": "7a1ff1a9",
+  "configHash": "fd866dae",
+  "lockfileHash": "d03f905f",
+  "browserHash": "af82a5c2",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.pnpm/react@19.2.4/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "18a0f19e",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/.pnpm/react@19.2.4/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "539acc96",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "fa099ab8",
+      "needsInterop": true
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/.pnpm/@tanstack+react-query@5.90.21_react@19.2.4/node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "e08b073a",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/.pnpm/react-router-dom@7.13.1_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "8f240066",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/.pnpm/lucide-react@0.577.0_react@19.2.4/node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "9a1a2f8c",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/.pnpm/axios@1.13.6/node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "2d4be1cb",
+      "needsInterop": false
+    },
+    "recharts": {
+      "src": "../../node_modules/.pnpm/recharts@3.8.0_@types+react@19.2.14_react-dom@19.2.4_react@19.2.4__react-is@19.2.4_react@19.2.4_redux@5.0.1/node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "4689e11b",
+      "needsInterop": false
+    },
+    "date-fns": {
+      "src": "../../node_modules/.pnpm/date-fns@4.1.0/node_modules/date-fns/index.js",
+      "file": "date-fns.js",
+      "fileHash": "1f584ce7",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-YRN42FDL": {
+      "file": "chunk-YRN42FDL.js"
+    },
+    "chunk-Z6UBE6BC": {
+      "file": "chunk-Z6UBE6BC.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}

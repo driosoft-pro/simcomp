@@ -1,5 +1,19 @@
 ---
-# Tasks for serve-dns
+# =============================================================================
+# SIMCOMP — Rol: serve-dns  (svr-dns 192.168.100.2)
+# Instala BIND9 y configura la zona simcomp.co
+#
+# Registros DNS:
+#   simcomp.co        A  192.168.100.4  (svr-web - frontend)
+#   www.simcomp.co    A  192.168.100.4
+#   api.simcomp.co    A  192.168.100.4  (api gateway via svr-web)
+#   auth.simcomp.co   A  192.168.100.3  (auth-service directo)
+#   per.simcomp.co    A  192.168.100.3
+#   veh.simcomp.co    A  192.168.100.3
+#   inf.simcomp.co    A  192.168.100.3
+#   cmp.simcomp.co    A  192.168.100.3
+#   dns.simcomp.co    A  192.168.100.2
+# =============================================================================
 
 - name: Actualizar caché apt
   ansible.builtin.apt:
@@ -36,7 +50,6 @@
     owner: root
     group: bind
     mode: "0644"
-  notify: restart bind9
 
 - name: Configurar named.conf.local
   ansible.builtin.copy:
@@ -54,7 +67,6 @@
     owner: root
     group: bind
     mode: "0644"
-  notify: restart bind9
 
 - name: Crear zona directa db.simcomp.co
   ansible.builtin.copy:
@@ -86,7 +98,6 @@
     owner: root
     group: bind
     mode: "0644"
-  notify: reload bind9
 
 - name: Crear zona inversa db.100.168.192
   ansible.builtin.copy:
@@ -101,17 +112,30 @@
                         86400 )
 
       @   IN  NS   dns.simcomp.co.
-      2   IN  PTR  dns.simcomp.co.
-      3   IN  PTR  auth.simcomp.co.
-      3   IN  PTR  per.simcomp.co.
-      3   IN  PTR  veh.simcomp.co.
-      3   IN  PTR  inf.simcomp.co.
-      3   IN  PTR  cmp.simcomp.co.
-      4   IN  PTR  simcomp.co.
+      2  IN  PTR  dns.simcomp.co.
+      3  IN  PTR  auth.simcomp.co.
+      4  IN  PTR  per.simcomp.co.
+      5  IN  PTR  veh.simcomp.co.
+      6  IN  PTR  inf.simcomp.co.
+      7  IN  PTR  cmp.simcomp.co.
+      8  IN  PTR  simcomp.co.
     owner: root
     group: bind
     mode: "0644"
-  notify: reload bind9
+
+- name: Validar configuración BIND9
+  ansible.builtin.command: named-checkconf
+  changed_when: false
+
+- name: Validar zona directa
+  ansible.builtin.command: named-checkzone simcomp.co /etc/bind/zones/db.simcomp.co
+  changed_when: false
+
+- name: Iniciar y habilitar BIND9
+  ansible.builtin.systemd:
+    name: named
+    state: restarted
+    enabled: true
 
 - name: Permitir DNS en UFW
   community.general.ufw:
@@ -129,3 +153,16 @@
   community.general.ufw:
     state: enabled
     policy: deny
+
+- name: Verificar resolución DNS interna
+  ansible.builtin.command: dig @127.0.0.1 simcomp.co
+  register: dns_check
+  changed_when: false
+
+- name: Resumen final svr-dns
+  ansible.builtin.debug:
+    msg:
+      - "BIND9 activo en 192.168.100.2"
+      - "simcomp.co → 192.168.100.4"
+      - "api.simcomp.co → 192.168.100.4"
+      - "auth.simcomp.co → 192.168.100.3"

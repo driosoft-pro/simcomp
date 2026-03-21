@@ -18,7 +18,7 @@ node_user: vagrant
 app_base_dir: /opt/simcomp
 
 # ── PostgreSQL ────────────────────────────────────────────────────────────────
-pg_version: "16"
+pg_version: "12"
 pg_user: postgres
 pg_password: "S1mc0mp@ss2025"
 
@@ -27,38 +27,23 @@ jwt_secret: "S1mc0mpJWT$ecret2025!XyZ"
 jwt_access_expiry: "15m"
 jwt_refresh_expiry: "7d"
 
-# ── Servicios (corren todos en srv-simcomp-api 192.168.100.3) ───────────────
+# ── Servicios (corren todos en svr-api 192.168.100.3) ────────────────────────
 services:
   - name: ms-auth-service
-    path: auth
     port: 8001
-    gateway_port: 8001
     db:   auth_db
-    db_port: 5432
   - name: ms-personas
-    path: personas
     port: 8002
-    gateway_port: 8002
     db:   personas_db
-    db_port: 5433
   - name: ms-automotores
-    path: automotores
     port: 8003
-    gateway_port: 8003
-    db:   vehiculos_db
-    db_port: 5434
+    db:   automotores_db
   - name: ms-infracciones
-    path: infracciones
     port: 8004
-    gateway_port: 8004
     db:   infracciones_db
-    db_port: 5435
   - name: ms-comparendos
-    path: comparendos
     port: 8005
-    gateway_port: 8005
     db:   comparendos_db
-    db_port: 5436
 
 # ── Frontend ──────────────────────────────────────────────────────────────────
 frontend_dir: /var/www/simcomp

@@ -1,8 +1,0 @@
----
-# =============================================================================
-# SIMCOMP — Variables específicas de srv-simcomp-dns (192.168.100.2)
-# Instala BIND9 y configura la zona simcomp.co
-# =============================================================================
-
-# (Contenido original preservado)
-# BIND9 configurations are handled in roles/serve-dns/tasks/main.yml

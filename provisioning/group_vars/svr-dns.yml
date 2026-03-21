@@ -1,168 +1,46 @@
----
 # =============================================================================
-# SIMCOMP — Rol: serve-dns  (svr-dns 192.168.100.2)
-# Instala BIND9 y configura la zona simcomp.co
-#
-# Registros DNS:
-#   simcomp.co        A  192.168.100.4  (svr-web - frontend)
-#   www.simcomp.co    A  192.168.100.4
-#   api.simcomp.co    A  192.168.100.4  (api gateway via svr-web)
-#   auth.simcomp.co   A  192.168.100.3  (auth-service directo)
-#   per.simcomp.co    A  192.168.100.3
-#   veh.simcomp.co    A  192.168.100.3
-#   inf.simcomp.co    A  192.168.100.3
-#   cmp.simcomp.co    A  192.168.100.3
-#   dns.simcomp.co    A  192.168.100.2
+# SIMCOMP — Variables para el rol server-dns (svr-dns 192.168.100.2)
 # =============================================================================
 
-- name: Actualizar caché apt
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 3600
+# IP de los servidores
+dns_ip: 192.168.100.2
+web_ip: 192.168.100.4
+api_ip: 192.168.100.4
+auth_ip: 192.168.100.3
+per_ip: 192.168.100.3
+veh_ip: 192.168.100.3
+inf_ip: 192.168.100.3
+cmp_ip: 192.168.100.3
 
-- name: Instalar BIND9
-  ansible.builtin.apt:
-    name: [bind9, bind9utils, bind9-doc, dnsutils]
-    state: present
+# Configuración de UFW
+ufw_allow_ports:
+  - { port: 53, proto: tcp }
+  - { port: 53, proto: udp }
+  - { name: OpenSSH }
 
-- name: Crear directorio de zonas
-  ansible.builtin.file:
-    path: /etc/bind/zones
-    state: directory
-    owner: root
-    group: bind
-    mode: "0755"
-
-- name: Configurar named.conf.options
-  ansible.builtin.copy:
-    dest: /etc/bind/named.conf.options
-    content: |
-      options {
-          directory "/var/cache/bind";
-          recursion yes;
-          allow-recursion { any; };
-          forwarders { 8.8.8.8; 8.8.4.4; };
-          forward only;
-          dnssec-validation auto;
-          listen-on { any; };
-          allow-query { any; };
-      };
-    owner: root
-    group: bind
-    mode: "0644"
-
-- name: Configurar named.conf.local
-  ansible.builtin.copy:
-    dest: /etc/bind/named.conf.local
-    content: |
-      zone "simcomp.co" {
-          type master;
-          file "/etc/bind/zones/db.simcomp.co";
-      };
-
-      zone "56.168.192.in-addr.arpa" {
-          type master;
-          file "/etc/bind/zones/db.56.168.192";
-      };
-    owner: root
-    group: bind
-    mode: "0644"
-
-- name: Crear zona directa db.simcomp.co
-  ansible.builtin.copy:
-    dest: /etc/bind/zones/db.simcomp.co
-    content: |
-      $TTL    604800
-      @       IN  SOA  dns.simcomp.co. admin.simcomp.co. (
-                        2026031101 ; Serial YYYYMMDDNN
-                        3600       ; Refresh
-                        1800       ; Retry
-                        604800     ; Expire
-                        86400 )    ; Negative Cache TTL
-
-      ; Nameserver
-      @       IN  NS   dns.simcomp.co.
-
-      ; Infraestructura
-      dns     IN  A    192.168.100.2
-      @       IN  A    192.168.100.4
-      www     IN  A    192.168.100.4
-      api     IN  A    192.168.100.4
-
-      ; Acceso directo a cada microservicio (para desarrollo/debug)
-      auth    IN  A    192.168.100.3
-      per     IN  A    192.168.100.3
-      veh     IN  A    192.168.100.3
-      inf     IN  A    192.168.100.3
-      cmp     IN  A    192.168.100.3
-    owner: root
-    group: bind
-    mode: "0644"
-
-- name: Crear zona inversa db.56.168.192
-  ansible.builtin.copy:
-    dest: /etc/bind/zones/db.56.168.192
-    content: |
-      $TTL    604800
-      @       IN  SOA  dns.simcomp.co. admin.simcomp.co. (
-                        2026031101
-                        3600
-                        1800
-                        604800
-                        86400 )
-
-      @   IN  NS   dns.simcomp.co.
-      10  IN  PTR  dns.simcomp.co.
-      11  IN  PTR  auth.simcomp.co.
-      12  IN  PTR  per.simcomp.co.
-      13  IN  PTR  veh.simcomp.co.
-      14  IN  PTR  inf.simcomp.co.
-      15  IN  PTR  cmp.simcomp.co.
-      20  IN  PTR  simcomp.co.
-    owner: root
-    group: bind
-    mode: "0644"
-
-- name: Validar configuración BIND9
-  ansible.builtin.command: named-checkconf
-  changed_when: false
-
-- name: Validar zona directa
-  ansible.builtin.command: named-checkzone simcomp.co /etc/bind/zones/db.simcomp.co
-  changed_when: false
-
-- name: Iniciar y habilitar BIND9
-  ansible.builtin.systemd:
-    name: named
-    state: restarted
-    enabled: true
-
-- name: Permitir DNS en UFW
-  community.general.ufw:
-    rule: allow
-    port: "53"
-    proto: "{{ item }}"
-  loop: [tcp, udp]
-
-- name: Permitir SSH en UFW
-  community.general.ufw:
-    rule: allow
-    name: OpenSSH
-
-- name: Habilitar UFW
-  community.general.ufw:
-    state: enabled
-    policy: deny
-
-- name: Verificar resolución DNS interna
-  ansible.builtin.command: dig @127.0.0.1 simcomp.co
-  register: dns_check
-  changed_when: false
-
-- name: Resumen final svr-dns
-  ansible.builtin.debug:
-    msg:
-      - "BIND9 activo en 192.168.100.2"
-      - "simcomp.co → 192.168.100.4"
-      - "api.simcomp.co → 192.168.100.4"
-      - "auth.simcomp.co → 192.168.100.3"
+# Configuración de zonas DNS
+dns_zone:
+  direct:
+    simcomp.co:
+      ns: "{{ dns_ip }}"
+      records:
+        "@": "{{ web_ip }}"
+        "www": "{{ web_ip }}"
+        "api": "{{ api_ip }}"
+        "auth": "{{ auth_ip }}"
+        "per": "{{ per_ip }}"
+        "veh": "{{ veh_ip }}"
+        "inf": "{{ inf_ip }}"
+        "cmp": "{{ cmp_ip }}"
+        "dns": "{{ dns_ip }}"
+  reverse:
+    "100.168.192.in-addr.arpa":
+      ns: "{{ dns_ip }}"
+      ptrs:
+        10: "{{ dns_ip }}"
+        11: "{{ auth_ip }}"
+        12: "{{ per_ip }}"
+        13: "{{ veh_ip }}"
+        14: "{{ inf_ip }}"
+        15: "{{ cmp_ip }}"
+        20: "{{ web_ip }}"

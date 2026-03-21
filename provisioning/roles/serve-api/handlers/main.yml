@@ -1,8 +1,5 @@
-- name: restart all postgres clusters
-  ansible.builtin.shell: |
-    PGDATA="/var/lib/postgresql/{{ pg_version }}/{{ item.name | replace('-service', '') }}"
-    PGLOG="/var/log/postgresql/postgresql-{{ pg_version }}-{{ item.name | replace('-service', '') }}.log"
-    /usr/lib/postgresql/{{ pg_version }}/bin/pg_ctl -D "$PGDATA" -l "$PGLOG" restart -w || true
-  loop: "{{ services }}"
-  become: true
-  become_user: postgres
+---
+- name: Recargar PostgreSQL
+  ansible.builtin.systemd:
+    name: postgresql
+    state: reloaded

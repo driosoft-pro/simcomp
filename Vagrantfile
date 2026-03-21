@@ -14,17 +14,19 @@
 #   ms-comparendos       :8005 (DB :5436)
 # =============================================================================
 
+
 Vagrant.configure("2") do |config|
+
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = false
   config.vm.synced_folder ".", "/vagrant", disabled: false
 
   # ============================================================================
-  # SRV-SIMCOMP-DNS — 192.168.100.2
+  # SVR-DNS — 192.168.100.2
   # BIND9, zona simcomp.co, forwarders a 8.8.8.8
   # ============================================================================
-  config.vm.define "srv-simcomp-dns" do |dns|
-    dns.vm.hostname = "srv-simcomp-dns"
+  config.vm.define "svr-dns" do |dns|
+    dns.vm.hostname = "svr-dns"
     dns.vm.network "private_network", ip: "192.168.100.2"
 
     dns.vm.provider "virtualbox" do |vb|
@@ -38,22 +40,25 @@ Vagrant.configure("2") do |config|
       lv.cpus   = 1
     end
 
+
+
     dns.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv_simcomp_dns"
-      ansible.verbose        = false
+      ansible.limit          = "svr-dns"
+      ansible.verbose        = "v"
+      
     end
   end
 
   # ============================================================================
-  # SRV-SIMCOMP-API — 192.168.100.3
+  # SVR-API — 192.168.100.3
   # PostgreSQL x5 dbs, Node.js 20, 5 microservicios con PM2
   # auth-service :3001, personas :3002, vehiculos :3003,
   # infracciones :3004, comparendos :3005
   # ============================================================================
-  config.vm.define "srv-simcomp-api" do |api|
-    api.vm.hostname = "srv-simcomp-api"
+  config.vm.define "svr-api" do |api|
+    api.vm.hostname = "svr-api"
     api.vm.network "private_network", ip: "192.168.100.3"
 
     api.vm.provider "virtualbox" do |vb|
@@ -67,22 +72,24 @@ Vagrant.configure("2") do |config|
       lv.cpus   = 2
     end
 
+
+
     api.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv_simcomp_api"
-      ansible.verbose        = false
+      ansible.limit          = "svr-api"
+      ansible.verbose        = "v"
     end
   end
 
   # ============================================================================
-  # SRV-SIMCOMP-WEB — 192.168.100.4
+  # SVR-WEB — 192.168.100.4
   # Nginx API Gateway con validación JWT + React SPA (build estático)
   # Rutas públicas:  /api/auth/*
   # Rutas protegidas: /api/personas /api/vehiculos /api/infracciones /api/comparendos
   # ============================================================================
-  config.vm.define "srv-simcomp-web" do |web|
-    web.vm.hostname = "srv-simcomp-web"
+  config.vm.define "svr-web" do |web|
+    web.vm.hostname = "svr-web"
     web.vm.network "private_network", ip: "192.168.100.4"
 
     web.vm.provider "virtualbox" do |vb|
@@ -96,11 +103,13 @@ Vagrant.configure("2") do |config|
       lv.cpus   = 1
     end
 
+
+
     web.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "srv_simcomp_web"
-      ansible.verbose        = false
+      ansible.limit          = "svr-web"
+      ansible.verbose        = "v"
     end
   end
 

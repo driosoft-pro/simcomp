@@ -30,29 +30,29 @@
 - name: Verificar svr-api (5 microservicios)
   hosts: svr-api
   tasks:
-    - name: Health check auth-service :3001
+    - name: Health check auth-service :8001
       ansible.builtin.uri:
-        url: http://localhost:3001/api/health
+        url: http://localhost:8001/api/health
         status_code: 200
       register: h_auth
-    - name: Health check personas-service :3002
+    - name: Health check personas-service :8002
       ansible.builtin.uri:
-        url: http://localhost:3002/api/health
+        url: http://localhost:8002/api/health
         status_code: 200
       register: h_per
-    - name: Health check vehiculos-service :3003
+    - name: Health check automotores-service :8003
       ansible.builtin.uri:
-        url: http://localhost:3003/api/health
+        url: http://localhost:8003/api/health
         status_code: 200
-      register: h_veh
-    - name: Health check infracciones-service :3004
+      register: h_aut
+    - name: Health check infracciones-service :8004
       ansible.builtin.uri:
-        url: http://localhost:3004/api/health
+        url: http://localhost:8004/api/health
         status_code: 200
       register: h_inf
-    - name: Health check comparendos-service :3005
+    - name: Health check comparendos-service :8005
       ansible.builtin.uri:
-        url: http://localhost:3005/api/health
+        url: http://localhost:8005/api/health
         status_code: 200
       register: h_cmp
     - name: Estado PM2
@@ -64,11 +64,11 @@
     - name: Resultado svr-api
       ansible.builtin.debug:
         msg:
-          - "auth-service         :3001 → {{ h_auth.status }} "
-          - "personas-service     :3002 → {{ h_per.status }} "
-          - "vehiculos-service    :3003 → {{ h_veh.status }} "
-          - "infracciones-service :3004 → {{ h_inf.status }} "
-          - "comparendos-service  :3005 → {{ h_cmp.status }} "
+          - "auth-service         :8001 → {{ h_auth.status }} "
+          - "personas-service     :8002 → {{ h_per.status }} "
+          - "automotores-service  :8003 → {{ h_aut.status }} "
+          - "infracciones-service :8004 → {{ h_inf.status }} "
+          - "comparendos-service  :8005 → {{ h_cmp.status }} "
 
 - name: Verificar svr-web (Nginx + API Gateway)
   hosts: svr-web

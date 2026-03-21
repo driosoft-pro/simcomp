@@ -1,124 +1,344 @@
 ---
-# Tasks for server-web
+# =============================================================================
+# SIMCOMP — Rol: server-web  (svr-web 192.168.100.4)
+# Nginx como API Gateway + servidor React SPA
+#
+# Upstreams (svr-api 192.168.100.3):
+#   ms-auth-service      192.168.100.3:8001
+#   ms-personas          192.168.100.3:8002
+#   ms-automotores       192.168.100.3:8003
+#   ms-infracciones      192.168.100.3:8004
+#   ms-comparendos       192.168.100.3:8005
+#
+# Validación JWT: cada microservicio valida el token con su propio middleware
+# Nginx reenvía el header Authorization a cada upstream
+# =============================================================================
 
+# ── 1. Instalar Nginx ─────────────────────────────────────────────────────────
 - name: Actualizar caché apt
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
 
-- name: Instalar dependencias del sistema y Node.js
-  block:
-    - name: Añadir llave NodeSource
-      ansible.builtin.get_url:
-        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
-        dest: /etc/apt/keyrings/nodesource.asc
-        mode: '0644'
-    - name: Añadir repo NodeSource
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/nodesource.asc] https://deb.nodesource.com/node_{{ node_version }}.x nodistro main"
-        state: present
-    - name: Instalar paquetes
-      ansible.builtin.apt:
-        name: [nginx, curl, ufw, rsync, nodejs]
-        state: present
-  become: true
+- name: Instalar Nginx y utilidades
+  ansible.builtin.apt:
+    name: [nginx, curl, ufw]
+    state: present
 
-- name: Crear directorio web
+# ── 2. Directorio web ─────────────────────────────────────────────────────────
+- name: Crear /var/www/simcomp
   ansible.builtin.file:
-    path: "{{ frontend_dir }}"
+    path: /var/www/simcomp
     state: directory
-    owner: "{{ node_user }}"
-    group: "www-data"
+    owner: www-data
+    group: www-data
     mode: "0755"
-  become: true
 
-- name: Aprovisionar código del Frontend y Construir
-  block:
-    - name: Copiar código fuente del Frontend
-      ansible.builtin.command: >
-        rsync -aq --exclude='node_modules' --exclude='dist'
-        /vagrant/frontend/
-        {{ frontend_dir }}/source/
-      changed_when: true
+# ── 3. Copiar build del frontend ──────────────────────────────────────────────
+- name: Verificar existencia de /vagrant/frontend/dist/index.html
+  ansible.builtin.stat:
+    path: /vagrant/frontend/dist/index.html
+  register: frontend_build
 
-    - name: Generar archivo .env para el Frontend
-      ansible.builtin.template:
-        src: frontend.env.j2
-        dest: "{{ frontend_dir }}/source/.env"
-        owner: "{{ node_user }}"
-        group: "{{ node_user }}"
-        mode: "0644"
+- name: Advertir si no hay build disponible
+  ansible.builtin.debug:
+    msg: >
+      No se encontró frontend/dist/. Ejecuta 'npm run build' en
+      la carpeta frontend/ local y luego corre 'vagrant provision svr-web'.
+  when: not frontend_build.stat.exists
 
-    - name: npm install y build
-      ansible.builtin.shell: |
-        npm install
-        VITE_AUTH_API=http://{{ domain }}/api/auth \
-        VITE_PERSONAS_API=http://{{ domain }}/api/personas \
-        VITE_AUTOMOTORES_API=http://{{ domain }}/api/automotores \
-        VITE_INFRACCIONES_API=http://{{ domain }}/api/infracciones \
-        VITE_COMPARENDOS_API=http://{{ domain }}/api/comparendos \
-        npm run build
-      args:
-        chdir: "{{ frontend_dir }}/source"
-      changed_when: true
+- name: Copiar build React a /var/www/simcomp
+  ansible.builtin.shell: >
+    rsync -a --exclude='node_modules'
+    /vagrant/frontend/dist/
+    /var/www/simcomp/
+  when: frontend_build.stat.exists
+  changed_when: true
 
-    - name: Desplegar archivos construidos
-      ansible.builtin.command: >
-        rsync -aq {{ frontend_dir }}/source/dist/ {{ frontend_dir }}/
-      changed_when: true
-  become: true
-  become_user: "{{ node_user }}"
+- name: Ajustar permisos del frontend
+  ansible.builtin.file:
+    path: /var/www/simcomp
+    owner: www-data
+    group: www-data
+    recurse: true
+  when: frontend_build.stat.exists
 
-- name: Eliminar configuración default
+# ── 4. Configurar Nginx ───────────────────────────────────────────────────────
+- name: Eliminar configuración default de Nginx
   ansible.builtin.file:
     path: /etc/nginx/sites-enabled/default
     state: absent
-  notify: reload nginx
 
-- name: Configurar Nginx para SIMCOMP
-  ansible.builtin.template:
-    src: nginx.conf.j2
+- name: Crear configuración Nginx para SIMCOMP
+  ansible.builtin.copy:
     dest: /etc/nginx/sites-available/simcomp
     owner: root
     group: root
     mode: "0644"
-  notify: reload nginx
+    content: |
+      # ================================================================
+      # SIMCOMP — Nginx: API Gateway + Frontend
+      # svr-web: 192.168.100.4
+      #
+      # Microservicios en svr-api (192.168.100.3):
+      #   ms-auth-service      → :8001
+      #   ms-personas          → :8002
+      #   ms-automotores       → :8003
+      #   ms-infracciones      → :8004
+      #   ms-comparendos       → :8005
+      #
+      # Validación JWT: cada microservicio valida el token Authorization
+      # proxy_pass incluye la ruta base para evitar duplicación de rutas
+      # ================================================================
 
-- name: Activar sitio SIMCOMP
+      upstream auth_backend        { server 192.168.100.3:8001; keepalive 16; }
+      upstream personas_backend    { server 192.168.100.3:8002; keepalive 16; }
+      upstream automotores_backend { server 192.168.100.3:8003; keepalive 16; }
+      upstream infracciones_backend{ server 192.168.100.3:8004; keepalive 16; }
+      upstream comparendos_backend { server 192.168.100.3:8005; keepalive 16; }
+
+      # ── Servidor principal: simcomp.co ─────────────────────────────
+      server {
+          listen 80;
+          server_name simcomp.co www.simcomp.co 192.168.100.4;
+
+          root  /var/www/simcomp;
+          index index.html;
+
+          add_header X-Frame-Options        "SAMEORIGIN"    always;
+          add_header X-Content-Type-Options "nosniff"       always;
+          add_header X-XSS-Protection       "1; mode=block" always;
+
+          # ── Rutas auth (públicas) ──────────────────────────────────
+          location /api/auth {
+              proxy_pass         http://auth_backend/api/auth;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 30s;
+          }
+
+        # ── Rutas usuarios ─────────────────────────────────────────────
+        location /api/usuarios {
+              proxy_pass         http://auth_backend/api/usuarios;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 30s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
+        # ── Rutas licencias ────────────────────────────────────────────
+        location /api/licencias {
+              proxy_pass         http://personas_backend/api/licencias;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+        } 
+        
+          # ── Rutas personas ─────────────────────────────────────────
+          location /api/personas {
+              proxy_pass         http://personas_backend/api/personas;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
+          # ── Rutas automotores ──────────────────────────────────────
+          location /api/automotores {
+              proxy_pass         http://automotores_backend/api/automotores;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
+          # ── Rutas infracciones ─────────────────────────────────────
+          location /api/infracciones {
+              proxy_pass         http://infracciones_backend/api/infracciones;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
+          # ── Rutas comparendos ──────────────────────────────────────
+          location /api/comparendos {
+              proxy_pass         http://comparendos_backend/api/comparendos;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
+          # ── Swagger Docs (sin auth) ────────────────────────────────
+          location /docs/auth         { proxy_pass http://auth_backend/api/docs;         }
+          location /docs/personas     { proxy_pass http://personas_backend/api/docs;     }
+          location /docs/automotores  { proxy_pass http://automotores_backend/api/docs;  }
+          location /docs/infracciones { proxy_pass http://infracciones_backend/api/docs; }
+          location /docs/comparendos  { proxy_pass http://comparendos_backend/api/docs;  }
+
+          # ── React SPA (catch-all) ──────────────────────────────────
+          location / {
+              try_files $uri $uri/ /index.html;
+          }
+
+          # ── Cache de assets estáticos ──────────────────────────────
+          location ~* \.(js|css|png|jpg|ico|svg|woff|woff2)$ {
+              expires 30d;
+              add_header Cache-Control "public, no-transform";
+              try_files $uri =404;
+          }
+
+          error_page 502 503 504 /50x.html;
+          location = /50x.html { root /usr/share/nginx/html; }
+
+          access_log /var/log/nginx/simcomp-access.log;
+          error_log  /var/log/nginx/simcomp-error.log warn;
+      }
+
+      # ── api.simcomp.co (acceso directo a la API) ───────────────────
+      server {
+          listen 80;
+          server_name api.simcomp.co;
+
+          location /api/auth        { proxy_pass http://auth_backend/api/auth;               proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/personas    { proxy_pass http://personas_backend/api/personas;        proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/automotores { proxy_pass http://automotores_backend/api/automotores;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/infracciones{ proxy_pass http://infracciones_backend/api/infracciones;proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/comparendos { proxy_pass http://comparendos_backend/api/comparendos;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+
+          access_log /var/log/nginx/simcomp-api-access.log;
+          error_log  /var/log/nginx/simcomp-api-error.log warn;
+      }
+
+- name: Activar sitio SIMCOMP en Nginx
   ansible.builtin.file:
     src: /etc/nginx/sites-available/simcomp
     dest: /etc/nginx/sites-enabled/simcomp
     state: link
-  notify: reload nginx
 
-- name: Habilitar y arrancar Nginx
+- name: Validar configuración Nginx
+  ansible.builtin.command: nginx -t
+  register: nginx_test
+  changed_when: false
+
+- name: Habilitar y reiniciar Nginx
   ansible.builtin.systemd:
     name: nginx
-    state: started
+    state: restarted
     enabled: true
+    daemon_reload: true
 
-- name: Firewall rules
-  block:
-    - community.general.ufw:
-        rule: allow
-        name: OpenSSH
-    - community.general.ufw:
-        rule: allow
-        name: "Nginx HTTP"
-    - community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-      loop: [8001, 8002, 8003, 8004, 8005]
-    - community.general.ufw:
-        state: enabled
-        policy: deny
+# ── 5. Firewall ───────────────────────────────────────────────────────────────
+- name: Permitir SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
 
-- name: Configurar resolv.conf
+- name: Permitir HTTP
+  community.general.ufw:
+    rule: allow
+    name: "Nginx HTTP"
+
+- name: Habilitar UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+# ── 6. DNS ────────────────────────────────────────────────────────────────────
+- name: Configurar resolv.conf para usar svr-dns
   ansible.builtin.copy:
     dest: /etc/resolv.conf
     content: |
-      search {{ domain }}
-      nameserver {{ ip_dns }}
+      search simcomp.co
+      nameserver 192.168.100.2
       nameserver 8.8.8.8
     mode: "0644"
+
+# ── 7. Verificación final ─────────────────────────────────────────────────────
+- name: Crear index.html temporal si no hay build de React
+  ansible.builtin.copy:
+    dest: /var/www/simcomp/index.html
+    owner: www-data
+    group: www-data
+    mode: "0644"
+    content: |
+      <!DOCTYPE html>
+      <html>
+        <head><title>SIMCOMP</title></head>
+        <body>
+          <h1>SIMCOMP - Infraestructura lista</h1>
+          <p>Frontend pendiente de build. Ejecuta npm run build en frontend/ y re-provisiona.</p>
+        </body>
+      </html>
+    force: false
+  when: not frontend_build.stat.exists
+
+- name: Verificar respuesta HTTP de Nginx
+  ansible.builtin.uri:
+    url: http://localhost
+    method: GET
+    status_code: [200, 301, 302, 403]
+  failed_when: false
+
+- name: Resumen final svr-web
+  ansible.builtin.debug:
+    msg:
+      - "Nginx activo como API Gateway"
+      - "Upstreams: ms-auth:8001 ms-personas:8002 ms-automotores:8003 ms-infracciones:8004 ms-comparendos:8005"
+      - "JWT validado por cada microservicio via header Authorization"
+      - "Rutas: /api/auth /api/personas /api/automotores /api/infracciones /api/comparendos"
+      - "Frontend: http://simcomp.co"
+      - "{% if not frontend_build.stat.exists %} Sin build React — ejecuta npm run build y re-provisiona{% endif %}"

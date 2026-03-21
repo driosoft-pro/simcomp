@@ -15,17 +15,17 @@ api_upstream: "192.168.100.3"
 # public: false → auth_request → auth-service :3001 antes de enrutar
 api_proxy_routes:
   - location: /api/auth
-    upstream: "http://192.168.100.3:3001"
+    upstream: "http://192.168.100.3:8001"
     public: true
   - location: /api/personas
-    upstream: "http://192.168.100.3:3002"
+    upstream: "http://192.168.100.3:8002"
     public: false
   - location: /api/vehiculos
-    upstream: "http://192.168.100.3:3003"
+    upstream: "http://192.168.100.3:8003"
     public: false
   - location: /api/infracciones
-    upstream: "http://192.168.100.3:3004"
+    upstream: "http://192.168.100.3:8004"
     public: false
   - location: /api/comparendos
-    upstream: "http://192.168.100.3:3005"
+    upstream: "http://192.168.100.3:8005"
     public: false

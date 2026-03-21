@@ -1,9 +1,0 @@
----
-# =============================================================================
-# SIMCOMP — Variables específicas de srv_simcomp_web (192.168.100.4)
-# =============================================================================
-
-nginx_worker_processes: auto
-nginx_worker_connections: 1024
-
-api_upstream: "192.168.100.3"

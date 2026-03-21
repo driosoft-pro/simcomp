@@ -1,4 +1,6 @@
 import express from "express";
+import { param } from "express-validator";
+import { validateRequest } from "../middlewares/validation.middleware.js";
 
 import {
   createAutomotorController,
@@ -99,7 +101,12 @@ router.get("/placa/:placa", getAutomotorByPlacaController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.get("/:id", getAutomotorByIdController);
+router.get(
+  "/:id",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
+  getAutomotorByIdController
+);
 
 /**
  * @swagger
@@ -128,7 +135,12 @@ router.get("/:id", getAutomotorByIdController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.put("/:id", updateAutomotorController);
+router.put(
+  "/:id",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
+  updateAutomotorController
+);
 
 /**
  * @swagger
@@ -152,7 +164,12 @@ router.put("/:id", updateAutomotorController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.delete("/:id", deleteAutomotorController);
+router.delete(
+  "/:id",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
+  deleteAutomotorController
+);
 
 /**
  * @swagger
@@ -189,7 +206,12 @@ router.delete("/:id", deleteAutomotorController);
  *       404:
  *         description: Automotor no encontrado
  */
-router.patch("/:id/estado", changeAutomotorStatusController);
+router.patch(
+  "/:id/estado",
+  [param("id").isUUID().withMessage("El id debe ser un UUID válido")],
+  validateRequest,
+  changeAutomotorStatusController
+);
 
 /**
  * @swagger

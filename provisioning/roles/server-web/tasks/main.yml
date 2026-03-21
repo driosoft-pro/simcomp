@@ -83,10 +83,10 @@
     mode: "0644"
     content: |
       VITE_AUTH_API=http://simcomp.co/api/auth
-      VITE_PERSONAS_API=http://simcomp.co/api/personas
-      VITE_AUTOMOTORES_API=http://simcomp.co/api/automotores
-      VITE_INFRACCIONES_API=http://simcomp.co/api/infracciones
-      VITE_COMPARENDOS_API=http://simcomp.co/api/comparendos
+      VITE_PERSONAS_API=http://simcomp.co/api
+      VITE_AUTOMOTORES_API=http://simcomp.co/api
+      VITE_INFRACCIONES_API=http://simcomp.co/api
+      VITE_COMPARENDOS_API=http://simcomp.co/api
 
 - name: Instalar dependencias del frontend
   community.general.npm:

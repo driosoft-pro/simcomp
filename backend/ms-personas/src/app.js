@@ -18,6 +18,15 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 
+app.get("/api/health", (req, res) => {
+  console.log("Health check requested for ms-personas");
+  res.status(200).json({
+    ok: true,
+    service: process.env.SERVICE_NAME || "ms-personas",
+    status: "running",
+  });
+});
+
 app.use("/api/Personas", personasRoutes);
 app.use("/api/Licencias", licenciasRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

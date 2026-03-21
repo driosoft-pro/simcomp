@@ -40,8 +40,6 @@ Vagrant.configure("2") do |config|
       lv.cpus   = 1
     end
 
-
-
     dns.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
@@ -54,8 +52,8 @@ Vagrant.configure("2") do |config|
   # ============================================================================
   # SVR-API — 192.168.100.3
   # PostgreSQL x5 dbs, Node.js 20, 5 microservicios con PM2
-  # auth-service :3001, personas :3002, vehiculos :3003,
-  # infracciones :3004, comparendos :3005
+  # auth-service :8001, personas :8002, vehiculos :8003,
+  # infracciones :8004, comparendos :8005
   # ============================================================================
   config.vm.define "svr-api" do |api|
     api.vm.hostname = "svr-api"
@@ -71,8 +69,6 @@ Vagrant.configure("2") do |config|
       lv.memory = 4096
       lv.cpus   = 2
     end
-
-
 
     api.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
@@ -102,8 +98,6 @@ Vagrant.configure("2") do |config|
       lv.memory = 2048
       lv.cpus   = 1
     end
-
-
 
     web.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"

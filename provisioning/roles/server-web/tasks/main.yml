@@ -34,25 +34,112 @@
     group: www-data
     mode: "0755"
 
-# ── 3. Copiar build del frontend ──────────────────────────────────────────────
-- name: Verificar existencia de /vagrant/frontend/dist/index.html
-  ansible.builtin.stat:
-    path: /vagrant/frontend/dist/index.html
-  register: frontend_build
+# ── 3. Preparar Entorno de Build (Node.js) ────────────────────────────────────
+- name: Verificar si Node.js ya está instalado
+  ansible.builtin.command: node --version
+  register: node_check
+  failed_when: false
+  changed_when: false
 
-- name: Advertir si no hay build disponible
-  ansible.builtin.debug:
-    msg: >
-      No se encontró frontend/dist/. Ejecuta 'npm run build' en
-      la carpeta frontend/ local y luego corre 'vagrant provision svr-web'.
-  when: not frontend_build.stat.exists
+- name: Descargar script NodeSource 20.x
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/setup_20.x
+    dest: /tmp/nodesource_setup.sh
+    mode: "0755"
+  when: node_check.rc != 0
 
-- name: Copiar build React a /var/www/simcomp
+- name: Ejecutar script NodeSource
+  ansible.builtin.command: bash /tmp/nodesource_setup.sh
+  when: node_check.rc != 0
+  changed_when: true
+
+- name: Instalar Node.js 20
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+# ── 3.5. Compilación del Frontend ─────────────────────────────────────────────
+- name: Crear directorio para build de frontend
+  ansible.builtin.file:
+    path: /opt/simcomp/frontend
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: "0755"
+
+- name: Copiar código fuente del frontend
   ansible.builtin.shell: >
-    rsync -a --exclude='node_modules'
-    /vagrant/frontend/dist/
+    rsync -a --delete --exclude='node_modules' --exclude='dist'
+    /vagrant/frontend/
+    /opt/simcomp/frontend/
+  changed_when: true
+
+- name: Crear .env para el frontend
+  ansible.builtin.copy:
+    dest: /opt/simcomp/frontend/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0644"
+    content: |
+      VITE_AUTH_API=http://simcomp.co/api/auth
+      VITE_PERSONAS_API=http://simcomp.co/api/personas
+      VITE_AUTOMOTORES_API=http://simcomp.co/api/automotores
+      VITE_INFRACCIONES_API=http://simcomp.co/api/infracciones
+      VITE_COMPARENDOS_API=http://simcomp.co/api/comparendos
+
+- name: Instalar dependencias del frontend
+  community.general.npm:
+    path: /opt/simcomp/frontend
+    state: present
+  become: false
+  become_user: vagrant
+
+- name: Compilar frontend (npm run build)
+  ansible.builtin.command: npm run build
+  args:
+    chdir: /opt/simcomp/frontend
+  become: false
+  become_user: vagrant
+  register: build_output
+  changed_when: true
+
+- name: Mostrar salida del build (DEBUG)
+  ansible.builtin.debug:
+    var: build_output.stdout_lines
+
+- name: Verificar si existe el directorio dist
+  ansible.builtin.stat:
+    path: /opt/simcomp/frontend/dist
+  register: dist_stat
+
+- name: Listar contenido de dist (DEBUG)
+  ansible.builtin.command: ls -la /opt/simcomp/frontend/dist
+  register: dist_list
+  when: dist_stat.stat.exists
+  changed_when: false
+
+- name: Mostrar contenido de dist (DEBUG)
+  ansible.builtin.debug:
+    var: dist_list.stdout_lines
+  when: dist_stat.stat.exists
+
+- name: Asegurar que /var/www/simcomp existe y está vacío
+  ansible.builtin.file:
+    path: /var/www/simcomp
+    state: "{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: "0755"
+  loop:
+    - absent
+    - directory
+
+- name: Copiar build de React a /var/www/simcomp
+  ansible.builtin.shell: >
+    rsync -a
+    /opt/simcomp/frontend/dist/
     /var/www/simcomp/
-  when: frontend_build.stat.exists
   changed_when: true
 
 - name: Ajustar permisos del frontend
@@ -61,7 +148,6 @@
     owner: www-data
     group: www-data
     recurse: true
-  when: frontend_build.stat.exists
 
 # ── 4. Configurar Nginx ───────────────────────────────────────────────────────
 - name: Eliminar configuración default de Nginx
@@ -308,24 +394,6 @@
     mode: "0644"
 
 # ── 7. Verificación final ─────────────────────────────────────────────────────
-- name: Crear index.html temporal si no hay build de React
-  ansible.builtin.copy:
-    dest: /var/www/simcomp/index.html
-    owner: www-data
-    group: www-data
-    mode: "0644"
-    content: |
-      <!DOCTYPE html>
-      <html>
-        <head><title>SIMCOMP</title></head>
-        <body>
-          <h1>SIMCOMP - Infraestructura lista</h1>
-          <p>Frontend pendiente de build. Ejecuta npm run build en frontend/ y re-provisiona.</p>
-        </body>
-      </html>
-    force: false
-  when: not frontend_build.stat.exists
-
 - name: Verificar respuesta HTTP de Nginx
   ansible.builtin.uri:
     url: http://localhost
@@ -340,5 +408,4 @@
       - "Upstreams: ms-auth:8001 ms-personas:8002 ms-automotores:8003 ms-infracciones:8004 ms-comparendos:8005"
       - "JWT validado por cada microservicio via header Authorization"
       - "Rutas: /api/auth /api/personas /api/automotores /api/infracciones /api/comparendos"
-      - "Frontend: http://simcomp.co"
-      - "{% if not frontend_build.stat.exists %} Sin build React — ejecuta npm run build y re-provisiona{% endif %}"
+      - "Frontend build generado y servido en: http://simcomp.co"

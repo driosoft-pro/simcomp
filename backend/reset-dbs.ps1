@@ -1,190 +1,248 @@
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Resetea las bases de datos de los microservicios (podman / docker).
+
+.DESCRIPTION
+    Detiene y elimina los contenedores de BD, borra sus volúmenes y
+    reconstruye todos los microservicios desde sus archivos compose.
+
+.PARAMETER Action
+    reset  – (predeterminado) Reinicia todo.
+    status – Muestra contenedores y volúmenes activos.
+
+.PARAMETER Engine
+    Fuerza el uso de un motor específico: 'podman' o 'docker'.
+    Si no se indica, el script detecta automáticamente.
+
+.EXAMPLE
+    .\reset-dbs.ps1
+    .\reset-dbs.ps1 -Action status
+    .\reset-dbs.ps1 -Action reset -Engine docker
+#>
+
+param(
+    [ValidateSet("reset", "status")]
+    [string]$Action = "reset",
+
+    [ValidateSet("", "podman", "docker")]
+    [string]$Engine = ""
+)
+
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$BASE_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
-$BACKEND_DIR = $BASE_DIR
+# ─── Configuration ────────────────────────────────────────────────────────────
 
-$DB_CONTAINERS = @(
-  "db-ms-auth-service",
-  "db-ms-comparendos",
-  "db-ms-automotores",
-  "db-ms-infracciones",
-  "db-ms-personas"
+$BaseDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
+$BackendDir = $BaseDir
+
+$DbContainers = @(
+    "db-ms-auth-service",
+    "db-ms-comparendos",
+    "db-ms-automotores",
+    "db-ms-infracciones",
+    "db-ms-personas"
 )
 
-$DB_VOLUMES = @(
-  "ms-auth-service_auth_db_data",
-  "ms-comparendos_comparendos_data",
-  "ms-automotores_automotores_db_data",
-  "ms-infracciones_infracciones_db_data",
-  "ms-personas_personas_db_data"
+$DbVolumes = @(
+    "ms-auth-service_auth_db_data",
+    "ms-comparendos_comparendos_data",
+    "ms-automotores_automotores_db_data",
+    "ms-infracciones_infracciones_db_data",
+    "ms-personas_personas_db_data"
 )
 
-$MICROSERVICES = @(
-  "ms-auth-service",
-  "ms-personas",
-  "ms-automotores",
-  "ms-infracciones",
-  "ms-comparendos"
+$Microservices = @(
+    "ms-auth-service",
+    "ms-personas",
+    "ms-automotores",
+    "ms-infracciones",
+    "ms-comparendos"
 )
 
-function Log($msg) {
-  Write-Host "`n[INFO] $msg" -ForegroundColor Blue
-}
+# ─── Logging helpers ──────────────────────────────────────────────────────────
 
-function Ok($msg) {
-  Write-Host "[OK] $msg" -ForegroundColor Green
-}
+function Write-Log  { param([string]$Msg) Write-Host "`n[INFO]  $Msg" -ForegroundColor Cyan    }
+function Write-Ok   { param([string]$Msg) Write-Host "[OK]    $Msg" -ForegroundColor Green   }
+function Write-Warn { param([string]$Msg) Write-Host "[WARN]  $Msg" -ForegroundColor Yellow  }
+function Write-Err  { param([string]$Msg) Write-Host "[ERROR] $Msg" -ForegroundColor Red     }
 
-function Warn($msg) {
-  Write-Host "[WARN] $msg" -ForegroundColor Yellow
-}
+# ─── Engine detection ─────────────────────────────────────────────────────────
 
-function Err($msg) {
-  Write-Host "[ERROR] $msg" -ForegroundColor Red
-}
+$ContainerEngine = ""   # "podman" | "docker"
+$UseDockerComposePlugin = $false
 
-function Check-Podman {
-  try {
-    podman --version | Out-Null
-  } catch {
-    Err "podman no está instalado o no está en el PATH."
-    exit 1
-  }
-}
-
-function Test-ContainerExists($name) {
-  $result = podman container exists $name 2>$null
-  return ($LASTEXITCODE -eq 0)
-}
-
-function Test-VolumeExists($name) {
-  $result = podman volume exists $name 2>$null
-  return ($LASTEXITCODE -eq 0)
-}
-
-function Find-ComposeFile($serviceDir) {
-  $files = @("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml")
-  foreach ($f in $files) {
-    $fullPath = Join-Path $serviceDir $f
-    if (Test-Path $fullPath) {
-      return $f
+function Detect-Engine {
+    if ($Engine -ne "") {
+        if (-not (Get-Command $Engine -ErrorAction SilentlyContinue)) {
+            Write-Err "El motor especificado '$Engine' no está disponible en PATH."
+            exit 1
+        }
+        $script:ContainerEngine = $Engine
     }
-  }
-  return $null
+    elseif (Get-Command "podman" -ErrorAction SilentlyContinue) {
+        $script:ContainerEngine = "podman"
+    }
+    elseif (Get-Command "docker" -ErrorAction SilentlyContinue) {
+        $script:ContainerEngine = "docker"
+    }
+    else {
+        Write-Err "No se encontró podman ni docker instalado o en el PATH."
+        exit 1
+    }
+
+    # Detect docker compose plugin vs standalone docker-compose
+    if ($script:ContainerEngine -eq "docker") {
+        $pluginCheck = & docker compose version 2>&1
+        $script:UseDockerComposePlugin = ($LASTEXITCODE -eq 0)
+    }
+
+    Write-Ok "Motor de contenedores detectado: $($script:ContainerEngine)"
 }
+
+function Invoke-Compose {
+    param(
+        [string]$WorkDir,
+        [string]$ComposeFile,
+        [string[]]$ExtraArgs
+    )
+
+    Push-Location $WorkDir
+    try {
+        if ($ContainerEngine -eq "podman") {
+            & podman compose -f $ComposeFile @ExtraArgs
+        }
+        elseif ($UseDockerComposePlugin) {
+            & docker compose -f $ComposeFile @ExtraArgs
+        }
+        else {
+            & docker-compose -f $ComposeFile @ExtraArgs
+        }
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "compose falló con código $LASTEXITCODE"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function Test-ContainerExists {
+    param([string]$Name)
+    & $ContainerEngine container inspect $Name 2>&1 | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Test-VolumeExists {
+    param([string]$Name)
+    & $ContainerEngine volume inspect $Name 2>&1 | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Find-ComposeFile {
+    param([string]$ServiceDir)
+    $candidates = @(
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        "compose.yml",
+        "compose.yaml"
+    )
+    foreach ($f in $candidates) {
+        $full = Join-Path $ServiceDir $f
+        if (Test-Path $full) { return $f }
+    }
+    return $null
+}
+
+# ─── Core operations ──────────────────────────────────────────────────────────
 
 function Stop-And-Remove-DbContainers {
-  Log "Deteniendo contenedores de bases de datos..."
-  foreach ($c in $DB_CONTAINERS) {
-    if (Test-ContainerExists $c) {
-      try {
-        podman stop $c | Out-Null
-        Ok "Contenedor detenido: $c"
-      } catch {
-        Warn "No se pudo detener $c, se continúa."
-      }
-    } else {
-      Warn "No existe el contenedor: $c"
+    Write-Log "Deteniendo contenedores de bases de datos..."
+    foreach ($c in $DbContainers) {
+        if (Test-ContainerExists $c) {
+            & $ContainerEngine stop $c 2>&1 | Out-Null
+            Write-Ok "Contenedor detenido: $c"
+        }
+        else {
+            Write-Warn "No existe el contenedor: $c"
+        }
     }
-  }
 
-  Log "Eliminando contenedores de bases de datos..."
-  foreach ($c in $DB_CONTAINERS) {
-    if (Test-ContainerExists $c) {
-      try {
-        podman rm -f $c | Out-Null
-        Ok "Contenedor eliminado: $c"
-      } catch {
-        Warn "No se pudo eliminar $c, se continúa."
-      }
-    } else {
-      Warn "Ya no existe el contenedor: $c"
+    Write-Log "Eliminando contenedores de bases de datos..."
+    foreach ($c in $DbContainers) {
+        if (Test-ContainerExists $c) {
+            & $ContainerEngine rm -f $c 2>&1 | Out-Null
+            Write-Ok "Contenedor eliminado: $c"
+        }
+        else {
+            Write-Warn "Ya no existe el contenedor: $c"
+        }
     }
-  }
 }
 
 function Remove-DbVolumes {
-  Log "Eliminando volúmenes de PostgreSQL..."
-  foreach ($v in $DB_VOLUMES) {
-    if (Test-VolumeExists $v) {
-      try {
-        podman volume rm -f $v | Out-Null
-        Ok "Volumen eliminado: $v"
-      } catch {
-        Warn "No se pudo eliminar el volumen $v, se continúa."
-      }
-    } else {
-      Warn "No existe el volumen: $v"
+    Write-Log "Eliminando volúmenes de PostgreSQL..."
+    foreach ($v in $DbVolumes) {
+        if (Test-VolumeExists $v) {
+            & $ContainerEngine volume rm -f $v 2>&1 | Out-Null
+            Write-Ok "Volumen eliminado: $v"
+        }
+        else {
+            Write-Warn "No existe el volumen: $v"
+        }
     }
-  }
 }
 
-function Rebuild-Microservice($service) {
-  $serviceDir = Join-Path $BACKEND_DIR $service
+function Rebuild-Microservice {
+    param([string]$Service)
 
-  if (-not (Test-Path $serviceDir)) {
-    Warn "No existe el directorio $serviceDir, se omite."
-    return
-  }
+    $serviceDir = Join-Path $BackendDir $Service
 
-  $composeFile = Find-ComposeFile $serviceDir
-  if (-not $composeFile) {
-    Warn "No se encontró compose en $serviceDir, se omite."
-    return
-  }
+    if (-not (Test-Path $serviceDir -PathType Container)) {
+        Write-Warn "No existe el directorio $serviceDir, se omite."
+        return
+    }
 
-  Log "Recreando $service desde $serviceDir..."
-  Push-Location $serviceDir
-  try {
-    podman compose -f $composeFile up -d --build --force-recreate
-    Ok "$service levantado."
-  } catch {
-    Err "Falló al levantar $service"
-  } finally {
-    Pop-Location
-  }
+    $composeFile = Find-ComposeFile $serviceDir
+    if (-not $composeFile) {
+        Write-Warn "No se encontró archivo compose en $serviceDir, se omite."
+        return
+    }
+
+    Write-Log "Recreando $Service desde $serviceDir..."
+    Invoke-Compose -WorkDir $serviceDir -ComposeFile $composeFile `
+                   -ExtraArgs @("up", "-d", "--build", "--force-recreate")
+    Write-Ok "$Service levantado."
 }
 
-function Status-All {
-  Log "Contenedores activos:"
-  try {
-    podman ps
-  } catch {
-    Warn "No se pudo listar contenedores."
-  }
+function Show-Status {
+    Write-Log "Contenedores activos:"
+    & $ContainerEngine ps
 
-  Log "Volúmenes actuales:"
-  try {
-    podman volume ls
-  } catch {
-    Warn "No se pudo listar volúmenes."
-  }
+    Write-Log "Volúmenes actuales:"
+    & $ContainerEngine volume ls
 }
 
 function Reset-All {
-  Stop-And-Remove-DbContainers
-  Remove-DbVolumes
+    Stop-And-Remove-DbContainers
+    Remove-DbVolumes
 
-  foreach ($service in $MICROSERVICES) {
-    Rebuild-Microservice $service
-  }
+    foreach ($svc in $Microservices) {
+        Rebuild-Microservice -Service $svc
+    }
 
-  Status-All
+    Show-Status
 }
 
-$action = if ($args.Count -gt 0) { $args[0] } else { "reset" }
+# ─── Entry point ──────────────────────────────────────────────────────────────
 
-switch ($action) {
-  "reset" {
-    Check-Podman
-    Reset-All
-  }
-  "status" {
-    Check-Podman
-    Status-All
-  }
-  default {
-    Write-Host "Uso: .\reset-dbs.ps1 [reset|status]" -ForegroundColor White
-    exit 1
-  }
+Detect-Engine
+
+switch ($Action) {
+    "reset"  { Reset-All   }
+    "status" { Show-Status }
 }

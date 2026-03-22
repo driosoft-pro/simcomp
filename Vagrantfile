@@ -35,11 +35,6 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 1
     end
 
-    dns.vm.provider "libvirt" do |lv|
-      lv.memory = 1024
-      lv.cpus   = 1
-    end
-
     dns.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
@@ -65,11 +60,6 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 2
     end
 
-    api.vm.provider "libvirt" do |lv|
-      lv.memory = 4096
-      lv.cpus   = 2
-    end
-
     api.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "provisioning/site.yml"
       ansible.inventory_path = "provisioning/inventory/hosts.ini"
@@ -92,11 +82,6 @@ Vagrant.configure("2") do |config|
       vb.name   = "SIMCOMP-WEB"
       vb.memory = 2048
       vb.cpus   = 1
-    end
-
-    web.vm.provider "libvirt" do |lv|
-      lv.memory = 2048
-      lv.cpus   = 1
     end
 
     web.vm.provision "ansible_local" do |ansible|

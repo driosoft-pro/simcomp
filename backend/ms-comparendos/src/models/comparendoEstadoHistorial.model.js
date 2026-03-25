@@ -48,7 +48,11 @@ const ComparendoEstadoHistorial = sequelize.define(
   },
   {
     tableName: "historial_comparendos",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    deletedAt: "deleted_at",
+    paranoid: true,
   }
 );
 

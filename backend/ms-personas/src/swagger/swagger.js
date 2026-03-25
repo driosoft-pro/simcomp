@@ -38,6 +38,7 @@ const options = {
             estado: { type: "string", enum: ["activo", "inactivo"] },
             created_at: { type: "string", format: "date-time" },
             updated_at: { type: "string", format: "date-time" },
+            deleted_at: { type: "string", format: "date-time", nullable: true },
           },
         },
         Licencia: {
@@ -53,6 +54,7 @@ const options = {
             observaciones: { type: "string" },
             created_at: { type: "string", format: "date-time" },
             updated_at: { type: "string", format: "date-time" },
+            deleted_at: { type: "string", format: "date-time", nullable: true },
           },
         },
       },

@@ -15,6 +15,55 @@ import SearchInput from '../../components/ui/SearchInput'
 import Pagination from '../../components/ui/Pagination'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { formatDateShort } from '../../utils/formatters'
+import DataFilters from '../../components/ui/DataFilters'
+import type { FilterOption } from '../../components/ui/DataFilters'
+
+const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
+  { 
+    label: 'Clase', 
+    key: 'clase', 
+    type: 'select', 
+    options: [
+      { label: '🚗 Automóvil', value: 'AUTOMOVIL' },
+      { label: '🏍️ Motocicleta', value: 'MOTOCICLETA' },
+      { label: '🚙 Camioneta', value: 'CAMIONETA' },
+      { label: '🚜 Campero', value: 'CAMPERO' },
+      { label: '🚌 Bus', value: 'BUS' },
+      { label: '🚛 Camión', value: 'CAMIÓN' },
+    ] 
+  },
+  { 
+    label: 'Servicio', 
+    key: 'servicio', 
+    type: 'select', 
+    options: [
+      { label: '🏠 Particular', value: 'PARTICULAR' },
+      { label: '🚕 Público', value: 'PUBLICO' },
+      { label: '🏢 Oficial', value: 'OFICIAL' },
+    ] 
+  },
+  { 
+    label: 'Condición', 
+    key: 'condicion', 
+    type: 'select', 
+    options: [
+      { label: 'Legal', value: 'LEGAL' },
+      { label: 'Reportado Robo', value: 'REPORTADO_ROBO' },
+      { label: 'Recuperado', value: 'RECUPERADO' },
+      { label: 'Embargado', value: 'EMBARGADO' },
+    ] 
+  },
+  { 
+    label: 'Estado', 
+    key: 'estado', 
+    type: 'select', 
+    options: [
+      { label: 'Activo', value: 'activo' },
+      { label: 'Inactivo', value: 'inactivo' },
+      { label: 'Inmovilizado', value: 'inmovilizado' },
+    ] 
+  },
+]
 // import { getPersonaByDocumento } from '../../api/personas.api'
 import type { Automotor } from '../../types'
 
@@ -68,11 +117,22 @@ function AutomotoresList() {
   const isCiudadano = user?.rol === 'ciudadano'
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
   const { addToast } = useToast()
 
-  const roleFilteredData = isCiudadano
+  let roleFilteredData = isCiudadano
     ? data?.filter((v) => v.propietario_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : data
+
+  // Apply Field Filters
+  if (roleFilteredData && Object.keys(filters).length > 0) {
+    roleFilteredData = roleFilteredData.filter((item: any) => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (value === undefined || value === '') return true
+        return String(item[key]) === String(value)
+      })
+    })
+  }
 
   const searchedData = useSearch(roleFilteredData, searchTerm, [
     'placa',
@@ -239,8 +299,13 @@ function AutomotoresList() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por placa, marca, propietario..." />
+        <DataFilters 
+          options={AUTOMOTOR_FILTER_OPTIONS} 
+          onFilter={(f) => setFilters(f)} 
+          onClear={() => setFilters({})} 
+        />
       </div>
 
       {/* Error */}

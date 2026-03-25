@@ -6,9 +6,35 @@ import { useAuth } from '../../hooks/useAuth'
 import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import SearchInput from '../../components/ui/SearchInput'
+import DataFilters from '../../components/ui/DataFilters'
+import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
 import PersonaForm from '../../components/forms/PersonaForm'
 import { formatDateShort } from '../../utils/formatters'
+
+const PERSONA_FILTER_OPTIONS: FilterOption[] = [
+  { 
+    label: 'Tipo Documento', 
+    key: 'tipo_documento', 
+    type: 'select', 
+    options: [
+      { label: 'Cédula de Ciudadanía', value: 'CC' },
+      { label: 'Cédula de Extranjería', value: 'CE' },
+      { label: 'Pasaporte', value: 'PASAPORTE' },
+      { label: 'Tarjeta de Identidad', value: 'TI' },
+    ] 
+  },
+  { 
+    label: 'Género', 
+    key: 'genero', 
+    type: 'select', 
+    options: [
+      { label: 'Masculino', value: 'M' },
+      { label: 'Femenino', value: 'F' },
+      { label: 'Otro', value: 'O' },
+    ] 
+  },
+]
 
 const tipoDocBadge: Record<string, string> = {
   CC: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -22,11 +48,22 @@ function PersonasList() {
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   const isCiudadano = user?.rol === 'ciudadano'
-  const roleFilteredData = isCiudadano
+  let roleFilteredData = isCiudadano
     ? data?.filter((p) => p.numero_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : data
+
+  // Apply Field Filters
+  if (roleFilteredData && Object.keys(filters).length > 0) {
+    roleFilteredData = roleFilteredData.filter((item: any) => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (value === undefined || value === '') return true
+        return String(item[key]) === String(value)
+      })
+    })
+  }
 
   const searchedData = useSearch(roleFilteredData, searchTerm, ['nombres', 'apellidos', 'numero_documento', 'email', 'telefono'])
 
@@ -66,8 +103,13 @@ function PersonasList() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por nombre, documento, email..." />
+        <DataFilters 
+          options={PERSONA_FILTER_OPTIONS} 
+          onFilter={(f) => setFilters(f)} 
+          onClear={() => setFilters({})} 
+        />
       </div>
 
       {/* Error */}

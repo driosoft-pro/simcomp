@@ -138,6 +138,18 @@ services:
     depends_on:
       - db-comparendos
 
+  ms-reportes:
+    build: ./backend/ms-reportes
+    environment:
+      - PORT=8006
+      - AUTH_SERVICE_URL=http://ms-auth-service:8001
+      - PERSONAS_SERVICE_URL=http://ms-personas:8002
+      - AUTOMOTORES_SERVICE_URL=http://ms-automotores:8003
+      - INFRACCIONES_SERVICE_URL=http://ms-infracciones:8004
+      - COMPARENDOS_SERVICE_URL=http://ms-comparendos:8005
+    ports:
+      - "8006:8006"
+
   # Frontend
   frontend:
     build: ./frontend
@@ -163,6 +175,7 @@ services:
       - ms-automotores
       - ms-infracciones
       - ms-comparendos
+      - ms-reportes
 
 volumes:
   auth_db_data:

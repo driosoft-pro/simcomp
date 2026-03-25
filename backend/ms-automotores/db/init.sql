@@ -28,7 +28,7 @@ BEGIN
   END IF;
 END$$;
 
-CREATE TABLE IF NOT EXISTS vehiculos (
+CREATE TABLE IF NOT EXISTS automotores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   placa VARCHAR(10) NOT NULL UNIQUE,
   vin VARCHAR(30) NOT NULL UNIQUE,
@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS vehiculos (
   propietario_nombre VARCHAR(200) NOT NULL,
   condicion condicion_vehiculo_enum NOT NULL DEFAULT 'LEGAL',
   estado estado_vehiculo_enum NOT NULL DEFAULT 'activo',
-  CONSTRAINT chk_vehiculos_modelo CHECK (modelo BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER + 1),
-  CONSTRAINT chk_vehiculos_estado_condicion CHECK (
+  CONSTRAINT chk_automotores_modelo CHECK (modelo BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER + 1),
+  CONSTRAINT chk_automotores_estado_condicion CHECK (
     (
       condicion = 'LEGAL'
       AND estado IN ('activo', 'inactivo', 'inmovilizado')
@@ -71,9 +71,9 @@ CREATE TABLE IF NOT EXISTS vehiculos (
   deleted_at TIMESTAMP NULL
 );
 
-TRUNCATE TABLE vehiculos RESTART IDENTITY CASCADE;
+TRUNCATE TABLE automotores RESTART IDENTITY CASCADE;
 
-INSERT INTO vehiculos (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
+INSERT INTO automotores (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
 ('a536999e-b8e4-4252-b32f-9855f4744064', 'GLC46D', 'VIN00000000000000001', 'MOTJZTOQCAF2VQR', 'CHA0N97KSXG0O6H03', 'Renault', 'Duster', 2017, 'Negro', 'MOTOCICLETA', 'PARTICULAR', '1000000625', 'Sara Sanchez Riascos', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('7caa2d01-6ae1-45e4-99a5-5d038f83b534', 'TDQ483', 'VIN00000000000000002', 'MOTC0JHCWUR9S56', 'CHA1AD8P7SBCRO80I', 'KTM', 'Duke', 2020, 'Verde', 'AUTOMOVIL', 'PARTICULAR', '1000001419', 'Natalia Torres Vargas', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('0819d796-161d-4ec3-9841-365dcbc4ca89', 'NPB48D', 'VIN00000000000000003', 'MOTXT3IKTMFTY5W', 'CHASZFV1SV3I67DKG', 'Chevrolet', 'Spark', 2006, 'Gris', 'CAMION', 'PARTICULAR', '1000000143', 'Natalia Mosquera Sanchez', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
@@ -575,7 +575,7 @@ INSERT INTO vehiculos (id, placa, vin, numero_motor, numero_chasis, marca, linea
 ('74dd4785-dda6-4978-bc59-12aeb3c2405e', 'NSL457', 'VIN00000000000000499', 'MOTMBVLGAP11SK2', 'CHABIE9MXL8IE010F', 'Nissan', 'Versa', 2015, 'Negro', 'BUS', 'PARTICULAR', '1000000712', 'Jhon Vargas Moreno', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('73b45556-f189-49e8-83fc-61e5cd1014ca', 'RCO244', 'VIN00000000000000500', 'MOTL0KBQCQORNSZ', 'CHAXUG44XS0IHY0TJ', 'Nissan', 'Versa', 2005, 'Gris', 'CAMIONETA', 'PARTICULAR', '1000001096', 'Jorge Ortiz Perez', 'LEGAL', 'inmovilizado', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL);
 
-INSERT INTO vehiculos (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
+INSERT INTO automotores (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
 ('bc1ff45b-b954-40f5-8392-86e17b171cc5', 'GMJ333', 'VIN00000000000000501', 'MOT4S7AWSG0678M', 'CHA8A8CAKCH4UA7D3', 'KTM', 'Duke', 2007, 'Azul', 'MOTOCICLETA', 'PARTICULAR', '1000001569', 'Juan Mina Castro', 'REPORTADO_ROBO', 'inactivo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('71897658-3c30-43fe-ac59-191463ea7142', 'IVQ40C', 'VIN00000000000000502', 'MOT7864UVO4WFMG', 'CHALVKRUU1PBKTN7U', 'Yamaha', 'FZ', 2011, 'Plateado', 'MOTOCICLETA', 'PARTICULAR', '1000000761', 'Miguel Lopez Perez', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('48bad042-b54d-4f12-8746-38cab93df268', 'LZD82K', 'VIN00000000000000503', 'MOT1Y6JK5B7PIL7', 'CHAZ6DXGFZYC0XJPF', 'Chevrolet', 'Onix', 2004, 'Plateado', 'AUTOMOVIL', 'PARTICULAR', '1000001213', 'Santiago Castro Valencia', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
@@ -1077,7 +1077,7 @@ INSERT INTO vehiculos (id, placa, vin, numero_motor, numero_chasis, marca, linea
 ('dade7bd7-c490-42d3-bb54-dc563daa008e', 'WDV237', 'VIN00000000000000999', 'MOTUWYX7OZ42IH0', 'CHAFOFJA4QWDUKH7E', 'Chevrolet', 'Spark', 2019, 'Azul', 'CAMION', 'PARTICULAR', '1000000949', 'David Lopez Moreno', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('86e444d8-70c6-4bce-b559-9c84cd60c5ba', 'ALQ606', 'VIN00000000000001000', 'MOTEM4M37GJ5MVA', 'CHAF2WG87O0MJZJAK', 'Suzuki', 'Swift', 2007, 'Negro', 'AUTOMOVIL', 'PARTICULAR', '1000001061', 'Yuliana Ramirez Riascos', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL);
 
-INSERT INTO vehiculos (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
+INSERT INTO automotores (id, placa, vin, numero_motor, numero_chasis, marca, linea, modelo, color, clase, servicio, propietario_documento, propietario_nombre, condicion, estado, created_at, updated_at, deleted_at) VALUES
 ('6d5d74f2-7bf6-4a6a-87e7-41ed0ba0c398', 'SSI56G', 'VIN00000000000001001', 'MOTM00Z03WZVZ5F', 'CHAQ779WXRSU3Y3CG', 'Chevrolet', 'Spark', 2004, 'Blanco', 'MOTOCICLETA', 'PARTICULAR', '1000001182', 'Andres Gomez Castro', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('d27a2b50-968a-4764-b0e2-f6b423a1c9e9', 'MEM014', 'VIN00000000000001002', 'MOT01EIO8HJ667S', 'CHA59IUT4ZY8KYGCJ', 'AKT', 'NKD', 2023, 'Plateado', 'MOTOCICLETA', 'PARTICULAR', '1000000145', 'Maria Gomez Torres', 'LEGAL', 'inmovilizado', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('4e13fb69-1a05-4a7a-b268-e47a166336e1', 'RSJ551', 'VIN00000000000001003', 'MOT20E76P8ZG6D6', 'CHAMB7ZFNX8827VZS', 'Kia', 'Picanto', 2010, 'Rojo', 'AUTOMOVIL', 'PARTICULAR', '1000000421', 'Luisa Gomez Vargas', 'LEGAL', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),

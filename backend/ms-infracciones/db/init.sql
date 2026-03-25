@@ -15,7 +15,7 @@ BEGIN
 END$$;
 
 CREATE TABLE IF NOT EXISTS infracciones (
-  infraccion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo VARCHAR(10) NOT NULL UNIQUE,
   descripcion TEXT NOT NULL,
   articulo_codigo VARCHAR(30) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS infracciones (
 
 TRUNCATE TABLE infracciones RESTART IDENTITY CASCADE;
 
-INSERT INTO infracciones (infraccion_id, codigo, descripcion, articulo_codigo, tipo_sancion, valor_multa, dias_suspension, estado, aplica_descuento, vigente, created_at, updated_at, deleted_at) VALUES
+INSERT INTO infracciones (id, codigo, descripcion, articulo_codigo, tipo_sancion, valor_multa, dias_suspension, estado, aplica_descuento, vigente, created_at, updated_at, deleted_at) VALUES
 ('3752ff7b-ae9f-4fe2-b2e1-9656e59de735', 'C01', 'Transitar por sitios restringidos o en horas prohibidas', 'ART-C01', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('012a0acc-10a6-44d6-a18b-f5c26c4ddb38', 'C02', 'Estacionar en sitios prohibidos', 'ART-C02', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('6ad3989f-9dce-4e6d-8cc7-e9e0e8bf5a9e', 'C03', 'No portar licencia de conducción', 'ART-C03', 'MIXTA', 604100.00, 90, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),

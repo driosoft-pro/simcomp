@@ -145,7 +145,7 @@ function InfraccionDetail() {
           {/* Metadatos */}
           <div className="border-t border-slate-100 pt-6 dark:border-slate-800">
              <div className="flex flex-wrap gap-6 text-xs text-slate-400">
-               <p>ID Sistema: {data.infraccion_id}</p>
+               <p>ID Sistema: {data.id}</p>
                {data.created_at && (
                  <p>Registrado el: {new Date(data.created_at).toLocaleString()}</p>
                )}

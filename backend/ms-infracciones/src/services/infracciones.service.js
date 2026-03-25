@@ -7,7 +7,7 @@ export async function getAllInfracciones() {
 export async function getInfraccionById(id) {
   return await Infraccion.findOne({
     where: {
-      infraccion_id: id,
+      id,
     },
   });
 }

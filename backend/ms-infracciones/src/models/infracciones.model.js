@@ -4,7 +4,7 @@ import sequelize from "../config/database.js";
 const Infraccion = sequelize.define(
   "Infraccion",
   {
-    infraccion_id: {
+    id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,

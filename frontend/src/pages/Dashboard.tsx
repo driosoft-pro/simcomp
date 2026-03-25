@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Users, Car, FileWarning, ClipboardList, ArrowRight, UserCog } from 'lucide-react'
+import { Users, Car, FileWarning, ClipboardList, ArrowRight, UserCog, BarChart3 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import type { UserRole } from '../types'
 
@@ -74,11 +74,23 @@ const adminCard: DashboardCard = {
   roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
 }
 
+const reportesCard: DashboardCard = {
+  title: 'Reportes',
+  description: 'Estadísticas, exportación masiva e importación de datos.',
+  to: '/reportes',
+  icon: BarChart3,
+  gradient: 'from-indigo-500 to-violet-600',
+  shadow: 'shadow-indigo-500/20',
+  bg: 'bg-indigo-50 dark:bg-indigo-950/20',
+  border: 'border-indigo-200 dark:border-indigo-900/40',
+  roles: ['admin', 'supervisor'],
+}
+
 import { DashboardCharts } from '../components/DashboardCharts'
 
 function Dashboard() {
   const { user } = useAuth()
-  const allCards = [...baseCards, adminCard]
+  const allCards = [...baseCards, adminCard, reportesCard]
   const cards = allCards.filter(card => user && card.roles.includes(user.rol))
 
   return (

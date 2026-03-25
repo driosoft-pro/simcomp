@@ -78,6 +78,40 @@ router.post("/import/:modulo", upload.single("file"), asyncHandler(importCsvByMo
 
 /**
  * @swagger
+ * /api/reportes/export/all/zip:
+ *   get:
+ *     summary: Exportar el dataset completo del sistema en ZIP
+ *     tags: [Exportacion]
+ *     responses:
+ *       200:
+ *         description: Archivo ZIP generado correctamente
+ *         content:
+ *           application/zip:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get("/export/all/zip", asyncHandler(exportFullDataset));
+
+/**
+ * @swagger
+ * /api/reportes/export/all/excel:
+ *   get:
+ *     summary: Exportar el dataset completo del sistema en Excel
+ *     tags: [Exportacion]
+ *     responses:
+ *       200:
+ *         description: Archivo Excel generado correctamente
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get("/export/all/excel", asyncHandler(exportFullDatasetExcel));
+
+/**
+ * @swagger
  * /api/reportes/export/{modulo}/csv:
  *   get:
  *     summary: Exportar un modulo en formato CSV
@@ -132,39 +166,7 @@ router.get("/export/:modulo/excel", asyncHandler(exportExcelByModule));
  */
 router.get("/export/:modulo/pdf", asyncHandler(exportPdfByModule));
 
-/**
- * @swagger
- * /api/reportes/export/all/zip:
- *   get:
- *     summary: Exportar el dataset completo del sistema en ZIP
- *     tags: [Exportacion]
- *     responses:
- *       200:
- *         description: Archivo ZIP generado correctamente
- *         content:
- *           application/zip:
- *             schema:
- *               type: string
- *               format: binary
- */
-router.get("/export/all/zip", asyncHandler(exportFullDataset));
-
-/**
- * @swagger
- * /api/reportes/export/all/excel:
- *   get:
- *     summary: Exportar el dataset completo del sistema en Excel
- *     tags: [Exportacion]
- *     responses:
- *       200:
- *         description: Archivo Excel generado correctamente
- *         content:
- *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
- *             schema:
- *               type: string
- *               format: binary
- */
-router.get("/export/all/excel", asyncHandler(exportFullDatasetExcel));
+// Note: /export/all/zip and /export/all/excel are registered ABOVE the parameterized routes
 
 /**
  * @swagger

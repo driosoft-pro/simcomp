@@ -190,7 +190,7 @@ function UsuariosList() {
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">
             Administración
@@ -202,16 +202,25 @@ function UsuariosList() {
             Gestión de cuentas de acceso al sistema.
           </p>
         </div>
-        {(isAdmin || isSupervisor) && (
-          <button
-            type="button"
-            onClick={() => setShowForm((s) => !s)}
-            className="mt-1 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
-          >
-            {showForm ? <X size={16} /> : <UserPlus size={16} />}
-            {showForm ? 'Cancelar' : 'Nuevo usuario'}
-          </button>
-        )}
+
+        <div className="flex flex-col items-end gap-3 mt-1">
+          <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold dark:bg-slate-800">
+            <div className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : isError ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
+            <span className="text-slate-600 dark:text-slate-400">
+              Servicio: {isLoading ? 'Cargando...' : isError ? 'Desconectado' : 'En línea'}
+            </span>
+          </div>
+          {(isAdmin || isSupervisor) && (
+            <button
+              type="button"
+              onClick={() => setShowForm((s) => !s)}
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 active:scale-95 dark:bg-rose-500 dark:hover:bg-rose-600"
+            >
+              {showForm ? <X size={16} /> : <UserPlus size={16} />}
+              {showForm ? 'Cancelar' : 'Nuevo usuario'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

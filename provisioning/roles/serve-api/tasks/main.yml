@@ -9,6 +9,7 @@
 #   ms-automotores   :8003  automotores_db
 #   ms-infracciones  :8004  infracciones_db
 #   ms-comparendos   :8005  comparendos_db
+#   ms-reportes      :8006  (no DB, usa APIs)
 #
 # PREREQUISITO:
 #   backend/ debe existir en la raíz del proyecto con los 5 servicios.
@@ -212,6 +213,7 @@
     - ms-automotores
     - ms-infracciones
     - ms-comparendos
+    - ms-reportes
 
 - name: Crear /var/log/simcomp
   ansible.builtin.file:
@@ -273,6 +275,14 @@
     rsync -a --exclude='node_modules' --exclude='.env'
     /vagrant/backend/ms-comparendos/
     /opt/simcomp/ms-comparendos/
+  when: backend_check.stat.exists
+  changed_when: true
+
+- name: Copiar ms-reportes
+  ansible.builtin.shell: >
+    rsync -a --exclude='node_modules' --exclude='.env'
+    /vagrant/backend/ms-reportes/
+    /opt/simcomp/ms-reportes/
   when: backend_check.stat.exists
   changed_when: true
 
@@ -372,6 +382,22 @@
       PERSONAS_SERVICE_URL=http://localhost:8002/api
       AUTOMOTORES_SERVICE_URL=http://localhost:8003/api
       INFRACCIONES_SERVICE_URL=http://localhost:8004/api
+  no_log: true
+
+- name: .env — ms-reportes
+  ansible.builtin.copy:
+    dest: /opt/simcomp/ms-reportes/.env
+    owner: vagrant
+    group: vagrant
+    mode: "0600"
+    content: |
+      SERVICE_NAME=ms-reportes
+      PORT=8006
+      AUTH_SERVICE_URL=http://localhost:8001
+      PERSONAS_SERVICE_URL=http://localhost:8002
+      AUTOMOTORES_SERVICE_URL=http://localhost:8003
+      INFRACCIONES_SERVICE_URL=http://localhost:8004
+      COMPARENDOS_SERVICE_URL=http://localhost:8005
   no_log: true
 
 # ── 9. Ejecutar scripts de inicialización de BD ───────────────────────────────
@@ -550,6 +576,13 @@
     production: true
   when: backend_check.stat.exists
 
+- name: npm install — ms-reportes
+  community.general.npm:
+    path: /opt/simcomp/ms-reportes
+    state: present
+    production: true
+  when: backend_check.stat.exists
+
 # ── 11. ecosystem.config.js para PM2 ─────────────────────────────────────────
 - name: Crear /opt/simcomp/ecosystem.config.js
   ansible.builtin.copy:
@@ -629,6 +662,20 @@
             out_file:        '/var/log/simcomp/comparendos-out.log',
             merge_logs:      true,
             log_date_format: 'YYYY-MM-DD HH:mm:ss'
+          },
+          {
+            name:               'ms-reportes',
+            script:             '/opt/simcomp/ms-reportes/src/server.js',
+            cwd:                '/opt/simcomp/ms-reportes',
+            instances:          1,
+            autorestart:        true,
+            watch:              false,
+            max_memory_restart: '300M',
+            env: { NODE_ENV: 'production', PORT: 8006 },
+            error_file:      '/var/log/simcomp/reportes-error.log',
+            out_file:        '/var/log/simcomp/reportes-out.log',
+            merge_logs:      true,
+            log_date_format: 'YYYY-MM-DD HH:mm:ss'
           }
         ]
       };
@@ -687,7 +734,7 @@
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  loop: ["8001", "8002", "8003", "8004", "8005"]
+  loop: ["8001", "8002", "8003", "8004", "8005", "8006"]
 
 - name: Habilitar UFW
   community.general.ufw:
@@ -705,13 +752,13 @@
     mode: "0644"
 
 # ── 15. Health checks finales ─────────────────────────────────────────────────
-- name: Esperar a que los microservicios arranquen (puertos 8001-8005)
+- name: Esperar a que los microservicios arranquen (puertos 8001-8006)
   ansible.builtin.wait_for:
     port: "{{ item }}"
     host: localhost
     delay: 5
     timeout: 60
-  loop: [8001, 8002, 8003, 8004, 8005]
+  loop: [8001, 8002, 8003, 8004, 8005, 8006]
   when: backend_check.stat.exists
 
 - name: Health check — ms-auth-service :8001
@@ -764,6 +811,16 @@
   delay: 5
   when: backend_check.stat.exists
 
+- name: Health check — ms-reportes :8006
+  ansible.builtin.uri:
+    url: http://localhost:8006/api/reportes/health
+    status_code: 200
+  register: h5
+  until: h5.status == 200
+  retries: 5
+  delay: 5
+  when: backend_check.stat.exists
+
 - name: Estado final PM2
   ansible.builtin.command: pm2 list
   become: false
@@ -781,4 +838,5 @@
       - "ms-automotores       corriendo en :8003  (automotores_db)"
       - "ms-infracciones      corriendo en :8004  (infracciones_db)"
       - "ms-comparendos       corriendo en :8005  (comparendos_db)"
+      - "ms-reportes          corriendo en :8006  (no DB)"
       - "{% if backend_check.stat.exists %}Microservicios corriendo con PM2{% else %}⚠️  Backend pendiente — ejecuta vagrant provision svr-api cuando esté listo{% endif %}"

@@ -6,13 +6,13 @@ import { buildExcelDataset } from "./excel.service.js";
 import { buildPdfReport } from "./pdf.service.js";
 import { buildGeneralStatistics } from "./statistics.service.js";
 
-export async function buildFullDataset() {
+export async function buildFullDataset(token) {
   const [usuarios, personas, automotores, infracciones, comparendos] = await Promise.all([
-    fetchModuleData("usuarios"),
-    fetchModuleData("personas"),
-    fetchModuleData("automotores"),
-    fetchModuleData("infracciones"),
-    fetchModuleData("comparendos")
+    fetchModuleData("usuarios", token),
+    fetchModuleData("personas", token),
+    fetchModuleData("automotores", token),
+    fetchModuleData("infracciones", token),
+    fetchModuleData("comparendos", token)
   ]);
 
   return {
@@ -24,9 +24,9 @@ export async function buildFullDataset() {
   };
 }
 
-export async function buildDatasetZipBuffer() {
-  const dataset = await buildFullDataset();
-  const stats = await buildGeneralStatistics();
+export async function buildDatasetZipBuffer(token) {
+  const dataset = await buildFullDataset(token);
+  const stats = await buildGeneralStatistics(token);
 
   const excelBuffer = await buildExcelDataset(dataset);
 

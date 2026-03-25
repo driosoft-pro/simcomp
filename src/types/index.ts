@@ -18,6 +18,7 @@ export interface Usuario {
   estado: UserEstado
   created_at?: string
   updated_at?: string
+  deleted_at?: string | null
 }
 
 export interface CreateUsuarioPayload {
@@ -141,7 +142,7 @@ export interface Infraccion {
   tipo_sancion: 'MONETARIA' | 'SUSPENSION_LICENCIA' | 'INMOVILIZACION' | 'MIXTA'
   valor_multa: number
   dias_suspension?: number | null
-  estado: string
+  estado: 'activo' | 'inactivo'
   aplica_descuento: boolean
   vigente: boolean
   created_at?: string

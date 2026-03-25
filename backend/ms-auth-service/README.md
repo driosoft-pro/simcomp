@@ -72,6 +72,29 @@ La base de datos PostgreSQL contiene dos tablas principales:
 
 El script `db/auth_db.sql` crea la estructura inicial y los usuarios semilla.
 
+### 1.5 Modelos de Datos
+
+#### Entidad: `usuarios`
+- `id` (PK, UUID)
+- `username` (Único)
+- `email` (Único)
+- `password_hash`
+- `rol` (ENUM: admin, agente, supervisor, ciudadano)
+- `estado` (ENUM: activo, inactivo)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
+
+#### Entidad: `refresh_tokens`
+- `id` (PK, UUID)
+- `usuario_id` (FK -> usuarios.id)
+- `token`
+- `expires_at`
+- `revocado` (BOOLEAN)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
+
 ### 2. Usuarios semilla
 Por defecto se manejan estos usuarios:
 

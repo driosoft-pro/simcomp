@@ -185,7 +185,7 @@ pnpm preview
 // Provee al árbol de componentes:
 const { user, role, isAuthenticated, login, logout } = useAuth()
 
-// user   → { id, username, email, rol }
+// user   → { id, username, email, rol, deleted_at }
 // role   → 'admin' | 'agente' | 'supervisor' | 'ciudadano'
 ```
 
@@ -269,4 +269,4 @@ npm run preview
 
 ---
 
-*SIMCOMP Frontend — React 18 + Vite 5 + TailwindCSS + JWT · v1.0.0*
+*SIMCOMP Frontend — React 18 + Vite 5 + TailwindCSS + JWT · v1.1.0*

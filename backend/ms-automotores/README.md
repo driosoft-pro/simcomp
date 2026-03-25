@@ -83,6 +83,9 @@ Campos principales:
 - `propietario_nombre`
 - `condicion` (ENUM: LEGAL, REPORTADO_ROBO, etc.)
 - `estado` (ENUM: activo, inactivo)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
 
 ### 3. Condición y Estado
 El campo `condicion` representa la situación legal del vehículo (LEGAL, EMBARGADO, etc.), mientras que `estado` indica si el registro está activo o ha sido dado de baja (soft delete).

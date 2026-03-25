@@ -1,0 +1,160 @@
+import { parseCsvBuffer, toCsv, validateCsvRows } from "../services/csv.service.js";
+import { fetchModuleData, postModuleRow, assertModule } from "../services/httpClients.js";
+import { buildExcelSingleSheet, buildExcelDataset } from "../services/excel.service.js";
+import { buildPdfReport } from "../services/pdf.service.js";
+import { buildGeneralStatistics } from "../services/statistics.service.js";
+import { buildFullDataset, buildDatasetZipBuffer } from "../services/dataset.service.js";
+
+export async function health(req, res) {
+  res.json({
+    success: true,
+    service: "ms-reportes",
+    message: "OK"
+  });
+}
+
+export async function importCsvByModule(req, res) {
+  const { modulo } = req.params;
+  assertModule(modulo);
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Debes enviar un archivo CSV"
+    });
+  }
+
+  const rows = parseCsvBuffer(req.file.buffer);
+  validateCsvRows(modulo, rows);
+
+  const result = {
+    total: rows.length,
+    inserted: 0,
+    failed: 0,
+    errors: []
+  };
+
+  for (let i = 0; i < rows.length; i += 1) {
+    try {
+      await postModuleRow(modulo, rows[i]);
+      result.inserted += 1;
+    } catch (error) {
+      result.failed += 1;
+      result.errors.push({
+        row: i + 1,
+        error: error.response?.data || error.message
+      });
+    }
+  }
+
+  res.json({
+    success: true,
+    message: `Importacion completada para ${modulo}`,
+    data: result
+  });
+}
+
+export async function exportCsvByModule(req, res) {
+  const { modulo } = req.params;
+  assertModule(modulo);
+
+  const data = await fetchModuleData(modulo);
+  const csv = toCsv(data);
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${modulo}.csv"`);
+
+  res.send(csv);
+}
+
+export async function exportExcelByModule(req, res) {
+  const { modulo } = req.params;
+  assertModule(modulo);
+
+  const data = await fetchModuleData(modulo);
+  const buffer = await buildExcelSingleSheet(modulo, data);
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${modulo}.xlsx"`);
+
+  res.send(Buffer.from(buffer));
+}
+
+export async function exportPdfByModule(req, res) {
+  const { modulo } = req.params;
+  assertModule(modulo);
+
+  const data = await fetchModuleData(modulo);
+
+  const sectionLines = data.slice(0, 30).map((row, index) => {
+    return `${index + 1}. ${JSON.stringify(row)}`;
+  });
+
+  const buffer = await buildPdfReport(`Reporte del modulo ${modulo}`, [
+    {
+      title: "Resumen",
+      lines: [`Total registros: ${data.length}`]
+    },
+    {
+      title: "Primeros registros",
+      lines: sectionLines.length ? sectionLines : ["Sin registros"]
+    }
+  ]);
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${modulo}.pdf"`);
+
+  res.send(buffer);
+}
+
+export async function exportFullDataset(req, res) {
+  const zipBuffer = await buildDatasetZipBuffer();
+
+  res.setHeader("Content-Type", "application/zip");
+  res.setHeader("Content-Disposition", 'attachment; filename="dataset_simcomp.zip"');
+
+  res.send(zipBuffer);
+}
+
+export async function exportFullDatasetExcel(req, res) {
+  const dataset = await buildFullDataset();
+  const buffer = await buildExcelDataset(dataset);
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", 'attachment; filename="dataset_simcomp.xlsx"');
+
+  res.send(Buffer.from(buffer));
+}
+
+export async function getStatistics(req, res) {
+  const stats = await buildGeneralStatistics();
+
+  res.json({
+    success: true,
+    data: stats
+  });
+}
+
+export async function exportStatisticsPdf(req, res) {
+  const stats = await buildGeneralStatistics();
+
+  const buffer = await buildPdfReport("Estadisticas generales SIMCOMP", [
+    {
+      title: "Resumen general",
+      lines: Object.entries(stats.resumen).map(([k, v]) => `${k}: ${v}`)
+    },
+    {
+      title: "Usuarios por rol",
+      lines: Object.entries(stats.usuariosPorRol).map(([k, v]) => `${k}: ${v}`)
+    },
+    {
+      title: "Comparendos por estado",
+      lines: Object.entries(stats.comparendosPorEstado).map(([k, v]) => `${k}: ${v}`)
+    }
+  ]);
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="estadisticas_simcomp.pdf"');
+
+  res.send(buffer);
+}

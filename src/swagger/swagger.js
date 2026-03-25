@@ -38,7 +38,7 @@ const options = {
         Infraccion: {
           type: "object",
           properties: {
-            infraccion_id: {
+            id: {
               type: "string",
               format: "uuid",
               example: "7c3f0d9e-6f27-4c4e-b88a-9e0b41c5d8c3",

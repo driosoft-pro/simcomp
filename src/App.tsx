@@ -18,6 +18,7 @@ import EditarComparendo from './pages/comparendos/EditarComparendo'
 import UsuariosList from './pages/usuarios/UsuariosList'
 import UsuarioDetail from './pages/usuarios/UsuarioDetail'
 import Perfil from './pages/usuarios/Profile'
+import Reportes from './pages/reportes/Reportes'
 
 type Theme = 'light' | 'dark'
 
@@ -201,6 +202,18 @@ function App() {
             <ProtectedRoute roles={['admin', 'agente', 'supervisor', 'ciudadano']}>
               <Layout theme={theme} onToggleTheme={toggleTheme}>
                 <Perfil />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Reportes – solo admin y supervisor */}
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute roles={['admin', 'supervisor']}>
+              <Layout theme={theme} onToggleTheme={toggleTheme}>
+                <Reportes />
               </Layout>
             </ProtectedRoute>
           }

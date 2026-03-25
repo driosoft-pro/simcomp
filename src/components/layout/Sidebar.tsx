@@ -8,6 +8,7 @@ import {
   UserCog,
   X,
   ShieldCheck,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { APP_VERSION } from '../../utils/constants'
@@ -63,6 +64,13 @@ const navItems: NavItem[] = [
     icon: ClipboardList,
     roles: ['admin', 'agente', 'supervisor', 'ciudadano'],
     color: 'text-emerald-400',
+  },
+  {
+    label: 'Reportes',
+    path: '/reportes',
+    icon: BarChart3,
+    roles: ['admin', 'supervisor'],
+    color: 'text-indigo-400',
   },
 ]
 

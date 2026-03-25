@@ -162,7 +162,7 @@ function InfraccionesList() {
     e.preventDefault()
     try {
       if (editingInfraccion) {
-        await updateInfraccion.mutateAsync({ id: editingInfraccion.infraccion_id, data: formData })
+        await updateInfraccion.mutateAsync({ id: editingInfraccion.id, data: formData })
         addToast('Infracción actualizada', 'success')
       } else {
         await createInfraccion.mutateAsync(formData)
@@ -287,7 +287,7 @@ function InfraccionesList() {
 
               {paginatedItems?.map((infraccion) => (
                 <tr
-                  key={infraccion.infraccion_id}
+                  key={infraccion.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
                 >
                   <td className="px-4 py-3 font-mono font-semibold text-slate-800 dark:text-slate-200">
@@ -341,7 +341,7 @@ function InfraccionesList() {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
-                        to={`/infracciones/${infraccion.infraccion_id}`}
+                        to={`/infracciones/${infraccion.id}`}
                         className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40"
                       >
                         Ver detalle
@@ -358,7 +358,7 @@ function InfraccionesList() {
                           )}
                           {infraccion.estado === 'activo' ? (
                             <button
-                              onClick={() => setConfirmDeleteId(infraccion.infraccion_id)}
+                              onClick={() => setConfirmDeleteId(infraccion.id)}
                               disabled={deleteInfraccion.isPending}
                               className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded disabled:opacity-50"
                             >
@@ -366,7 +366,7 @@ function InfraccionesList() {
                             </button>
                           ) : (
                             <button
-                              onClick={() => setConfirmActivateId(infraccion.infraccion_id)}
+                              onClick={() => setConfirmActivateId(infraccion.id)}
                               disabled={activateInfraccion.isPending}
                               className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium text-xs bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded disabled:opacity-50"
                             >

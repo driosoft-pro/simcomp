@@ -157,7 +157,7 @@ export async function changeInfraccionStatusController(req, res) {
     return res.status(200).json({
       success: true,
       data: {
-        infraccion_id: infraccion.infraccion_id,
+        id: infraccion.id,
         vigente: infraccion.vigente,
       },
     });

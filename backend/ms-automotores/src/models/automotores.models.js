@@ -85,7 +85,7 @@ const Automotor = sequelize.define(
     },
   },
   {
-    tableName: "vehiculos",
+    tableName: "automotores",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

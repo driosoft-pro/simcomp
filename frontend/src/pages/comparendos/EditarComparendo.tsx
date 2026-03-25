@@ -225,7 +225,7 @@ function EditarComparendo() {
               >
                 <option value="">Seleccione una infracción</option>
                 {infracciones?.map((inf) => (
-                  <option key={inf.infraccion_id} value={inf.codigo}>
+                  <option key={inf.id} value={inf.codigo}>
                     {inf.codigo} - {inf.descripcion.substring(0, 50)}...
                   </option>
                 ))}

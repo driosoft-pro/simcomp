@@ -84,6 +84,9 @@ Campos principales:
 - `valor_multa`
 - `observaciones`
 - `estado` (ENUM: PENDIENTE, PAGADO, ANULADO)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
 
 ### 3. Estados del comparendo
 Estados válidos del campo `estado`:

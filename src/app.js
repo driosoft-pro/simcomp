@@ -24,6 +24,14 @@ app.get("/api/docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: process.env.SERVICE_NAME || "ms-reportes",
+    status: "OK",
+  });
+});
+
 app.use("/api/reportes", reportesRoutes);
 
 app.use((req, res) => {

@@ -40,7 +40,7 @@ const Infraccion = sequelize.define(
       allowNull: true,
     },
     estado: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.ENUM("activo", "inactivo"),
       allowNull: false,
       defaultValue: "activo",
     },

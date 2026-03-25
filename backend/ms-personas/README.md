@@ -83,6 +83,9 @@ Campos principales:
 - `telefono`
 - `email` (Único)
 - `estado` (ENUM)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
 
 ### 3. Entidad LicenciaConduccion
 La tabla `licencias_conduccion` permite almacenar licencias históricas por persona.
@@ -97,6 +100,9 @@ Campos principales:
 - `fecha_vencimiento`
 - `estado` (ENUM: VIGENTE, SUSPENDIDA, VENCIDA, CANCELADA)
 - `observaciones`
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
 
 ### 4. Integración con otros servicios
 Este microservicio es consumido por otros módulos para validar si una persona existe antes de registrar automotores o comparendos.

@@ -77,8 +77,9 @@ Campos principales:
 - `aplica_descuento`
 - `vigente`
 - `estado` (ENUM: activo, inactivo)
-- `created_at`
-- `updated_at`
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+- `deleted_at` (TIMESTAMP, NULL)
 
 ### 3. Tipos de sanción
 El campo `tipo_sancion` puede manejar los siguientes valores:

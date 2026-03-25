@@ -214,6 +214,7 @@ npm install
 | estado | ENUM |  | `activo`, `inactivo` |
 | created_at | TIMESTAMP |  | Fecha de registro en el sistema |
 | updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `refresh_tokens`
 
@@ -226,6 +227,7 @@ npm install
 | revocado | BOOLEAN |  | Estado del token |
 | created_at | TIMESTAMP |  | Fecha de creación |
 | updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
 
@@ -248,6 +250,7 @@ npm install
 | estado | ENUM |  | `activo`, `inactivo` |
 | created_at | TIMESTAMP |  | Fecha de registro |
 | updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `LicenciaConduccion`
 
@@ -261,6 +264,9 @@ npm install
 | fecha_vencimiento | DATE |  | Fecha de vencimiento |
 | estado | ENUM |  | `vigente`, `suspendida`, `vencida`, `cancelada` |
 | observaciones | TEXT |  | Notas adicionales |
+| created_at | TIMESTAMP |  | Fecha de registro |
+| updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
 
@@ -287,6 +293,7 @@ npm install
 | condicion | ENUM |  | `LEGAL`, `REPORTADO_ROBO`, `RECUPERADO`, `EMBARGADO` |
 | created_at | TIMESTAMP |  | Fecha de registro |
 | updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 > `propietario_id` es una referencia lógica al microservicio de personas.  
 > No debe implementarse como clave foránea física entre bases de datos.
@@ -306,9 +313,12 @@ npm install
 | tipo_sancion | ENUM |  | `MONETARIA`, `SUSPENSION_LICENCIA`, `INMOVILIZACION`, `MIXTA` |
 | valor_multa | DECIMAL(12,2) |  | Valor de la multa |
 | dias_suspension | INTEGER | NULL | Días de suspensión si aplica |
-| estado | VARCHAR(20) |  | `activo`, `inactivo` |
+| estado | ENUM |  | `activo`, `inactivo` |
 | aplica_descuento | BOOLEAN |  | Si aplica descuento |
 | vigente | BOOLEAN |  | Estado de vigencia normativa |
+| created_at | TIMESTAMP |  | Fecha de registro |
+| updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
 
@@ -335,6 +345,7 @@ npm install
 | estado | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
 | created_at | TIMESTAMP |  | Fecha de creación |
 | updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `ComparendoEstadoHistorial`
 
@@ -346,6 +357,9 @@ npm install
 | estado_nuevo | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
 | observacion | TEXT |  | Razón del cambio |
 | fecha_evento | TIMESTAMP |  | Fecha del cambio |
+| created_at | TIMESTAMP |  | Fecha de registro |
+| updated_at | TIMESTAMP |  | Última modificación |
+| deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 > Los campos `persona_id`, `automotor_id` e `infraccion_id` son referencias lógicas
 > y deben validarse consultando los microservicios correspondientes vía HTTP/REST.

@@ -119,7 +119,14 @@ Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo hos
 
 3. **Credenciales por defecto**:
    - **Usuario**: `admin@simcomp.co`
-   - **Password**: `Admin123!`
+   - **Password**: `Admin123*`
+
+---
+
+## Características de Datos
+
+- **Borrado Lógico (Soft Delete)**: El sistema implementa borrado lógico mediante el campo `deleted_at` en todas las entidades principales. Los registros no se eliminan físicamente de la base de datos.
+- **Auditoría**: Todas las tablas incluyen campos `created_at` y `updated_at` gestionados automáticamente por Sequelize.
 
 ---
 

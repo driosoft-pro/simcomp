@@ -5,7 +5,7 @@
 # =============================================================================
 
 - name: Verificar svr-dns
-  hosts: svr-dns
+  hosts: dns_servers
   become: true
   tasks:
     - name: Estado del servicio named
@@ -28,7 +28,7 @@
           - "api.simcomp.co → {{ dns_api.stdout }}"
 
 - name: Verificar svr-api (5 microservicios)
-  hosts: svr-api
+  hosts: api_servers
   tasks:
     - name: Health check auth-service :8001
       ansible.builtin.uri:
@@ -71,7 +71,7 @@
           - "comparendos-service  :8005 → {{ h_cmp.status }} "
 
 - name: Verificar svr-web (Nginx + API Gateway)
-  hosts: svr-web
+  hosts: web_servers
   tasks:
     - name: Estado Nginx
       ansible.builtin.systemd:

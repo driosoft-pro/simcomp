@@ -5,19 +5,19 @@
 # =============================================================================
 
 - name: Aprovisionar svr-dns (BIND9 + zona simcomp.co)
-  hosts: svr-dns
+  hosts: dns_servers
   become: true
   roles:
     - serve-dns
 
 - name: Aprovisionar svr-api (PostgreSQL x5 + Node.js x5 + PM2)
-  hosts: svr-api
+  hosts: api_servers
   become: true
   roles:
     - serve-api
 
 - name: Aprovisionar svr-web (Nginx API Gateway JWT + React SPA)
-  hosts: svr-web
+  hosts: web_servers
   become: true
   roles:
     - server-web

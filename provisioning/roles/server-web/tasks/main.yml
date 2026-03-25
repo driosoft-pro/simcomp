@@ -87,7 +87,7 @@
       VITE_AUTOMOTORES_API=http://simcomp.co/api
       VITE_INFRACCIONES_API=http://simcomp.co/api
       VITE_COMPARENDOS_API=http://simcomp.co/api
-      VITE_REPORTES_API=http://simcomp.co/api
+      VITE_REPORTES_API=http://simcomp.co/api/reportes
 
 - name: Instalar dependencias del frontend
   community.general.npm:

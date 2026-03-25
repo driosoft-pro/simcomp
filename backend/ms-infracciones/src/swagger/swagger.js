@@ -104,7 +104,7 @@ const options = {
               example: "2025-01-10T10:20:30.000Z",
             },
 
-            deletet_at: {
+            deleted_at: {
               type: "string",
               format: "date-time",
               nullable: true,

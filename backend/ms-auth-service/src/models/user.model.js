@@ -32,18 +32,22 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "activo",
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "usuarios",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    deletedAt: "deleted_at",
+    paranoid: true,
   }
 );
 

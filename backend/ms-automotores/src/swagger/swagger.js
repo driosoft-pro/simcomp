@@ -104,6 +104,12 @@ const options = {
               format: "date-time",
               example: "2025-01-10T10:20:30.000Z",
             },
+            deleted_at: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              example: null,
+            },
           },
         },
         CreateAutomotor: {

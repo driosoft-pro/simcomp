@@ -14,7 +14,7 @@ DB_CONTAINERS=(
 
 DB_VOLUMES=(
   "ms-auth-service_auth_db_data"
-  "ms-comparendos_comparendos_data"
+  "ms-comparendos_comparendos_db_data"
   "ms-automotores_automotores_db_data"
   "ms-infracciones_infracciones_db_data"
   "ms-personas_personas_db_data"

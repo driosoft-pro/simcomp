@@ -140,6 +140,21 @@ Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo hos
 
 ---
 
+## Dataset 
+Incluye:
+
+personas.csv → 1700
+usuarios.csv → 700
+licencias_conduccion.csv → 1411
+vehiculos.csv → 1200
+infracciones.csv → 20
+comparendos.csv → 1400
+historial_comparendos.csv → 1922
+
+Total tablas principales (personas + usuarios + vehiculos + infracciones + comparendos): 5020 registros.
+
+----
+
 ## Ejecución con Docker (Orquestación Completa)
 
 Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant, puedes usar Docker Compose:

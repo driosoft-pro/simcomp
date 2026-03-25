@@ -10,7 +10,7 @@ info:
   version: "1.0.0"
   contact:
     name: SIMCOMP
-    email: admin@simcomp.gov.co
+    email: dbonilla0
 
 servers:
   - url: http://localhost:8001

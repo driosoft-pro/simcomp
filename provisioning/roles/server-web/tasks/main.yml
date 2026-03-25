@@ -87,6 +87,7 @@
       VITE_AUTOMOTORES_API=http://simcomp.co/api
       VITE_INFRACCIONES_API=http://simcomp.co/api
       VITE_COMPARENDOS_API=http://simcomp.co/api
+      VITE_REPORTES_API=http://simcomp.co/api
 
 - name: Instalar dependencias del frontend
   community.general.npm:
@@ -172,6 +173,7 @@
       #   ms-automotores       → :8003
       #   ms-infracciones      → :8004
       #   ms-comparendos       → :8005
+      #   ms-reportes          → :8006
       #
       # Validación JWT: cada microservicio valida el token Authorization
       # proxy_pass incluye la ruta base para evitar duplicación de rutas
@@ -182,6 +184,7 @@
       upstream automotores_backend { server 192.168.100.3:8003; keepalive 16; }
       upstream infracciones_backend{ server 192.168.100.3:8004; keepalive 16; }
       upstream comparendos_backend { server 192.168.100.3:8005; keepalive 16; }
+      upstream reportes_backend    { server 192.168.100.3:8006; keepalive 16; }
 
       # ── Servidor principal: simcomp.co ─────────────────────────────
       server {
@@ -308,12 +311,30 @@
               if ($request_method = OPTIONS) { return 204; }
           }
 
+          # ── Rutas reportes ─────────────────────────────────────────
+          location /api/reportes {
+              proxy_pass         http://reportes_backend/api/reportes;
+              proxy_http_version 1.1;
+              proxy_set_header   Host            $host;
+              proxy_set_header   X-Real-IP       $remote_addr;
+              proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header   Authorization   $http_authorization;
+              proxy_read_timeout 60s;
+
+              add_header Access-Control-Allow-Origin      "$http_origin"                           always;
+              add_header Access-Control-Allow-Methods     "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+              add_header Access-Control-Allow-Headers     "Content-Type, Authorization"            always;
+              add_header Access-Control-Allow-Credentials "true"                                   always;
+              if ($request_method = OPTIONS) { return 204; }
+          }
+
           # ── Swagger Docs (sin auth) ────────────────────────────────
           location /docs/auth         { proxy_pass http://auth_backend/api/docs;         }
           location /docs/personas     { proxy_pass http://personas_backend/api/docs;     }
           location /docs/automotores  { proxy_pass http://automotores_backend/api/docs;  }
           location /docs/infracciones { proxy_pass http://infracciones_backend/api/docs; }
           location /docs/comparendos  { proxy_pass http://comparendos_backend/api/docs;  }
+          location /docs/reportes     { proxy_pass http://reportes_backend/api/docs;     }
 
           # ── React SPA (catch-all) ──────────────────────────────────
           location / {
@@ -344,6 +365,7 @@
           location /api/automotores { proxy_pass http://automotores_backend/api/automotores;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
           location /api/infracciones{ proxy_pass http://infracciones_backend/api/infracciones;proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
           location /api/comparendos { proxy_pass http://comparendos_backend/api/comparendos;  proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
+          location /api/reportes    { proxy_pass http://reportes_backend/api/reportes;        proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header Authorization $http_authorization; add_header Access-Control-Allow-Origin "*" always; add_header Access-Control-Allow-Headers "Content-Type, Authorization" always; if ($request_method = OPTIONS) { return 204; } }
 
           access_log /var/log/nginx/simcomp-api-access.log;
           error_log  /var/log/nginx/simcomp-api-error.log warn;
@@ -405,7 +427,7 @@
   ansible.builtin.debug:
     msg:
       - "Nginx activo como API Gateway"
-      - "Upstreams: ms-auth:8001 ms-personas:8002 ms-automotores:8003 ms-infracciones:8004 ms-comparendos:8005"
+      - "Upstreams: ms-auth:8001 ms-personas:8002 ms-automotores:8003 ms-infracciones:8004 ms-comparendos:8005 ms-reportes:8006"
       - "JWT validado por cada microservicio via header Authorization"
-      - "Rutas: /api/auth /api/personas /api/automotores /api/infracciones /api/comparendos"
+      - "Rutas: /api/auth /api/personas /api/automotores /api/infracciones /api/comparendos /api/reportes"
       - "Frontend build generado y servido en: http://simcomp.co"

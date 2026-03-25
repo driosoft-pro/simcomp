@@ -6,36 +6,41 @@ Guía para desplegar en **3 VMs** con Vagrant + Ansible. Sin Docker en producci�
 
 # Imagenes Módulos SIMCOMP
 
-- login
+- Login
 ![Login.png](img/Login.png)
 
-- dashboard
-![Dashboard.png](img/Dashboard.png)
+- Dashboard dark
+![DashboardDark.png](img/DashboardDark.png)
 
-- personas
-![Personas.png](img/Personas.png)
+- Dashboard light
+![DashboardLight.png](img/DashboardLight.png)
 
-- automotores
-![Automotores.png](img/Automotores.png)
-
-- infracciones
-![Infracciones.png](img/Infracciones.png)
-
-- comparendos
-![Comparendos.png](img/Comparendos.png)
-
-- detalles-comparendo
-![DetallesComparendo.png](img/DetallesComparendo.png)
-
-- recibo-comparendo
-![ReciboComparendo.png](img/ReciboComparendo.png)
-
-- paga-comparendo
-![PagaComparendo.png](img/PagaComparendo.png)
-
-- usuarios
+- Usuarios
 ![Usuarios.png](img/Usuarios.png)
 
+- Personas
+![Personas.png](img/Personas.png)
+
+- Automotores
+![Automotores.png](img/Automotores.png)
+
+- Infracciones
+![Infracciones.png](img/Infracciones.png)
+
+- Comparendos
+![Comparendos.png](img/Comparendos.png)
+
+- Comparendo
+![Comparendo.png](img/Comparendo.png)
+
+- Pagar
+![PagoComparendo.png](img/PagoComparendo.png)
+
+- Recibo
+![ReciboComparendo.png](img/ReciboComparendo.png)
+
+- Reportes
+![Reportes.png](img/Reportes.png)
 
 -## Arquitectura (Red 192.168.100.x)
 

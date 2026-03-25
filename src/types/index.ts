@@ -136,7 +136,6 @@ export interface Automotor {
 
 export interface Infraccion {
   id: UUID
-  infraccion_id: UUID
   codigo: string
   descripcion: string
   articulo_codigo: string

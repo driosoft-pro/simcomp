@@ -5,9 +5,41 @@ import { formatDate, formatDateShort } from '../../utils/formatters'
 import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import SearchInput from '../../components/ui/SearchInput'
+import DataFilters from '../../components/ui/DataFilters'
+import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
 import type { Comparendo } from '../../types'
 import { Plus } from 'lucide-react'
+
+const COMPARENDO_FILTER_OPTIONS: FilterOption[] = [
+  { 
+    label: 'Estado', 
+    key: 'estado', 
+    type: 'select', 
+    options: [
+      { label: 'Pendiente', value: 'PENDIENTE' },
+      { label: 'Vigente', value: 'VIGENTE' },
+      { label: 'En Proceso de Pago', value: 'EN_PROCESO_DE_PAGO' },
+      { label: 'Pagado', value: 'PAGADO' },
+      { label: 'Cerrado', value: 'CERRADO' },
+      { label: 'En Cobro Coactivo', value: 'EN_COBRO_COACTIVO' },
+      { label: 'Impugnado', value: 'IMPUGNADO' },
+      { label: 'Exonerado', value: 'EXONERADO' },
+      { label: 'Anulado', value: 'ANULADO' },
+    ] 
+  },
+  { 
+    label: 'Ciudad', 
+    key: 'ciudad', 
+    type: 'select', 
+    options: [
+      { label: 'Cali', value: 'Cali' },
+      { label: 'Bogotá', value: 'Bogotá' },
+      { label: 'Medellín', value: 'Medellín' },
+      { label: 'Barranquilla', value: 'Barranquilla' },
+    ] 
+  },
+]
 import { useState } from 'react'
 
 const estadoStyles: Record<Comparendo['estado'], string> = {
@@ -26,11 +58,22 @@ function ComparendosList() {
   const { user } = useAuth()
   const { data: allData, isLoading, isError, error } = useComparendos()
   const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   const isCiudadano = user?.rol === 'ciudadano'
-  const roleFilteredData = isCiudadano
+  let roleFilteredData = isCiudadano
     ? allData?.filter((c) => c.ciudadano_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
     : allData
+
+  // Apply Field Filters
+  if (roleFilteredData && Object.keys(filters).length > 0) {
+    roleFilteredData = roleFilteredData.filter((item: any) => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (value === undefined || value === '') return true
+        return String(item[key]) === String(value)
+      })
+    })
+  }
 
   const searchedData = useSearch(roleFilteredData, searchTerm, [
     'numero_comparendo',
@@ -77,8 +120,13 @@ function ComparendosList() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por número, infractor, lugar, placa..." />
+        <DataFilters 
+          options={COMPARENDO_FILTER_OPTIONS} 
+          onFilter={(f) => setFilters(f)} 
+          onClear={() => setFilters({})} 
+        />
       </div>
 
       {/* Error */}

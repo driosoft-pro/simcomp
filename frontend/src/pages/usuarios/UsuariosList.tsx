@@ -7,6 +7,8 @@ import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import { useToast } from '../../context/ToastContext'
 import SearchInput from '../../components/ui/SearchInput'
+import DataFilters from '../../components/ui/DataFilters'
+import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
 import type { UserRole } from '../../types'
 import axios from 'axios'
@@ -53,6 +55,29 @@ import { getPersonaByEmail } from '../../api/personas.api'
 import PersonaForm from '../../components/forms/PersonaForm'
 import { formatDateShort } from '../../utils/formatters'
 
+const USUARIO_FILTER_OPTIONS: FilterOption[] = [
+  { 
+    label: 'Rol', 
+    key: 'rol', 
+    type: 'select', 
+    options: [
+      { label: 'Administrador', value: 'admin' },
+      { label: 'Supervisor', value: 'supervisor' },
+      { label: 'Agente', value: 'agente' },
+      { label: 'Ciudadano', value: 'ciudadano' },
+    ] 
+  },
+  { 
+    label: 'Estado', 
+    key: 'estado', 
+    type: 'select', 
+    options: [
+      { label: 'Activo', value: 'activo' },
+      { label: 'Inactivo', value: 'inactivo' },
+    ] 
+  },
+]
+
 function UsuariosList() {
   const { data, isLoading, isError, error, refetch } = useUsuarios()
   const { user } = useAuth()
@@ -66,10 +91,24 @@ function UsuariosList() {
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false)
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
 
   const isAdmin = user?.rol === 'admin'
   const isSupervisor = user?.rol === 'supervisor'
-  const searchedData = useSearch(data, searchTerm, ['username', 'email', 'rol'])
+
+  let roleFilteredData = data
+
+  // Apply Field Filters
+  if (roleFilteredData && Object.keys(filters).length > 0) {
+    roleFilteredData = roleFilteredData.filter((item: any) => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (value === undefined || value === '') return true
+        return String(item[key]) === String(value)
+      })
+    })
+  }
+
+  const searchedData = useSearch(roleFilteredData, searchTerm, ['username', 'email', 'rol'])
 
   const {
     currentPage,
@@ -175,8 +214,13 @@ function UsuariosList() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por username, email, rol..." />
+        <DataFilters 
+          options={USUARIO_FILTER_OPTIONS} 
+          onFilter={(f) => setFilters(f)} 
+          onClear={() => setFilters({})} 
+        />
       </div>
 
       {/* Formulario nuevo usuario (Modal) */}

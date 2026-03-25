@@ -14,9 +14,43 @@ import { useSearch } from '../../hooks/useSearch'
 import { usePagination } from '../../hooks/usePagination'
 import { useToast } from '../../context/ToastContext'
 import SearchInput from '../../components/ui/SearchInput'
+import DataFilters from '../../components/ui/DataFilters'
+import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import type { Infraccion } from '../../types'
+
+const INFRACCION_FILTER_OPTIONS: FilterOption[] = [
+  { 
+    label: 'Tipo Sanción', 
+    key: 'tipo_sancion', 
+    type: 'select', 
+    options: [
+      { label: 'Monetaria', value: 'MONETARIA' },
+      { label: 'Suspensión Licencia', value: 'SUSPENSION_LICENCIA' },
+      { label: 'Inmovilización', value: 'INMOVILIZACION' },
+      { label: 'Mixta', value: 'MIXTA' },
+    ] 
+  },
+  { 
+    label: 'Estado', 
+    key: 'estado', 
+    type: 'select', 
+    options: [
+      { label: 'Activo', value: 'activo' },
+      { label: 'Inactivo', value: 'inactivo' },
+    ] 
+  },
+  { 
+    label: 'Vigencia', 
+    key: 'vigente', 
+    type: 'boolean', 
+    options: [
+      { label: 'Vigente', value: true },
+      { label: 'No Vigente', value: false },
+    ] 
+  },
+]
 const tipoSancionStyles: Record<Infraccion['tipo_sancion'], string> = {
   MONETARIA: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   SUSPENSION_LICENCIA: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
@@ -38,12 +72,25 @@ function InfraccionesList() {
   const { addToast } = useToast()
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [confirmActivateId, setConfirmActivateId] = useState<string | null>(null)
   const [editingInfraccion, setEditingInfraccion] = useState<Infraccion | null>(null)
 
-  const searchedData = useSearch(data, searchTerm, ['codigo', 'descripcion', 'articulo_codigo'])
+  let roleFilteredData = data
+
+  // Apply Field Filters
+  if (roleFilteredData && Object.keys(filters).length > 0) {
+    roleFilteredData = roleFilteredData.filter((item: any) => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (value === undefined || value === '') return true
+        return String(item[key]) === String(value)
+      })
+    })
+  }
+
+  const searchedData = useSearch(roleFilteredData, searchTerm, ['codigo', 'descripcion', 'articulo_codigo'])
 
   const {
     currentPage,
@@ -181,8 +228,13 @@ function InfraccionesList() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por código, descripción, artículo..." />
+        <DataFilters 
+          options={INFRACCION_FILTER_OPTIONS} 
+          onFilter={(f) => setFilters(f)} 
+          onClear={() => setFilters({})} 
+        />
       </div>
 
       {/* Error */}

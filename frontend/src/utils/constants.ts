@@ -6,6 +6,7 @@ export const API_URLS = {
   automotores: import.meta.env.VITE_AUTOMOTORES_API || 'http://localhost:3003/api',
   infracciones: import.meta.env.VITE_INFRACCIONES_API || 'http://localhost:3004/api',
   comparendos: import.meta.env.VITE_COMPARENDOS_API || 'http://localhost:3005/api',
+  reportes: import.meta.env.VITE_REPORTES_API || 'http://localhost:3006/api/reportes',
 } as const
 
 export const ROUTES = {
@@ -17,6 +18,7 @@ export const ROUTES = {
   comparendos: '/comparendos',
   nuevoComparendo: '/comparendos/nuevo',
   usuarios: '/usuarios',
+  reportes: '/reportes',
 } as const
 
 export const USER_ROLES = {

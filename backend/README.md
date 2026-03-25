@@ -43,7 +43,7 @@ Tecnologías base del proyecto:
 - Cada microservicio es dueño exclusivo de sus datos.
 - Las referencias entre microservicios se realizan mediante **UUID**.
 - No se usan claves foráneas directas entre bases de datos de distintos servicios.
-- La comunicación entre servicios se realiza por **APIs REST síncronas**.
+- La comunicación entre servicios se realiza por **APIs REST síncronas**, reenviando el token JWT (Bearer) para mantener la trazabilidad y seguridad interna.
 - Cada servicio implementa una responsabilidad específica.
 - Los valores monetarios deben manejarse con **DECIMAL(12,2)**.
 - La consistencia de datos se garantiza a nivel de servicio.
@@ -62,6 +62,7 @@ Tecnologías base del proyecto:
 | ms-automotores | Registro de vehículos y asociación con propietarios | 8003 |
 | ms-infracciones | Catálogo de infracciones y valores de multa | 8004 |
 | ms-comparendos | Registro y gestión del ciclo de vida de comparendos | 8005 |
+| ms-reportes | Microservicio de reportes, importación y exportación | 8006 |
 
 ---
 
@@ -139,6 +140,18 @@ sistema-comparendos/
 │   │   └── swagger/
 │   └── .env
 │
+├── ms-reportes/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── server.js
+│   │   ├── config/
+│   │   ├── routes/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   └── swagger/
+│   └── .env
 └── ms-comparendos/
     ├── Dockerfile
     ├── package.json
@@ -447,6 +460,21 @@ npm install
 | GET | /api/health | Health check |
 | GET | /api/docs | Swagger UI |
 
+### ms-reportes — `http://localhost:8006`
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | /api/reportes/health | Health check |
+| GET | /api/reportes/estadisticas | Estadísticas generales |
+| GET | /api/reportes/estadisticas/pdf | Exportar estadísticas a PDF |
+| POST | /api/reportes/import/:modulo | Importar CSV por módulo |
+| GET | /api/reportes/export/:modulo/csv | Exportar módulo a CSV |
+| GET | /api/reportes/export/:modulo/excel | Exportar módulo a Excel |
+| GET | /api/reportes/export/:modulo/pdf | Exportar módulo a PDF |
+| GET | /api/reportes/export/all/zip | Exportar dataset completo (ZIP) |
+| GET | /api/reportes/export/all/excel | Exportar dataset completo (Excel) |
+| GET | /api/reportes/docs | Swagger UI |
+
 ---
 
 ## FLUJO DE COMUNICACIÓN ENTRE SERVICIOS
@@ -626,6 +654,13 @@ services:
     environment:
       - PORT=8005
       - DB_PORT=5436
+
+  ms-reportes:
+    build: ./ms-reportes
+    ports:
+      - "8006:8006"
+    environment:
+      - PORT=8006
 ```
 
 > Las variables de entorno, volúmenes, redes y `depends_on` deben ajustarse a la
@@ -661,6 +696,7 @@ CMD ["node", "src/server.js"]
 | ms-automotores   | 8003   | 5434    | automotores  |
 | ms-infracciones  | 8004   | 5435    | infracciones |
 | ms-comparendos   | 8005   | 5436    | comparendos  |
+| ms-reportes      | 8006   | -       | -            |
 
 ---
 
@@ -679,6 +715,7 @@ curl http://localhost:8002/api/health
 curl http://localhost:8003/api/health
 curl http://localhost:8004/api/health
 curl http://localhost:8005/api/health
+curl http://localhost:8006/api/reportes/health
 ```
 
 ---

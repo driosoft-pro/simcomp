@@ -2,6 +2,13 @@
 
 Panel de administración del Sistema de Comparendos de Tránsito.
 
+**Nuevas Características Módulos Fronend:**
+- Implementación de **Indicadores de Estado de Servicios** en línea.
+- Nuevo diseño con temática gubernamental (inspirado en tránsito Cali).
+- **Modo Oscuro** (Dark Mode) con sincronización fluida y contrastes accesibles.
+- **Mascota animada interactiva** (Cono de Tráfico) para feedback de acceso.
+- Módulo de reportes integrados (`ms-reportes`) y tableros interactivos.
+
 **Stack:** React 19 + TypeScript + Vite + TailwindCSS 3 + React Query + React Hook Form + pnpm
 
 ---
@@ -111,6 +118,7 @@ VITE_PERSONAS_API=http://localhost:8002/api
 VITE_AUTOMOTORES_API=http://localhost:8003/api
 VITE_INFRACCIONES_API=http://localhost:8004/api
 VITE_COMPARENDOS_API=http://localhost:8005/api
+VITE_REPORTES_API=http://localhost:8006/api
 ```
 
 ### Producción Vagrant (`.env.production`)
@@ -120,6 +128,7 @@ VITE_PERSONAS_API=http://api.simcomp.co:3002/api
 VITE_AUTOMOTORES_API=http://api.simcomp.co:3003/api
 VITE_INFRACCIONES_API=http://api.simcomp.co:3004/api
 VITE_COMPARENDOS_API=http://api.simcomp.co:3005/api
+VITE_REPORTES_API=http://api.simcomp.co:3006/api
 ```
 
 ---

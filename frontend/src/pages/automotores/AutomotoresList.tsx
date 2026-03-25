@@ -275,7 +275,7 @@ function AutomotoresList() {
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-400">
             Módulo
@@ -288,15 +288,23 @@ function AutomotoresList() {
           </p>
         </div>
 
-        {user?.rol !== 'ciudadano' && user?.rol !== 'supervisor' && (
-          <button
-            onClick={() => handleOpenModal()}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/20 transition hover:-translate-y-0.5 hover:shadow-sky-500/30"
-          >
-            <Plus size={18} />
-            Nuevo Automotor
-          </button>
-        )}
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold dark:bg-slate-800">
+            <div className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : isError ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
+            <span className="text-slate-600 dark:text-slate-400">
+              Servicio: {isLoading ? 'Cargando...' : isError ? 'Desconectado' : 'En línea'}
+            </span>
+          </div>
+          {user?.rol !== 'ciudadano' && user?.rol !== 'supervisor' && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/20 transition hover:-translate-y-0.5 hover:shadow-sky-500/30"
+            >
+              <Plus size={18} />
+              Nuevo Automotor
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

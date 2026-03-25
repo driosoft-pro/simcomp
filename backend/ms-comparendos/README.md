@@ -129,7 +129,7 @@ Un comparendo solo puede pasar al estado `PAGADO` si:
 Un comparendo puede cambiar al estado `ANULADO` únicamente por decisión administrativa de la autoridad de tránsito.
 
 #### RN-05 Unicidad del número de comparendo
-El campo `numero_comparendo` debe ser único dentro del sistema.
+El campo `numero_comparendo` debe ser único dentro del sistema, generándose de forma **secuencial** estricta para todo el ecosistema y evitando duplicidades concurrentes, independientemente de los roles y vistas.
 
 #### RN-06 Valor de la multa
 El valor de la multa asignado al comparendo debe corresponder al valor definido para la infracción registrada en el microservicio de infracciones.

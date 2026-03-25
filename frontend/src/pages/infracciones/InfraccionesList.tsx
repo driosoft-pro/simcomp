@@ -204,7 +204,7 @@ function InfraccionesList() {
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
             Módulo
@@ -217,15 +217,23 @@ function InfraccionesList() {
           </p>
         </div>
         
-        {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
-          <button
-            onClick={() => handleOpenModal()}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition hover:-translate-y-0.5 hover:shadow-amber-500/30"
-          >
-            <Plus size={18} />
-            Nueva Infracción
-          </button>
-        )}
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold dark:bg-slate-800">
+            <div className={`h-2 w-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : isError ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
+            <span className="text-slate-600 dark:text-slate-400">
+              Servicio: {isLoading ? 'Cargando...' : isError ? 'Desconectado' : 'En línea'}
+            </span>
+          </div>
+          {(user?.rol === 'admin' || user?.rol === 'supervisor') && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition hover:-translate-y-0.5 hover:shadow-amber-500/30"
+            >
+              <Plus size={18} />
+              Nueva Infracción
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

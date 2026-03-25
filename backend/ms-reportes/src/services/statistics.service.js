@@ -1,12 +1,12 @@
 import { fetchModuleData } from "./httpClients.js";
 
-export async function buildGeneralStatistics() {
+export async function buildGeneralStatistics(token) {
   const [usuarios, personas, automotores, infracciones, comparendos] = await Promise.all([
-    fetchModuleData("usuarios"),
-    fetchModuleData("personas"),
-    fetchModuleData("automotores"),
-    fetchModuleData("infracciones"),
-    fetchModuleData("comparendos")
+    fetchModuleData("usuarios", token),
+    fetchModuleData("personas", token),
+    fetchModuleData("automotores", token),
+    fetchModuleData("infracciones", token),
+    fetchModuleData("comparendos", token)
   ]);
 
   const comparendosPorEstado = comparendos.reduce((acc, item) => {

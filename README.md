@@ -52,6 +52,7 @@ Servicios en srv-simcomp-api (192.168.100.3):
   automotores-service  :8003  →  vehiculos_db    (puerto 5434)
   infracciones-service :8004  →  infracciones_db (puerto 5435)
   comparendos-service  :8005  →  comparendos_db  (puerto 5436)
+  reportes-service     :8006  →  (sin DB propia, consolida datos)
 
 Gateways en srv-simcomp-web (192.168.100.4):
   Port 80            → React SPA (Frontend principal)
@@ -60,6 +61,7 @@ Gateways en srv-simcomp-web (192.168.100.4):
   :8003 (Gateway)    → srv-simcomp-api:8003 (Automotores + JWT)
   :8004 (Gateway)    → srv-simcomp-api:8004 (Infracciones + JWT)
   :8005 (Gateway)    → srv-simcomp-api:8005 (Comparendos + JWT)
+  :8006 (Gateway)    → srv-simcomp-api:8006 (Reportes + JWT)
 ```
 
 ---
@@ -91,7 +93,7 @@ Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo hos
 | VM              | IP              | RAM    | CPU | Rol                                |
 |-----------------|-----------------|--------|-----|------------------------------------|
 | srv-simcomp-dns | 192.168.100.2   | 1 GB   | 1   | DNS BIND9 — zona simcomp.co        |
-| srv-simcomp-api | 192.168.100.3   | 4 GB   | 2   | 5 servicios Node.js + PostgreSQL + PM2 |
+| srv-simcomp-api | 192.168.100.3   | 4 GB   | 2   | 6 servicios Node.js + PostgreSQL + PM2 |
 | srv-simcomp-web | 192.168.100.4   | 2 GB   | 1   | Nginx API Gateway + React SPA      |
 
 ---
@@ -139,11 +141,13 @@ Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo hos
 | http://api.simcomp.co:8003/api/vehiculos | JWT     | Automotores via Gateway          |
 | http://api.simcomp.co:8004/api/infracciones| JWT     | Infracciones via Gateway         |
 | http://api.simcomp.co:8005/api/comparendos| JWT     | Comparendos via Gateway          |
+| http://api.simcomp.co:8006/api/reportes  | JWT     | Reportes via Gateway             |
 | http://192.168.100.3:8001/api/docs       | —       | Swagger auth-service             |
 | http://192.168.100.3:8002/api/docs       | —       | Swagger personas-service         |
 | http://192.168.100.3:8003/api/docs       | —       | Swagger automotores-service      |
 | http://192.168.100.3:8004/api/docs       | —       | Swagger infracciones-service     |
 | http://192.168.100.3:8005/api/docs       | —       | Swagger comparendos-service      |
+| http://192.168.100.3:8006/api/reportes/docs| —     | Swagger reportes-service         |
 
 ---
 

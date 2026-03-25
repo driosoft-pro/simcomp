@@ -43,11 +43,12 @@ export function assertModule(modulo) {
   }
 }
 
-export async function fetchModuleData(modulo) {
+export async function fetchModuleData(modulo, token) {
   assertModule(modulo);
 
   const config = moduleConfig[modulo];
-  const response = await client.get(`${config.baseUrl}${config.getPath}`);
+  const headers = token ? { Authorization: token } : {};
+  const response = await client.get(`${config.baseUrl}${config.getPath}`, { headers });
 
   if (Array.isArray(response.data)) return response.data;
   if (Array.isArray(response.data?.data)) return response.data.data;
@@ -56,10 +57,11 @@ export async function fetchModuleData(modulo) {
   return [];
 }
 
-export async function postModuleRow(modulo, row) {
+export async function postModuleRow(modulo, row, token) {
   assertModule(modulo);
 
   const config = moduleConfig[modulo];
-  const response = await client.post(`${config.baseUrl}${config.postPath}`, row);
+  const headers = token ? { Authorization: token } : {};
+  const response = await client.post(`${config.baseUrl}${config.postPath}`, row, { headers });
   return response.data;
 }

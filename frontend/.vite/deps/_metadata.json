@@ -1,61 +1,61 @@
 {
-  "hash": "7a1ff1a9",
+  "hash": "76fa246d",
   "configHash": "fd866dae",
-  "lockfileHash": "d03f905f",
-  "browserHash": "af82a5c2",
+  "lockfileHash": "588aebcd",
+  "browserHash": "a21aaf68",
   "optimized": {
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/.pnpm/react@19.2.4/node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "18a0f19e",
+      "fileHash": "ab09107c",
       "needsInterop": true
     },
     "react": {
       "src": "../../node_modules/.pnpm/react@19.2.4/node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "539acc96",
+      "fileHash": "f6b5c743",
       "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "fa099ab8",
+      "fileHash": "a1036ea4",
       "needsInterop": true
     },
     "@tanstack/react-query": {
       "src": "../../node_modules/.pnpm/@tanstack+react-query@5.90.21_react@19.2.4/node_modules/@tanstack/react-query/build/modern/index.js",
       "file": "@tanstack_react-query.js",
-      "fileHash": "e08b073a",
+      "fileHash": "946f748b",
       "needsInterop": false
     },
     "react-router-dom": {
       "src": "../../node_modules/.pnpm/react-router-dom@7.13.1_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "8f240066",
+      "fileHash": "dd7b3759",
       "needsInterop": false
     },
     "lucide-react": {
       "src": "../../node_modules/.pnpm/lucide-react@0.577.0_react@19.2.4/node_modules/lucide-react/dist/esm/lucide-react.js",
       "file": "lucide-react.js",
-      "fileHash": "9a1a2f8c",
+      "fileHash": "e79959eb",
       "needsInterop": false
     },
     "axios": {
       "src": "../../node_modules/.pnpm/axios@1.13.6/node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "2d4be1cb",
+      "fileHash": "07a6f400",
       "needsInterop": false
     },
     "recharts": {
       "src": "../../node_modules/.pnpm/recharts@3.8.0_@types+react@19.2.14_react-dom@19.2.4_react@19.2.4__react-is@19.2.4_react@19.2.4_redux@5.0.1/node_modules/recharts/es6/index.js",
       "file": "recharts.js",
-      "fileHash": "4689e11b",
+      "fileHash": "ab485a2e",
       "needsInterop": false
     },
     "date-fns": {
       "src": "../../node_modules/.pnpm/date-fns@4.1.0/node_modules/date-fns/index.js",
       "file": "date-fns.js",
-      "fileHash": "1f584ce7",
+      "fileHash": "60632970",
       "needsInterop": false
     }
   },

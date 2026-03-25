@@ -11,18 +11,18 @@ const client = axios.create({
 export const moduleConfig = {
   usuarios: {
     baseUrl: env.authServiceUrl,
-    getPath: "/api/usuarios",
-    postPath: "/api/usuarios"
+    getPath: "/api/Usuarios",
+    postPath: "/api/Usuarios"
   },
   personas: {
     baseUrl: env.personasServiceUrl,
-    getPath: "/api/personas",
-    postPath: "/api/personas"
+    getPath: "/api/Personas",
+    postPath: "/api/Personas"
   },
   automotores: {
     baseUrl: env.automotoresServiceUrl,
-    getPath: "/api/automotores",
-    postPath: "/api/automotores"
+    getPath: "/api/Automotores",
+    postPath: "/api/Automotores"
   },
   infracciones: {
     baseUrl: env.infraccionesServiceUrl,

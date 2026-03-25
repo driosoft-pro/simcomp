@@ -41,6 +41,7 @@ TRUNCATE TABLE refresh_tokens RESTART IDENTITY CASCADE;
 TRUNCATE TABLE usuarios RESTART IDENTITY CASCADE;
 
 INSERT INTO usuarios (id, username, email, password_hash, rol, estado, created_at, updated_at, deleted_at) VALUES
+('e3e3e3e3-e3e3-e3e3-e3e3-e3e3e3e3e3e3', 'admin', 'admin@simcomp.gov.co', crypt('Admin123*', gen_salt('bf')), 'admin', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('0c5620b8-95b0-4425-9b60-f28956f515f8', 'dbonilla0', 'daniela.bonilla@simcomp.gov.co', crypt('Admin123*', gen_salt('bf')), 'admin', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('7a783920-24f3-4f66-8729-c4e8aef759e3', 'crodriguez1', 'carolina.rodriguez@simcomp.gov.co', crypt('Admin123*', gen_salt('bf')), 'admin', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
 ('3c7ebcc1-1fe6-4e3c-b492-9c08a12a4768', 'mriascos2', 'maria.riascos@simcomp.gov.co', crypt('Admin123*', gen_salt('bf')), 'admin', 'activo', '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),

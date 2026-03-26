@@ -36,9 +36,18 @@ interface FormState {
   email: string
   password: string
   rol: UserRole
+  persona_id: string | null
+  numero_documento: string | null
 }
 
-const emptyForm: FormState = { username: '', email: '', password: '', rol: 'agente' }
+const emptyForm: FormState = { 
+  username: '', 
+  email: '', 
+  password: '', 
+  rol: 'agente',
+  persona_id: null,
+  numero_documento: null
+}
 
 function extractError(err: unknown): string {
   if (axios.isAxiosError(err)) {
@@ -142,11 +151,13 @@ function UsuariosList() {
       if (persona) {
         setEmailVerified(true)
         setFormError(null)
-        // Autofill username and password with persona's document number
+        // Autofill username, password, persona_id and numero_documento
         setForm(prev => ({ 
           ...prev, 
           username: persona.numero_documento,
-          password: persona.numero_documento 
+          password: persona.numero_documento,
+          persona_id: persona.persona_id,
+          numero_documento: persona.numero_documento
         }))
       } else {
         setEmailVerified(false)
@@ -455,6 +466,9 @@ function UsuariosList() {
                   Email
                 </th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Documento
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Rol
                 </th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -489,6 +503,7 @@ function UsuariosList() {
                     {usuario.username}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{usuario.email}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs italic">{usuario.numero_documento || '—'}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${

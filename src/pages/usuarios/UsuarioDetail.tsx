@@ -58,6 +58,8 @@ function UsuarioDetail() {
         username: usuario.username,
         email: usuario.email,
         rol: usuario.rol,
+        persona_id: usuario.persona_id,
+        numero_documento: usuario.numero_documento,
       })
     }
   }, [usuario])
@@ -166,6 +168,8 @@ function UsuarioDetail() {
               { label: 'Email', value: usuario.email },
               { label: 'Rol', value: usuario.rol },
               { label: 'Estado', value: usuario.estado },
+              { label: 'Persona ID', value: usuario.persona_id || '—' },
+              { label: 'Documento', value: usuario.numero_documento || '—' },
               {
                 label: 'Creado',
                 value: usuario.created_at
@@ -246,6 +250,40 @@ function UsuarioDetail() {
                     value={editForm.email ?? ''}
                     onChange={(e) =>
                       setEditForm((p) => ({ ...p, email: e.target.value }))
+                    }
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label
+                    className="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                    htmlFor="edit-documento"
+                  >
+                    Documento
+                  </label>
+                  <input
+                    id="edit-documento"
+                    placeholder={usuario.numero_documento || ''}
+                    value={editForm.numero_documento ?? ''}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, numero_documento: e.target.value }))
+                    }
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
+                  />
+                </div>
+                <div className="flex flex-col gap-2 sm:col-span-2">
+                  <label
+                    className="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                    htmlFor="edit-persona-id"
+                  >
+                    Persona UUID
+                  </label>
+                  <input
+                    id="edit-persona-id"
+                    placeholder={usuario.persona_id || ''}
+                    value={editForm.persona_id ?? ''}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, persona_id: e.target.value }))
                     }
                     className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-rose-400 focus:bg-white focus:ring-4 focus:ring-rose-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:bg-slate-800 dark:focus:ring-rose-500/20"
                   />

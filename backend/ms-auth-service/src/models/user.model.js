@@ -32,6 +32,16 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "activo",
     },
+    persona_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      unique: true,
+    },
+    numero_documento: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
+    },
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

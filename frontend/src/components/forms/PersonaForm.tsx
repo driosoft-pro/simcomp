@@ -112,7 +112,9 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
             username: numero_documento,
             password: numero_documento, // Password is the cedula by default
             email: email,
-            rol: 'ciudadano'
+            rol: 'ciudadano',
+            persona_id: resultPersona.persona_id,
+            numero_documento: numero_documento
           })
         } catch (err) {
           console.error('Error al crear usuario ciudadano automáticamente:', err)

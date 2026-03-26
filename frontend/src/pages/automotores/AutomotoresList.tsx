@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, AlertCircle } from 'lucide-react'
+import { Plus, X, AlertCircle, Search, UserPlus, CheckCircle2 } from 'lucide-react'
 import {
   useAutomotores,
   useCreateAutomotor,
@@ -17,6 +17,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { formatDateShort } from '../../utils/formatters'
 import DataFilters from '../../components/ui/DataFilters'
 import type { FilterOption } from '../../components/ui/DataFilters'
+import { getPersonaByDocumento } from '../../api/personas.api'
+import PersonaForm from '../../components/forms/PersonaForm'
 
 const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
   { 
@@ -64,8 +66,7 @@ const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
     ] 
   },
 ]
-// import { getPersonaByDocumento } from '../../api/personas.api'
-import type { Automotor } from '../../types'
+import type { Automotor, Persona } from '../../types'
 
 const estadoStyles: Record<Automotor['estado'], string> = {
   activo: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -158,8 +159,13 @@ function AutomotoresList() {
   const deleteAutomotor = useDeleteAutomotor()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showPersonaForm, setShowPersonaForm] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [editingAutomotor, setEditingAutomotor] = useState<Automotor | null>(null)
+  
+  const [isVerifyingOwner, setIsVerifyingOwner] = useState(false)
+  const [ownerVerified, setOwnerVerified] = useState<boolean | null>(null)
+  const [ownerHasLicense, setOwnerHasLicense] = useState<boolean | null>(null)
 
   const [formData, setFormData] = useState<Partial<Automotor>>({
     placa: '',
@@ -229,6 +235,61 @@ function AutomotoresList() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingAutomotor(null)
+    setOwnerVerified(null)
+    setOwnerHasLicense(null)
+  }
+
+  const handleVerifyOwner = async () => {
+    const doc = formData.propietario_documento
+    if (!doc) {
+      addToast('Ingrese un documento para verificar', 'error')
+      return
+    }
+
+    setIsVerifyingOwner(true)
+    setOwnerVerified(null)
+    setOwnerHasLicense(null)
+
+    try {
+      const persona = await getPersonaByDocumento(doc)
+      if (persona) {
+        setOwnerVerified(true)
+        setFormData(prev => ({ 
+          ...prev, 
+          propietario_nombre: `${persona.nombres} ${persona.apellidos}` 
+        }))
+        const hasLicense = Array.isArray(persona.licencias) && persona.licencias.length > 0
+        setOwnerHasLicense(hasLicense)
+        
+        if (hasLicense) {
+          addToast('Propietario y licencia verificados', 'success')
+        } else {
+          addToast('Propietario encontrado pero sin licencia', 'warning')
+        }
+      } else {
+        setOwnerVerified(false)
+        addToast('Propietario no encontrado', 'warning')
+      }
+    } catch (err) {
+      console.error('Error verifying owner:', err)
+      setOwnerVerified(false)
+      addToast('Error al verificar propietario', 'error')
+    } finally {
+      setIsVerifyingOwner(false)
+    }
+  }
+
+  const handlePersonaSuccess = (persona: Persona) => {
+    setShowPersonaForm(false)
+    setOwnerVerified(true)
+    setFormData(prev => ({
+      ...prev,
+      propietario_documento: persona.numero_documento,
+      propietario_nombre: `${persona.nombres} ${persona.apellidos}`
+    }))
+    // We assume the PersonaForm handles license creation if required/shown
+    setOwnerHasLicense(true) 
+    addToast('Propietario registrado y vinculado', 'success')
   }
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -610,15 +671,61 @@ function AutomotoresList() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Documento Propietario</label>
-                    <input
-                      type="text"
-                      name="propietario_documento"
-                      required
-                      value={formData.propietario_documento}
-                      onChange={handleFormChange}
-                      className={inputClass}
-                      placeholder="Ej. 1010001001"
-                    />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          name="propietario_documento"
+                          required
+                          value={formData.propietario_documento}
+                          onChange={(e) => {
+                            handleFormChange(e)
+                            setOwnerVerified(null)
+                            setOwnerHasLicense(null)
+                          }}
+                          className={`${inputClass} ${
+                            ownerVerified === true ? 'border-emerald-500 bg-emerald-50/50' : 
+                            ownerVerified === false ? 'border-amber-500 bg-amber-50/50' : ''
+                          }`}
+                          placeholder="Ej. 1010001001"
+                        />
+                        {ownerVerified === true && (
+                          <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleVerifyOwner}
+                        disabled={isVerifyingOwner || !formData.propietario_documento}
+                        className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        {isVerifyingOwner ? <LoaderRow size={14} /> : <Search size={14} />}
+                        <span className="ml-2 hidden sm:inline">Verificar</span>
+                      </button>
+                    </div>
+
+                    {ownerVerified === false && (
+                      <div className="mt-3 flex items-center justify-between rounded-xl bg-amber-50 p-3 text-xs text-amber-700 border border-amber-200 animate-in slide-in-from-top-1">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle size={14} />
+                          <p>No registrado.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowPersonaForm(true)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-sky-600 px-3 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-sky-700"
+                        >
+                          <UserPlus size={12} /> Registrar Propietario
+                        </button>
+                      </div>
+                    )}
+
+                    {ownerVerified === true && ownerHasLicense === false && (
+                      <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 p-2 text-[10px] font-bold text-red-600 border border-red-100">
+                        <AlertCircle size={12} />
+                        <span>¡Atención! La persona no cuenta con una licencia registrada.</span>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className={labelClass}>Nombre Propietario</label>
@@ -673,7 +780,46 @@ function AutomotoresList() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmDeleteId(null)}
       />
+
+      {/* Modal para Registrar Persona desde Automotores */}
+      {showPersonaForm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between mb-6 border-b pb-4 dark:border-slate-800">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Registrar Nuevo Propietario</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Cree la persona, su licencia y su cuenta de usuario para vincularla al vehículo.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPersonaForm(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <PersonaForm 
+              onSuccess={handlePersonaSuccess}
+              onCancel={() => setShowPersonaForm(false)}
+              defaultDocumento={formData.propietario_documento}
+              requireLicense={true}
+              submitLabel="Registrar y Vincular"
+            />
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function LoaderRow({ size }: { size: number }) {
+  return (
+    <svg className={`animate-spin text-white`} style={{ width: size, height: size }} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>
   )
 }
 

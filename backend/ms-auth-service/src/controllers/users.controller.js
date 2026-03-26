@@ -176,11 +176,8 @@ export async function updateUserController(req, res) {
       allowedFields = ["username", "email", "password", "rol", "estado"];
     } else if (isOwnProfile) {
       canUpdate = true;
-      if (requesterRole === "agente") {
-        allowedFields = ["username", "email", "password"];
-      } else if (requesterRole === "supervisor" || requesterRole === "ciudadano") {
-        allowedFields = ["email", "password"];
-      }
+      // All roles can update their own username, email, and password
+      allowedFields = ["username", "email", "password"];
     } else if (requesterRole === "supervisor" && targetUser.rol === "agente") {
       canUpdate = true;
       allowedFields = ["estado"];

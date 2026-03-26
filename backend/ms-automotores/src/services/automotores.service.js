@@ -23,6 +23,21 @@ export async function createAutomotor(data) {
     throw new Error("El automotor ya existe");
   }
 
+  // Verificar que el propietario existe en ms-personas
+  try {
+    const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002/api";
+    const response = await fetch(`${personasServiceUrl}/Personas/documento/${data.propietario_documento}`);
+    if (!response.ok) {
+      throw new Error("El propietario no está registrado en el sistema de personas");
+    }
+  } catch (error) {
+    if (error.message.includes("personas")) {
+      throw error;
+    }
+    console.error("Error validando propietario:", error.message);
+    // No bloqueamos si el servicio de personas está caído, pero registramos el error
+  }
+
   const automotor = await Automotor.create({
     placa: data.placa,
     vin: data.vin,

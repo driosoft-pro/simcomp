@@ -73,6 +73,7 @@ export interface Persona {
   telefono: string
   email: string
   estado: 'activo' | 'inactivo'
+  licencias?: LicenciaConduccion[]
   created_at?: string
   updated_at?: string
   deleted_at?: string | null

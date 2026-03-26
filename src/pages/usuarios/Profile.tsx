@@ -97,7 +97,7 @@ function Perfil() {
   }
 
   // Field restrictions logic
-  const canEditUsername = isAdmin || isAgente
+  const canEditUsername = true
   const canEditEmail = true
   const canEditAddress = true
   const canEditNames = isAdmin || isAgente || isSupervisor

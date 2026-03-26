@@ -311,62 +311,6 @@ async function cambiarEstadoComparendo(comparendoId, nuevoEstado, observacion) {
     );
 
     await transaction.commit();
-
-    // ── Efectos secundarios si cambió la infracción (best-effort) ────────────
-    const infractionsToProcess = [{ codigo: comparendo.infraccion_codigo }];
-    // ... we already updated the main one
-    
-    // Process side effects for the main updated one
-    if (data.infraccion_codigo) {
-       await applySideEffects(data.infraccion_codigo, comparendo.placa_vehiculo, comparendo.ciudadano_documento);
-    }
-
-    // Process additional infractions if provided
-    if (Array.isArray(data.infracciones) && data.infracciones.length > 0) {
-      const additionalTransaction = await sequelize.transaction();
-      try {
-        for (let i = 0; i < data.infracciones.length; i++) {
-          const inf = data.infracciones[i];
-          // Determine next number... or just use a timestamp-based unique sequence if not sure.
-          // For simplicity, we'll try to guess based on the original number
-          const baseNumero = comparendo.numero_comparendo.split('-').slice(0, 3).join('-');
-          const count = await Comparendo.count({ where: { numero_comparendo: { [Op.like]: `${baseNumero}%` } } });
-          const newNumero = `${baseNumero}-${count + 1}`;
-
-          const nuevo = await Comparendo.create({
-            numero_comparendo: newNumero,
-            ciudadano_documento: comparendo.ciudadano_documento,
-            ciudadano_nombre: comparendo.ciudadano_nombre,
-            agente_documento: comparendo.agente_documento,
-            agente_nombre: comparendo.agente_nombre,
-            placa_vehiculo: comparendo.placa_vehiculo,
-            infraccion_codigo: inf.codigo,
-            infraccion_descripcion: inf.descripcion,
-            valor_multa: inf.valor_multa,
-            fecha_comparendo: comparendo.fecha_comparendo,
-            lugar: comparendo.lugar,
-            ciudad: comparendo.ciudad,
-            observaciones: `Adicionado en edición de ${comparendo.numero_comparendo}`,
-            estado: "PENDIENTE",
-          }, { transaction: additionalTransaction });
-
-          await ComparendoEstadoHistorial.create({
-            comparendo_id: nuevo.id,
-            estado_anterior: null,
-            estado_nuevo: "PENDIENTE",
-            observacion: "Comparendo creado vía edición de otro.",
-            fecha_evento: new Date(),
-          }, { transaction: additionalTransaction });
-
-          await applySideEffects(inf.codigo, comparendo.placa_vehiculo, comparendo.ciudadano_documento);
-        }
-        await additionalTransaction.commit();
-      } catch (err) {
-        await additionalTransaction.rollback();
-        console.error("Error creating additional comparendos during update:", err.message);
-      }
-    }
-
     return comparendo;
   } catch (error) {
     await transaction.rollback();
@@ -552,6 +496,53 @@ export async function actualizarComparendo(comparendoId, data, { userRole } = {}
 
     comparendo.updated_at = new Date();
     await comparendo.save({ transaction });
+
+    // ── Efectos secundarios si cambió la infracción (best-effort) ────────────
+    if (data.infraccion_codigo) {
+      await applySideEffects(data.infraccion_codigo, comparendo.placa_vehiculo, comparendo.ciudadano_documento);
+    }
+
+    // Procesar infracciones adicionales
+    if (Array.isArray(data.infracciones) && data.infracciones.length > 0) {
+      for (let i = 0; i < data.infracciones.length; i++) {
+        const inf = data.infracciones[i];
+        const baseNumero = comparendo.numero_comparendo.split('-').slice(0, 3).join('-');
+        
+        // Contar existentes para el siguiente sufijo
+        const count = await Comparendo.count({ 
+          where: { numero_comparendo: { [Op.like]: `${baseNumero}%` } },
+          transaction 
+        });
+        const newNumero = `${baseNumero}-${count + 1}`;
+
+        const nuevo = await Comparendo.create({
+          numero_comparendo: newNumero,
+          ciudadano_documento: comparendo.ciudadano_documento,
+          ciudadano_nombre: comparendo.ciudadano_nombre,
+          agente_documento: comparendo.agente_documento,
+          agente_nombre: comparendo.agente_nombre,
+          placa_vehiculo: comparendo.placa_vehiculo,
+          infraccion_codigo: inf.codigo,
+          infraccion_descripcion: inf.descripcion,
+          valor_multa: inf.valor_multa,
+          fecha_comparendo: comparendo.fecha_comparendo,
+          lugar: comparendo.lugar,
+          ciudad: comparendo.ciudad,
+          observaciones: `Adicionado en edición de ${comparendo.numero_comparendo}`,
+          estado: "PENDIENTE",
+        }, { transaction });
+
+        await ComparendoEstadoHistorial.create({
+          comparendo_id: nuevo.id,
+          estado_anterior: null,
+          estado_nuevo: "PENDIENTE",
+          observacion: "Comparendo creado vía edición de otro.",
+          fecha_evento: new Date(),
+        }, { transaction });
+
+        await applySideEffects(inf.codigo, comparendo.placa_vehiculo, comparendo.ciudadano_documento);
+      }
+    }
 
     await ComparendoEstadoHistorial.create(
       {

@@ -26,6 +26,8 @@ export async function login(req, res) {
           email: user.email,
           rol: user.rol,
           estado: user.estado,
+          persona_id: user.persona_id,
+          numero_documento: user.numero_documento,
         },
       },
     });
@@ -54,6 +56,8 @@ export async function refresh(req, res) {
           email: result.user.email,
           rol: result.user.rol,
           estado: result.user.estado,
+          persona_id: result.user.persona_id,
+          numero_documento: result.user.numero_documento,
         },
       },
     });

@@ -8,6 +8,8 @@ export interface AuthUser {
   username: string
   email: string
   rol: UserRole
+  persona_id?: UUID | null
+  numero_documento?: string | null
 }
 
 export interface Usuario {
@@ -16,6 +18,8 @@ export interface Usuario {
   email: string
   rol: UserRole
   estado: UserEstado
+  persona_id?: UUID | null
+  numero_documento?: string | null
   created_at?: string
   updated_at?: string
   deleted_at?: string | null
@@ -26,6 +30,8 @@ export interface CreateUsuarioPayload {
   email: string
   password: string
   rol: UserRole
+  persona_id?: UUID | null
+  numero_documento?: string | null
 }
 
 export interface UpdateUsuarioPayload {
@@ -33,6 +39,8 @@ export interface UpdateUsuarioPayload {
   email?: string
   rol?: UserRole
   password?: string
+  persona_id?: UUID | null
+  numero_documento?: string | null
 }
 
 export interface LoginPayload {

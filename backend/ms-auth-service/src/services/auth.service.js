@@ -12,6 +12,8 @@ export function buildAccessToken(user) {
       username: user.username,
       email: user.email,
       rol: user.rol,
+      persona_id: user.persona_id,
+      numero_documento: user.numero_documento,
     },
     process.env.JWT_SECRET,
     {

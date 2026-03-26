@@ -45,6 +45,8 @@ export async function createUser(data) {
     password_hash,
     rol: data.rol,
     estado: data.estado || "activo",
+    persona_id: data.persona_id || null,
+    numero_documento: data.numero_documento || null,
   });
 
   return user;
@@ -64,6 +66,8 @@ export async function updateUser(id, data) {
   if (data.email !== undefined) user.email = data.email;
   if (data.rol !== undefined) user.rol = data.rol;
   if (data.estado !== undefined) user.estado = data.estado;
+  if (data.persona_id !== undefined) user.persona_id = data.persona_id;
+  if (data.numero_documento !== undefined) user.numero_documento = data.numero_documento;
 
   if (data.password) {
     user.password_hash = await bcrypt.hash(data.password, 10);

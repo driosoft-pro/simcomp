@@ -1,0 +1,157 @@
+# =============================================================================
+# SIMCOMP — Vagrantfile (DOCKER VERSION)
+# Sistema de Comparendos de Tránsito en Docker Swarm
+# Máquinas virtuales:
+#   managerDocker  192.168.100.2  → Swarm Manager + Nginx Gateway
+#   workerDocker1  192.168.100.3  → Swarm Worker (Microservicios)
+#   workerDocker2  192.168.100.4  → Swarm Worker (Microservicios)
+#
+# Puerto Expuesto (Global):
+#   simcomp.co (Puerto 80) -> Gateway Nginx -> Containers
+# =============================================================================
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+  config.vm.box_check_update = false
+
+  # Carpeta del proyecto compartida
+  config.vm.synced_folder ".", "/vagrant", disabled: false
+
+  # ---------------------------------------------------------------------------
+  # managerDocker - 192.168.100.2
+  # ---------------------------------------------------------------------------
+  config.vm.define "managerDocker" do |manager|
+    manager.vm.hostname = "managerDocker"
+    manager.vm.network "private_network", ip: "192.168.100.2"
+
+    manager.vm.provider "virtualbox" do |vb|
+      vb.name = "managerDocker"
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+
+    manager.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      usermod -aG docker vagrant
+      systemctl enable docker
+      systemctl start docker
+
+      cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "buildkit": true
+  }
+}
+EOF
+
+      systemctl restart docker
+    SHELL
+  end
+
+  # ---------------------------------------------------------------------------
+  # workerDocker1 - 192.168.100.3
+  # ---------------------------------------------------------------------------
+  config.vm.define "workerDocker1" do |worker1|
+    worker1.vm.hostname = "workerDocker1"
+    worker1.vm.network "private_network", ip: "192.168.100.3"
+
+    worker1.vm.provider "virtualbox" do |vb|
+      vb.name = "workerDocker1"
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+
+    worker1.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      usermod -aG docker vagrant
+      systemctl enable docker
+      systemctl start docker
+
+      cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "buildkit": true
+  }
+}
+EOF
+
+      systemctl restart docker
+    SHELL
+  end
+
+  # ---------------------------------------------------------------------------
+  # workerDocker2 - 192.168.100.4
+  # ---------------------------------------------------------------------------
+  config.vm.define "workerDocker2" do |worker2|
+    worker2.vm.hostname = "workerDocker2"
+    worker2.vm.network "private_network", ip: "192.168.100.4"
+
+    worker2.vm.provider "virtualbox" do |vb|
+      vb.name = "workerDocker2"
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+
+    worker2.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      usermod -aG docker vagrant
+      systemctl enable docker
+      systemctl start docker
+
+      cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "buildkit": true
+  }
+}
+EOF
+
+      systemctl restart docker
+    SHELL
+  end
+end

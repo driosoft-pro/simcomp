@@ -6,7 +6,7 @@ import { buildExcelDataset } from "./excel.service.js";
 import { buildPdfReport } from "./pdf.service.js";
 import { buildGeneralStatistics } from "./statistics.service.js";
 
-export async function buildFullDataset(token) {
+export async function buildFullDataset(token, limit) {
   const [usuarios, personas, automotores, infracciones, comparendos] = await Promise.all([
     fetchModuleData("usuarios", token),
     fetchModuleData("personas", token),
@@ -15,17 +15,26 @@ export async function buildFullDataset(token) {
     fetchModuleData("comparendos", token)
   ]);
 
-  return {
+  const dataset = {
     usuarios,
     personas,
     automotores,
     infracciones,
     comparendos
   };
+
+  if (limit && limit !== "all" && !isNaN(parseInt(limit))) {
+    const l = parseInt(limit);
+    for (const key in dataset) {
+      dataset[key] = dataset[key].slice(0, l);
+    }
+  }
+
+  return dataset;
 }
 
-export async function buildDatasetZipBuffer(token) {
-  const dataset = await buildFullDataset(token);
+export async function buildDatasetZipBuffer(token, limit) {
+  const dataset = await buildFullDataset(token, limit);
   const stats = await buildGeneralStatistics(token);
 
   const excelBuffer = await buildExcelDataset(dataset);

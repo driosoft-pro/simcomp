@@ -57,10 +57,16 @@ export async function importCsvByModule(req, res) {
 
 export async function exportCsvByModule(req, res) {
   const { modulo } = req.params;
+  const { limit } = req.query;
   const token = req.headers.authorization;
   assertModule(modulo);
 
-  const data = await fetchModuleData(modulo, token);
+  let data = await fetchModuleData(modulo, token);
+  
+  if (limit && limit !== "all" && !isNaN(parseInt(limit))) {
+    data = data.slice(0, parseInt(limit));
+  }
+
   const csv = toCsv(data);
 
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -71,10 +77,16 @@ export async function exportCsvByModule(req, res) {
 
 export async function exportExcelByModule(req, res) {
   const { modulo } = req.params;
+  const { limit } = req.query;
   const token = req.headers.authorization;
   assertModule(modulo);
 
-  const data = await fetchModuleData(modulo, token);
+  let data = await fetchModuleData(modulo, token);
+
+  if (limit && limit !== "all" && !isNaN(parseInt(limit))) {
+    data = data.slice(0, parseInt(limit));
+  }
+
   const buffer = await buildExcelSingleSheet(modulo, data);
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -85,22 +97,32 @@ export async function exportExcelByModule(req, res) {
 
 export async function exportPdfByModule(req, res) {
   const { modulo } = req.params;
+  const { limit } = req.query;
   const token = req.headers.authorization;
   assertModule(modulo);
 
-  const data = await fetchModuleData(modulo, token);
+  let data = await fetchModuleData(modulo, token);
 
-  const sectionLines = data.slice(0, 30).map((row, index) => {
+  const appliedLimit = (limit && limit !== "all" && !isNaN(parseInt(limit))) 
+    ? parseInt(limit) 
+    : data.length;
+
+  const displayData = data.slice(0, appliedLimit);
+
+  const sectionLines = displayData.map((row, index) => {
+    if (modulo === "personas") {
+      return `${index + 1}. [${row.tipo_documento} ${row.numero_documento}] ${row.nombres} ${row.apellidos} - ${row.email}`;
+    }
     return `${index + 1}. ${JSON.stringify(row)}`;
   });
 
   const buffer = await buildPdfReport(`Reporte del modulo ${modulo}`, [
     {
       title: "Resumen",
-      lines: [`Total registros: ${data.length}`]
+      lines: [`Total registros exportados: ${displayData.length} de ${data.length}`]
     },
     {
-      title: "Primeros registros",
+      title: "Registros",
       lines: sectionLines.length ? sectionLines : ["Sin registros"]
     }
   ]);
@@ -113,7 +135,8 @@ export async function exportPdfByModule(req, res) {
 
 export async function exportFullDataset(req, res) {
   const token = req.headers.authorization;
-  const zipBuffer = await buildDatasetZipBuffer(token);
+  const { limit } = req.query;
+  const zipBuffer = await buildDatasetZipBuffer(token, limit);
 
   res.setHeader("Content-Type", "application/zip");
   res.setHeader("Content-Disposition", 'attachment; filename="dataset_simcomp.zip"');
@@ -123,7 +146,8 @@ export async function exportFullDataset(req, res) {
 
 export async function exportFullDatasetExcel(req, res) {
   const token = req.headers.authorization;
-  const dataset = await buildFullDataset(token);
+  const { limit } = req.query;
+  const dataset = await buildFullDataset(token, limit);
   const buffer = await buildExcelDataset(dataset);
 
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

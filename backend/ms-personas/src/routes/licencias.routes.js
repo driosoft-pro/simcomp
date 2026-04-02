@@ -8,6 +8,7 @@ import {
   actualizarLicenciaController,
   suspenderLicenciasPorDocumentoController,
   reactivarLicenciasPorDocumentoController,
+  cancelarLicenciaController,
 } from "../controllers/licencias.controller.js";
 
 const router = Router();
@@ -207,5 +208,30 @@ router.patch("/suspender/:documento", suspenderLicenciasPorDocumentoController);
  *         description: Persona no encontrada
  */
 router.patch("/reactivar/:documento", reactivarLicenciasPorDocumentoController);
+
+/**
+ * @swagger
+ * /Licencias/{licencia_id}:
+ *   delete:
+ *     summary: Cancelar una licencia de conducción (Irreversible)
+ *     tags: [Licencias]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: licencia_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Licencia cancelada correctamente
+ *       404:
+ *         description: Licencia no encontrada
+ *       400:
+ *         description: Error en la cancelación
+ */
+router.delete("/:licencia_id", [param("licencia_id").isUUID()], cancelarLicenciaController);
 
 export default router;

@@ -22,13 +22,17 @@ function Modal({ open, children, onClose, maxWidth }: ModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+    >
       <div 
         className="absolute inset-0" 
         onClick={onClose} 
       />
-      <div className={`relative flex flex-col w-full shadow-2xl transition-all duration-300 animate-in zoom-in-95 ${
-        maxWidth ? `max-w-${maxWidth}` : ''
+      <div className={`relative flex flex-col w-full shadow-2xl transition-all duration-300 animate-in zoom-in-95 data-[state=open]:zoom-in-100 ${
+        maxWidth ? `max-w-${maxWidth}` : 'max-w-xl'
       }`}>
         {children}
       </div>

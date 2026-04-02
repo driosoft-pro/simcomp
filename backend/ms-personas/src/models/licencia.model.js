@@ -21,7 +21,6 @@ const Licencia = sequelize.define(
     numero_licencia: {
       type: DataTypes.STRING(30),
       allowNull: false,
-      unique: true,
     },
     categoria: {
       type: DataTypes.ENUM("A1", "A2", "B1", "B2", "B3", "C1", "C2", "C3"),
@@ -66,6 +65,12 @@ const Licencia = sequelize.define(
     deletedAt: "deleted_at",
     paranoid: true,
     freezeTableName: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["persona_id", "categoria"],
+      },
+    ],
   }
 );
 

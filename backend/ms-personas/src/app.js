@@ -27,8 +27,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use("/api/Personas", personasRoutes);
-app.use("/api/Licencias", licenciasRoutes);
+app.use("/api/personas", personasRoutes);
+app.use("/api/licencias", licenciasRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req, res) => {

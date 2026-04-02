@@ -29,8 +29,8 @@ function ConfirmDialog({
   }
 
   return (
-    <Modal open={open}>
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-200">
+    <Modal open={open} maxWidth="md">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
           <button

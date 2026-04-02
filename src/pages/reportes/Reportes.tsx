@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useStatistics, useExport, useImport, useReportesHealth } from '../../hooks/useReportes'
 import { useToast } from '../../context/ToastContext'
+import ExportModal from '../../components/ui/ExportModal'
 
 const MODULOS = [
   { id: 'personas', name: 'Personas', icon: Users, color: 'text-violet-600', bg: 'bg-violet-100' },
@@ -34,20 +35,35 @@ function Reportes() {
   const { addToast } = useToast()
 
   const [importingModule, setImportingModule] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalConfig, setModalConfig] = useState<{
+    modulo?: string
+    format: 'csv' | 'excel' | 'pdf' | 'zip'
+    all?: boolean
+    title: string
+  }>({ format: 'csv', title: '' })
 
-  const handleExport = async (modulo: string, format: 'csv' | 'excel' | 'pdf') => {
-    try {
-      await exportMutation.mutateAsync({ modulo, format })
-      addToast(`Reporte de ${modulo} (${format.toUpperCase()}) descargado`, 'success')
-    } catch (err: any) {
-      addToast(`Error al exportar: ${err.message}`, 'error')
-    }
+  const handleExport = (modulo: string, format: 'csv' | 'excel' | 'pdf') => {
+    const modName = MODULOS.find((m) => m.id === modulo)?.name || modulo
+    setModalConfig({ modulo, format, title: modName })
+    setModalOpen(true)
   }
 
-  const handleExportAll = async (format: 'zip' | 'excel') => {
+  const handleExportAll = (format: 'zip' | 'excel') => {
+    setModalConfig({ all: true, format, title: 'Dataset Completo' })
+    setModalOpen(true)
+  }
+
+  const onConfirmExport = async (limit: string) => {
     try {
-      await exportMutation.mutateAsync({ all: true, format })
-      addToast(`Dataset completo (${format.toUpperCase()}) descargado`, 'success')
+      await exportMutation.mutateAsync({
+        modulo: modalConfig.modulo,
+        format: modalConfig.format as any,
+        all: modalConfig.all,
+        limit,
+      })
+      addToast(`Reporte de ${modalConfig.title} (${modalConfig.format.toUpperCase()}) descargado`, 'success')
+      setModalOpen(false)
     } catch (err: any) {
       addToast(`Error al exportar: ${err.message}`, 'error')
     }
@@ -255,6 +271,15 @@ function Reportes() {
           </div>
         </div>
       </div>
+
+      <ExportModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={onConfirmExport}
+        title={modalConfig.title}
+        format={modalConfig.format}
+        isPending={exportMutation.isPending}
+      />
     </div>
   )
 }

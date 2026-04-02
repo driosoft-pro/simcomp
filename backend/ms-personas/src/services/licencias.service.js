@@ -8,9 +8,17 @@ export async function crearLicencia(data) {
     throw new Error("La persona no existe");
   }
 
+  // El número de licencia será por defecto el número de documento de la persona
+  const numero_licencia = persona.numero_documento;
+
+  // Validar que la fecha de expedición sea menor a la fecha de vencimiento
+  if (new Date(data.fecha_expedicion) >= new Date(data.fecha_vencimiento)) {
+    throw new Error("La fecha de expedición debe ser menor a la fecha de vencimiento");
+  }
+
   const licencia = await Licencia.create({
     persona_id: data.persona_id,
-    numero_licencia: data.numero_licencia,
+    numero_licencia: numero_licencia,
     categoria: data.categoria,
     fecha_expedicion: data.fecha_expedicion,
     fecha_vencimiento: data.fecha_vencimiento,
@@ -53,6 +61,10 @@ export async function actualizarLicencia(id, data) {
 
   if (!licencia) {
     throw new Error("La licencia no existe");
+  }
+
+  if (licencia.estado === "cancelada") {
+    throw new Error("No se puede actualizar una licencia cancelada");
   }
 
   await licencia.update({
@@ -139,4 +151,23 @@ export async function reactivarLicenciasPorDocumento(documento) {
   }
 
   return { reactivadas: licencias.length, licencias };
+}
+
+export async function cancelarLicencia(id) {
+  const licencia = await Licencia.findByPk(id);
+
+  if (!licencia) {
+    throw new Error("La licencia no existe");
+  }
+
+  if (licencia.estado === "cancelada") {
+    throw new Error("La licencia ya se encuentra cancelada");
+  }
+
+  await licencia.update({
+    estado: "cancelada",
+    observaciones: `${licencia.observaciones || ""}\n[SISTEMA]: Licencia cancelada irreversiblemente.`.trim(),
+  });
+
+  return licencia;
 }

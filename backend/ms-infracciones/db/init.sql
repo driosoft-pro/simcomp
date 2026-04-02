@@ -1,18 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-DO $$
-BEGIN
+DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_sancion_enum') THEN
     CREATE TYPE tipo_sancion_enum AS ENUM ('MONETARIA', 'SUSPENSION_LICENCIA', 'INMOVILIZACION', 'MIXTA');
   END IF;
-END$$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'estado_infraccion_enum') THEN
-    CREATE TYPE estado_infraccion_enum AS ENUM ('activo', 'inactivo');
-  END IF;
-END$$;
+END $$;
 
 CREATE TABLE IF NOT EXISTS infracciones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -20,18 +12,11 @@ CREATE TABLE IF NOT EXISTS infracciones (
   descripcion TEXT NOT NULL,
   articulo_codigo VARCHAR(30) NOT NULL,
   tipo_sancion tipo_sancion_enum NOT NULL,
-  valor_multa DECIMAL(12,2) NOT NULL,
-  dias_suspension INTEGER NULL,
-  estado estado_infraccion_enum NOT NULL DEFAULT 'activo',
-  aplica_descuento BOOLEAN DEFAULT FALSE,
-  vigente BOOLEAN DEFAULT TRUE,
-  CONSTRAINT chk_infracciones_valor_multa CHECK (valor_multa > 0),
-  CONSTRAINT chk_infracciones_dias_suspension CHECK (dias_suspension IS NULL OR dias_suspension > 0),
-  CONSTRAINT chk_infracciones_estado_vigente CHECK (
-    (estado = 'activo' AND vigente = TRUE)
-    OR
-    (estado = 'inactivo' AND vigente = FALSE)
-  ),
+  valor_multa DECIMAL(12,2) NOT NULL CHECK (valor_multa >= 0),
+  dias_suspension INTEGER NULL CHECK (dias_suspension IS NULL OR dias_suspension >= 0),
+  estado VARCHAR(20) NOT NULL DEFAULT 'activo',
+  aplica_descuento BOOLEAN NOT NULL DEFAULT TRUE,
+  vigente BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
@@ -40,23 +25,84 @@ CREATE TABLE IF NOT EXISTS infracciones (
 TRUNCATE TABLE infracciones RESTART IDENTITY CASCADE;
 
 INSERT INTO infracciones (id, codigo, descripcion, articulo_codigo, tipo_sancion, valor_multa, dias_suspension, estado, aplica_descuento, vigente, created_at, updated_at, deleted_at) VALUES
-('3752ff7b-ae9f-4fe2-b2e1-9656e59de735', 'C01', 'Transitar por sitios restringidos o en horas prohibidas', 'ART-C01', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('012a0acc-10a6-44d6-a18b-f5c26c4ddb38', 'C02', 'Estacionar en sitios prohibidos', 'ART-C02', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('6ad3989f-9dce-4e6d-8cc7-e9e0e8bf5a9e', 'C03', 'No portar licencia de conducción', 'ART-C03', 'MIXTA', 604100.00, 90, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('94b208cd-02bd-44c6-b4de-06522b6f868e', 'C04', 'No utilizar cinturón de seguridad', 'ART-C04', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('dddb5c26-64dd-426f-97dc-abfb84fb46e8', 'C05', 'No realizar revisión tecnicomecánica', 'ART-C05', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('96495645-f9e5-446a-8422-5f677598c030', 'C06', 'Conducir sin SOAT', 'ART-C06', 'MIXTA', 1208200.00, 30, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('f296b053-a6a1-41d9-b2d7-a594d9faede2', 'C07', 'Transitar con luces apagadas', 'ART-C07', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('21f85c15-a805-4171-b7c0-dc39e938e14f', 'C08', 'Bloquear intersección o calzada', 'ART-C08', 'MIXTA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('db812a94-e3f9-4a27-a0d2-511feea7cf3e', 'C09', 'Conducir con exceso de velocidad', 'ART-C09', 'MONETARIA', 1208200.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('ea9e33c5-2292-4595-af47-c659b5fb4967', 'C10', 'No respetar señal de pare o semáforo', 'ART-C10', 'MIXTA', 1208200.00, 180, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('501deb8a-6541-47ab-9e8c-aa5608069762', 'D01', 'Conducir en estado de embriaguez grado 0', 'ART-D01', 'MONETARIA', 2416400.00, NULL, 'activo', FALSE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('e1c5e600-b012-4b7e-87a8-c616692ada85', 'D02', 'Conducir en estado de embriaguez grado 1', 'ART-D02', 'MONETARIA', 4832800.00, NULL, 'activo', FALSE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('71ae2087-ccfb-4cca-a301-3cab8d1c9d01', 'D03', 'Conducir en estado de embriaguez grado 2', 'ART-D03', 'MONETARIA', 9665600.00, NULL, 'inactivo', FALSE, FALSE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('0d245ab3-a33d-4771-a90c-36ff3605120b', 'D04', 'Conducir en estado de embriaguez grado 3', 'ART-D04', 'MONETARIA', 19331200.00, NULL, 'activo', FALSE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('37e7d056-cb1e-4e9e-8eb1-74c0645616ca', 'B01', 'No acatar orden de autoridad', 'ART-B01', 'MONETARIA', 1208200.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('6b68be9d-c20f-48ac-90a9-3735a91a09ee', 'B02', 'Adelantar en zona prohibida', 'ART-B02', 'MIXTA', 1208200.00, 180, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('221f09bf-f037-4e53-91f7-34c61c2c8b38', 'B03', 'Usar teléfono celular al conducir', 'ART-B03', 'MIXTA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('c138c0d4-2ade-416f-83e6-ee49bd8280fc', 'B04', 'Circular sin placas visibles', 'ART-B04', 'MONETARIA', 1208200.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('3f1b62c2-e39c-4bfc-9db0-a42fa593d463', 'A01', 'Peatón cruza por sitio no permitido', 'ART-A01', 'MONETARIA', 151000.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL),
-('ca8229ff-9790-4e83-b183-0ac626369908', 'A02', 'Invadir carril exclusivo', 'ART-A02', 'MONETARIA', 604100.00, NULL, 'activo', TRUE, TRUE, '2026-03-25 15:12:00', '2026-03-25 15:12:00', NULL);
+('e70626e9-ab78-4e4b-9142-690fc2aaf602', 'C001', 'Infracción de tránsito de prueba #1', 'ART-101', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2025-01-17 19:15:35', '2025-01-17 19:15:35', NULL),
+('17036f2f-4573-43ea-b9bd-2b39f441c2a1', 'E002', 'Infracción de tránsito de prueba #2', 'ART-102', 'MIXTA', 520000, 90, 'activo', TRUE, FALSE, '2023-12-09 11:45:02', '2023-12-09 11:45:02', NULL),
+('0e85daa8-2132-4a10-bb30-e499d645a92d', 'D003', 'Infracción de tránsito de prueba #3', 'ART-103', 'MONETARIA', 130000, NULL, 'activo', TRUE, TRUE, '2025-03-17 21:14:36', '2025-03-17 21:14:36', NULL),
+('c0bcc784-3dac-4489-8d33-3a70404c680a', 'E004', 'Infracción de tránsito de prueba #4', 'ART-104', 'MONETARIA', 1820000, NULL, 'activo', FALSE, TRUE, '2023-02-04 04:52:03', '2023-02-04 04:52:03', NULL),
+('fc6092cf-33e8-4de2-bab5-a78756323427', 'E005', 'Infracción de tránsito de prueba #5', 'ART-105', 'MONETARIA', 260000, NULL, 'activo', FALSE, TRUE, '2024-12-03 11:16:49', '2024-12-03 11:16:49', NULL),
+('9eef4a55-52d4-4895-a68e-d732ccf9225d', 'D006', 'Infracción de tránsito de prueba #6', 'ART-106', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2025-08-11 21:24:38', '2025-08-11 21:24:38', NULL),
+('b2172e2b-d066-44db-9ca7-440393546cdc', 'E007', 'Infracción de tránsito de prueba #7', 'ART-107', 'MONETARIA', 1820000, NULL, 'activo', TRUE, TRUE, '2024-12-19 23:05:41', '2024-12-19 23:05:41', NULL),
+('35af7d05-07f5-4f77-a88c-861eb9c9dd5e', 'B008', 'Infracción de tránsito de prueba #8', 'ART-108', 'SUSPENSION_LICENCIA', 260000, 180, 'activo', FALSE, TRUE, '2024-06-30 01:59:20', '2024-06-30 01:59:20', NULL),
+('2cc20299-f180-467e-8e28-3a78e20fba57', 'D009', 'Infracción de tránsito de prueba #9', 'ART-109', 'MONETARIA', 1250000, NULL, 'activo', TRUE, TRUE, '2025-06-28 09:34:35', '2025-06-28 09:34:35', NULL),
+('98169d9c-3068-44e9-9790-6bf51ddb9325', 'A010', 'Infracción de tránsito de prueba #10', 'ART-110', 'MONETARIA', 520000, NULL, 'activo', TRUE, TRUE, '2023-03-13 03:24:58', '2023-03-13 03:24:58', NULL),
+('c243fbc2-2517-489c-bea7-c3c0e96871b7', 'D011', 'Infracción de tránsito de prueba #11', 'ART-111', 'MONETARIA', 1250000, NULL, 'activo', TRUE, TRUE, '2024-09-24 17:55:41', '2024-09-24 17:55:41', NULL),
+('d3351580-29c6-499b-8aa4-0573570628b6', 'E012', 'Infracción de tránsito de prueba #12', 'ART-112', 'MIXTA', 180000, 180, 'activo', TRUE, TRUE, '2025-08-04 10:49:21', '2025-08-04 10:49:21', NULL),
+('9e73d1e9-ff22-4cb6-8bb5-d25b8f9f1583', 'C013', 'Infracción de tránsito de prueba #13', 'ART-113', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2025-10-24 10:57:32', '2025-10-24 10:57:32', NULL),
+('e91bde64-17d4-4914-b4e2-265fcee0eb22', 'C014', 'Infracción de tránsito de prueba #14', 'ART-114', 'SUSPENSION_LICENCIA', 180000, 30, 'activo', FALSE, TRUE, '2023-01-02 00:23:13', '2023-01-02 00:23:13', NULL),
+('b1253e3b-786a-41d7-8931-349190d0846a', 'E015', 'Infracción de tránsito de prueba #15', 'ART-115', 'MIXTA', 980000, 180, 'activo', TRUE, TRUE, '2025-06-25 11:49:39', '2025-06-25 11:49:39', NULL),
+('118d90bd-427f-4967-b5d3-d6e44a2495ee', 'D016', 'Infracción de tránsito de prueba #16', 'ART-116', 'SUSPENSION_LICENCIA', 1820000, 365, 'inactivo', FALSE, TRUE, '2024-12-27 07:00:36', '2024-12-27 07:00:36', NULL),
+('33bcc6c0-1858-4ed1-91b7-d981d3b1eaf9', 'B017', 'Infracción de tránsito de prueba #17', 'ART-117', 'MIXTA', 260000, 60, 'activo', TRUE, TRUE, '2025-06-29 01:32:18', '2025-06-29 01:32:18', NULL),
+('61cc9a5f-1908-4f26-8dfe-289e05c19e3d', 'A018', 'Infracción de tránsito de prueba #18', 'ART-118', 'MONETARIA', 1820000, NULL, 'activo', FALSE, TRUE, '2024-02-06 16:00:27', '2024-02-06 16:00:27', NULL),
+('2eee4b0c-0d10-4638-9baa-5dcd3d1a2685', 'E019', 'Infracción de tránsito de prueba #19', 'ART-119', 'MONETARIA', 980000, NULL, 'activo', TRUE, TRUE, '2024-02-16 02:09:22', '2024-02-16 02:09:22', NULL),
+('31497113-f5ea-4b38-9a27-0e4a88913a68', 'E020', 'Infracción de tránsito de prueba #20', 'ART-120', 'MONETARIA', 980000, NULL, 'activo', TRUE, TRUE, '2025-06-07 07:22:45', '2025-06-07 07:22:45', NULL),
+('90c0f05b-5b82-41f7-aa1a-d6593e8e47d3', 'C021', 'Infracción de tránsito de prueba #21', 'ART-121', 'MONETARIA', 710000, NULL, 'activo', TRUE, TRUE, '2026-03-12 05:16:44', '2026-03-12 05:16:44', NULL),
+('83fdb60a-34a9-44fe-9c9a-1b0066ee719c', 'B022', 'Infracción de tránsito de prueba #22', 'ART-122', 'INMOVILIZACION', 980000, NULL, 'activo', TRUE, TRUE, '2025-11-07 20:37:11', '2025-11-07 20:37:11', NULL),
+('8953aff1-8a88-4ef8-9425-0fa20a33f919', 'C023', 'Infracción de tránsito de prueba #23', 'ART-123', 'MIXTA', 260000, 30, 'activo', TRUE, TRUE, '2025-10-16 23:36:06', '2025-10-16 23:36:06', NULL),
+('a0798aaf-956b-4cdb-bbd5-6bed3d4621ed', 'A024', 'Infracción de tránsito de prueba #24', 'ART-124', 'SUSPENSION_LICENCIA', 520000, 60, 'activo', FALSE, FALSE, '2024-05-16 02:45:37', '2024-05-16 02:45:37', NULL),
+('52a212fb-fbb8-47b0-a575-1efae9bee27b', 'A025', 'Infracción de tránsito de prueba #25', 'ART-125', 'INMOVILIZACION', 350000, NULL, 'activo', TRUE, FALSE, '2025-04-25 06:27:22', '2025-04-25 06:27:22', NULL),
+('7cd96e8a-53a9-46aa-91d6-c57dd139dde4', 'E026', 'Infracción de tránsito de prueba #26', 'ART-126', 'SUSPENSION_LICENCIA', 260000, 60, 'activo', TRUE, FALSE, '2025-12-26 13:13:28', '2025-12-26 13:13:28', NULL),
+('95eca4a6-330e-4235-a224-a63bc85ca88c', 'D027', 'Infracción de tránsito de prueba #27', 'ART-127', 'MONETARIA', 260000, NULL, 'activo', FALSE, TRUE, '2025-03-31 06:39:19', '2025-03-31 06:39:19', NULL),
+('d19ec58f-da13-4c4e-91e5-90ffa11ba674', 'D028', 'Infracción de tránsito de prueba #28', 'ART-128', 'SUSPENSION_LICENCIA', 520000, 30, 'activo', FALSE, TRUE, '2023-05-03 09:31:09', '2023-05-03 09:31:09', NULL),
+('e295ea3b-894b-43f1-b43d-687f691bcb2b', 'E029', 'Infracción de tránsito de prueba #29', 'ART-129', 'INMOVILIZACION', 180000, NULL, 'activo', FALSE, TRUE, '2025-04-15 04:10:49', '2025-04-15 04:10:49', NULL),
+('eb48ce00-e346-49dc-bc56-c0e4f556b46d', 'A030', 'Infracción de tránsito de prueba #30', 'ART-130', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2025-07-28 09:43:03', '2025-07-28 09:43:03', NULL),
+('640123a7-9c39-4542-bdcc-8d0dff2153fa', 'A031', 'Infracción de tránsito de prueba #31', 'ART-131', 'MONETARIA', 260000, NULL, 'activo', TRUE, TRUE, '2023-12-21 13:21:27', '2023-12-21 13:21:27', NULL),
+('d33f6819-11ce-4e7e-af95-4c70f36ac01c', 'E032', 'Infracción de tránsito de prueba #32', 'ART-132', 'MONETARIA', 710000, NULL, 'activo', TRUE, TRUE, '2024-06-02 14:41:05', '2024-06-02 14:41:05', NULL),
+('954906ce-e061-4bf7-94f8-a9bb64b26837', 'D033', 'Infracción de tránsito de prueba #33', 'ART-133', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2024-06-28 12:48:38', '2024-06-28 12:48:38', NULL),
+('7f4039b3-20ae-4e12-8ed5-b2fe29320b89', 'E034', 'Infracción de tránsito de prueba #34', 'ART-134', 'MONETARIA', 520000, NULL, 'activo', FALSE, TRUE, '2024-02-05 14:49:16', '2024-02-05 14:49:16', NULL),
+('c13654cb-811d-4ac5-adf7-4d245b98f826', 'B035', 'Infracción de tránsito de prueba #35', 'ART-135', 'MIXTA', 710000, 90, 'activo', TRUE, FALSE, '2023-04-29 09:41:08', '2023-04-29 09:41:08', NULL),
+('71fa80b5-d673-4d3d-9219-a3b94d5ce6a7', 'E036', 'Infracción de tránsito de prueba #36', 'ART-136', 'SUSPENSION_LICENCIA', 710000, 365, 'activo', TRUE, TRUE, '2025-11-04 18:51:18', '2025-11-04 18:51:18', NULL),
+('10862ef9-d499-44d4-a692-3fe197a0f4e1', 'C037', 'Infracción de tránsito de prueba #37', 'ART-137', 'MONETARIA', 180000, NULL, 'activo', TRUE, FALSE, '2025-07-10 11:00:08', '2025-07-10 11:00:08', NULL),
+('64f8ad06-b6a9-477f-8358-c8e3a3462ada', 'A038', 'Infracción de tránsito de prueba #38', 'ART-138', 'INMOVILIZACION', 260000, NULL, 'activo', TRUE, TRUE, '2024-07-29 21:08:03', '2024-07-29 21:08:03', NULL),
+('6540ec90-e396-4ef4-8522-17d22447dd9e', 'E039', 'Infracción de tránsito de prueba #39', 'ART-139', 'MIXTA', 980000, 60, 'activo', FALSE, TRUE, '2024-12-05 01:53:15', '2024-12-05 01:53:15', NULL),
+('46d5c9d7-06bc-4bbb-ba2b-5362d10da60c', 'E040', 'Infracción de tránsito de prueba #40', 'ART-140', 'MONETARIA', 520000, NULL, 'activo', TRUE, TRUE, '2025-11-23 07:57:49', '2025-11-23 07:57:49', NULL),
+('ad6ac124-142b-4593-9a28-e6b76b7625b0', 'D041', 'Infracción de tránsito de prueba #41', 'ART-141', 'MONETARIA', 1250000, NULL, 'inactivo', TRUE, TRUE, '2024-08-21 02:15:17', '2024-08-21 02:15:17', NULL),
+('03dd2a43-4629-47e7-949e-28060c210702', 'D042', 'Infracción de tránsito de prueba #42', 'ART-142', 'SUSPENSION_LICENCIA', 980000, 365, 'activo', TRUE, TRUE, '2023-08-27 07:03:50', '2023-08-27 07:03:50', NULL),
+('ca6c8275-2cf9-447b-9d40-8af5c1cdf6ed', 'B043', 'Infracción de tránsito de prueba #43', 'ART-143', 'MONETARIA', 260000, NULL, 'activo', TRUE, TRUE, '2024-08-12 00:22:15', '2024-08-12 00:22:15', NULL),
+('d4532457-0c0b-4cf2-b453-020cbba32a71', 'B044', 'Infracción de tránsito de prueba #44', 'ART-144', 'MONETARIA', 350000, NULL, 'activo', TRUE, FALSE, '2025-04-20 09:58:06', '2025-04-20 09:58:06', NULL),
+('6999a607-9765-49b8-85ec-69ac6cc86c95', 'D045', 'Infracción de tránsito de prueba #45', 'ART-145', 'MIXTA', 350000, 60, 'activo', TRUE, TRUE, '2025-02-21 10:21:52', '2025-02-21 10:21:52', NULL),
+('617458d8-7692-46eb-8fef-a5175b58e830', 'E046', 'Infracción de tránsito de prueba #46', 'ART-146', 'MONETARIA', 260000, NULL, 'activo', TRUE, TRUE, '2024-09-17 13:09:02', '2024-09-17 13:09:02', NULL),
+('e4e2dfb0-4b68-4a1c-ab16-ba2e2e582cbf', 'B047', 'Infracción de tránsito de prueba #47', 'ART-147', 'MIXTA', 1820000, 90, 'activo', TRUE, TRUE, '2023-11-06 10:07:17', '2023-11-06 10:07:17', NULL),
+('1c1bc742-63db-41e1-9a85-f9a5da32190a', 'B048', 'Infracción de tránsito de prueba #48', 'ART-148', 'MONETARIA', 710000, NULL, 'activo', TRUE, TRUE, '2023-02-11 02:35:33', '2023-02-11 02:35:33', NULL),
+('a6cf6362-d8c4-4db8-82dc-cf69c48bdca4', 'D049', 'Infracción de tránsito de prueba #49', 'ART-149', 'MIXTA', 710000, 30, 'activo', FALSE, TRUE, '2024-04-26 10:29:14', '2024-04-26 10:29:14', NULL),
+('bf009496-2d7c-4ed7-a50f-3eb4f569844f', 'E050', 'Infracción de tránsito de prueba #50', 'ART-150', 'INMOVILIZACION', 260000, NULL, 'inactivo', TRUE, TRUE, '2025-09-15 09:28:22', '2025-09-15 09:28:22', NULL),
+('dd2028ec-a83a-4e47-878b-c45bcb05d1af', 'E051', 'Infracción de tránsito de prueba #51', 'ART-151', 'SUSPENSION_LICENCIA', 180000, 30, 'activo', TRUE, FALSE, '2023-11-14 20:36:30', '2023-11-14 20:36:30', NULL),
+('140ec964-2da2-4a15-ab57-3617da2eabd3', 'C052', 'Infracción de tránsito de prueba #52', 'ART-152', 'MONETARIA', 1820000, NULL, 'activo', TRUE, TRUE, '2026-01-26 09:19:00', '2026-01-26 09:19:00', NULL),
+('ba11e308-2921-42f7-a77c-3ecc64d9bdc2', 'D053', 'Infracción de tránsito de prueba #53', 'ART-153', 'MIXTA', 520000, 60, 'activo', TRUE, TRUE, '2024-07-13 16:13:32', '2024-07-13 16:13:32', NULL),
+('8cacda5f-f197-4612-8c3d-910255070e04', 'B054', 'Infracción de tránsito de prueba #54', 'ART-154', 'MONETARIA', 260000, NULL, 'activo', TRUE, TRUE, '2025-09-25 19:42:36', '2025-09-25 19:42:36', NULL),
+('7aed48b0-383b-4fac-b3ed-88705ceb5f33', 'C055', 'Infracción de tránsito de prueba #55', 'ART-155', 'MIXTA', 1250000, 30, 'activo', FALSE, TRUE, '2023-06-07 02:05:32', '2023-06-07 02:05:32', NULL),
+('58ad0f37-6e48-4540-a118-2ec111ead74a', 'C056', 'Infracción de tránsito de prueba #56', 'ART-156', 'MONETARIA', 980000, NULL, 'activo', TRUE, TRUE, '2024-04-18 05:37:06', '2024-04-18 05:37:06', NULL),
+('15ebbd10-4dd2-4331-8309-ef6a004f825d', 'D057', 'Infracción de tránsito de prueba #57', 'ART-157', 'MONETARIA', 350000, NULL, 'activo', FALSE, TRUE, '2023-01-24 10:23:47', '2023-01-24 10:23:47', NULL),
+('c5b126c1-5941-423a-adcd-e22e2ec5abe9', 'A058', 'Infracción de tránsito de prueba #58', 'ART-158', 'MONETARIA', 710000, NULL, 'activo', TRUE, TRUE, '2026-01-01 14:36:26', '2026-01-01 14:36:26', NULL),
+('535d1ba1-9aa5-4533-b4d1-ff4f298cca94', 'D059', 'Infracción de tránsito de prueba #59', 'ART-159', 'MONETARIA', 180000, NULL, 'activo', TRUE, TRUE, '2024-06-22 18:30:21', '2024-06-22 18:30:21', NULL),
+('88ef6991-b942-4b96-9e2a-87358cefac96', 'A060', 'Infracción de tránsito de prueba #60', 'ART-160', 'INMOVILIZACION', 130000, NULL, 'activo', TRUE, TRUE, '2024-05-26 15:20:50', '2024-05-26 15:20:50', NULL),
+('1f493c43-dc0b-440b-ac71-255d66b20cfb', 'E061', 'Infracción de tránsito de prueba #61', 'ART-161', 'MIXTA', 980000, 90, 'activo', TRUE, TRUE, '2025-10-08 06:39:50', '2025-10-08 06:39:50', NULL),
+('2ebb6598-433b-4292-827d-f3b4805bfbdf', 'A062', 'Infracción de tránsito de prueba #62', 'ART-162', 'MONETARIA', 180000, NULL, 'activo', TRUE, TRUE, '2024-06-14 13:37:33', '2024-06-14 13:37:33', NULL),
+('2ddd6191-dc65-42fc-96b2-91c9dabbaa4c', 'C063', 'Infracción de tránsito de prueba #63', 'ART-163', 'MONETARIA', 520000, NULL, 'activo', TRUE, TRUE, '2024-05-17 11:35:34', '2024-05-17 11:35:34', NULL),
+('37bfbb7c-9eb7-4686-be79-4091f3875495', 'E064', 'Infracción de tránsito de prueba #64', 'ART-164', 'MONETARIA', 350000, NULL, 'activo', FALSE, TRUE, '2025-04-29 00:54:36', '2025-04-29 00:54:36', NULL),
+('aeeab3fe-1d8a-4a46-90b6-2340730f8942', 'C065', 'Infracción de tránsito de prueba #65', 'ART-165', 'INMOVILIZACION', 350000, NULL, 'activo', TRUE, TRUE, '2024-05-10 22:45:53', '2024-05-10 22:45:53', NULL),
+('b74db0ea-fbe1-4c4a-8d82-ad7717cd449f', 'E066', 'Infracción de tránsito de prueba #66', 'ART-166', 'MONETARIA', 130000, NULL, 'activo', TRUE, TRUE, '2025-05-28 00:33:00', '2025-05-28 00:33:00', NULL),
+('b9877c47-71c4-46aa-96da-c27a46a2e18e', 'A067', 'Infracción de tránsito de prueba #67', 'ART-167', 'INMOVILIZACION', 980000, NULL, 'activo', FALSE, TRUE, '2024-05-23 16:10:10', '2024-05-23 16:10:10', NULL),
+('b6269183-9817-495d-906d-4290e003e452', 'A068', 'Infracción de tránsito de prueba #68', 'ART-168', 'MONETARIA', 1820000, NULL, 'activo', FALSE, TRUE, '2023-03-10 01:40:18', '2023-03-10 01:40:18', NULL),
+('531296f9-f770-4143-9eb9-42e3f0bfe38b', 'A069', 'Infracción de tránsito de prueba #69', 'ART-169', 'INMOVILIZACION', 1250000, NULL, 'activo', FALSE, TRUE, '2025-09-02 23:34:24', '2025-09-02 23:34:24', NULL),
+('121f7271-b4e8-454a-92d7-2c21dee5aba1', 'D070', 'Infracción de tránsito de prueba #70', 'ART-170', 'SUSPENSION_LICENCIA', 1250000, 60, 'activo', TRUE, TRUE, '2025-05-25 02:15:26', '2025-05-25 02:15:26', NULL),
+('9fdaf3a6-427a-4fd6-8cc2-1cdbd2d43c4e', 'A071', 'Infracción de tránsito de prueba #71', 'ART-171', 'INMOVILIZACION', 180000, NULL, 'activo', FALSE, TRUE, '2024-07-31 06:45:05', '2024-07-31 06:45:05', NULL),
+('1c994b51-d3fe-4558-82b0-4e6054f3b494', 'E072', 'Infracción de tránsito de prueba #72', 'ART-172', 'SUSPENSION_LICENCIA', 1250000, 90, 'activo', TRUE, TRUE, '2025-07-12 08:57:58', '2025-07-12 08:57:58', NULL),
+('f84b8c24-0b1c-4092-9a86-fdc918ed2552', 'D073', 'Infracción de tránsito de prueba #73', 'ART-173', 'MONETARIA', 710000, NULL, 'activo', TRUE, TRUE, '2025-11-20 20:11:13', '2025-11-20 20:11:13', NULL),
+('01b168a0-f7f7-4b2d-8d19-081af0432ea3', 'E074', 'Infracción de tránsito de prueba #74', 'ART-174', 'MONETARIA', 350000, NULL, 'activo', TRUE, TRUE, '2026-01-25 04:34:33', '2026-01-25 04:34:33', NULL),
+('ebcc03cb-5cca-4998-99e3-955725dd9ebf', 'D075', 'Infracción de tránsito de prueba #75', 'ART-175', 'MONETARIA', 980000, NULL, 'activo', FALSE, TRUE, '2024-11-15 11:04:07', '2024-11-15 11:04:07', NULL),
+('19be8d0e-665a-405d-bdc6-20eb4b8d88ec', 'D076', 'Infracción de tránsito de prueba #76', 'ART-176', 'MONETARIA', 130000, NULL, 'activo', TRUE, TRUE, '2026-03-22 20:20:59', '2026-03-22 20:20:59', NULL),
+('98ce52e3-2f3b-4acb-8dff-e2e2a28ddbcb', 'B077', 'Infracción de tránsito de prueba #77', 'ART-177', 'MONETARIA', 520000, NULL, 'activo', TRUE, TRUE, '2024-01-23 03:52:58', '2024-01-23 03:52:58', NULL),
+('847747e5-1e0f-47ac-b4c3-c4d84ee70b9a', 'A078', 'Infracción de tránsito de prueba #78', 'ART-178', 'SUSPENSION_LICENCIA', 350000, 30, 'activo', TRUE, TRUE, '2023-07-11 05:07:01', '2023-07-11 05:07:01', NULL),
+('a99a7a1f-b3f6-4cb0-b532-f058975b8832', 'B079', 'Infracción de tránsito de prueba #79', 'ART-179', 'MIXTA', 130000, 90, 'activo', TRUE, TRUE, '2025-07-12 15:46:25', '2025-07-12 15:46:25', NULL),
+('affbe513-06e8-4fa4-8964-8899cb2f209d', 'C080', 'Infracción de tránsito de prueba #80', 'ART-180', 'MONETARIA', 520000, NULL, 'activo', TRUE, TRUE, '2025-08-11 16:41:38', '2025-08-11 16:41:38', NULL);
+

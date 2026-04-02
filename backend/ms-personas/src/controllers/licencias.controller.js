@@ -7,6 +7,7 @@ import {
   actualizarLicencia,
   suspenderLicenciasPorDocumento,
   reactivarLicenciasPorDocumento,
+  cancelarLicencia,
 } from "../services/licencias.service.js";
 
 export async function crearLicenciaController(req, res) {
@@ -258,6 +259,25 @@ export async function reactivarLicenciasPorDocumentoController(req, res) {
     });
   } catch (error) {
     const status = error.message.includes("no encontrada") ? 404 : 500;
+    return res.status(status).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+}
+
+export async function cancelarLicenciaController(req, res) {
+  try {
+    const { licencia_id } = req.params;
+    const licencia = await cancelarLicencia(licencia_id);
+
+    return res.json({
+      ok: true,
+      message: "Licencia cancelada correctamente",
+      data: licencia,
+    });
+  } catch (error) {
+    const status = error.message.includes("no existe") ? 404 : 400;
     return res.status(status).json({
       ok: false,
       message: error.message,

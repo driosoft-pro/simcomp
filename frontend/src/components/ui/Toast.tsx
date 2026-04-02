@@ -21,19 +21,23 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div 
+      className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-3 pointer-events-none w-full max-w-md px-4 sm:px-6"
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-sm transition-all duration-300 animate-slide-up ${
+          className={`pointer-events-auto flex items-center justify-between gap-3 rounded-2xl border px-5 py-3.5 shadow-2xl backdrop-blur-md transition-all duration-300 animate-in slide-in-from-top-4 fade-in ${
             toastStyles[toast.type]
-          }`}
+          } w-full sm:w-auto min-w-[320px] max-w-full`}
         >
-          {toastIcons[toast.type]}
-          <p className="text-sm font-medium">{toast.message}</p>
+          <div className="flex items-center gap-3">
+            {toastIcons[toast.type]}
+            <p className="text-sm font-semibold">{toast.message}</p>
+          </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="ml-2 rounded-full p-1 opacity-60 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/5"
+            className="ml-2 rounded-full p-1 opacity-60 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/5 transition-all"
           >
             <X className="h-4 w-4" />
           </button>

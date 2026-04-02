@@ -11,17 +11,18 @@ export function useStatistics() {
 
 export function useExport() {
   return useMutation({
-    mutationFn: ({ modulo, format, all }: { modulo?: string; format: any, all?: boolean }) => {
-      if (all) return reportesApi.exportAll(format)
-      return reportesApi.exportByModule(modulo!, format)
+    mutationFn: ({ modulo, format, all, limit }: { modulo?: string; format: any, all?: boolean, limit?: string }) => {
+      if (all) return reportesApi.exportAll(format, limit)
+      return reportesApi.exportByModule(modulo!, format, limit)
     },
     onSuccess: (blob, variables) => {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
+      const extension = variables.format === 'excel' ? 'xlsx' : variables.format
       const filename = variables.all 
         ? `dataset_completo.${variables.format === 'zip' ? 'zip' : 'xlsx'}`
-        : `${variables.modulo}_reporte.${variables.format}`
+        : `${variables.modulo}_reporte.${extension}`
       link.setAttribute('download', filename)
       document.body.appendChild(link)
       link.click()

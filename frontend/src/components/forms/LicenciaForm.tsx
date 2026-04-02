@@ -5,12 +5,13 @@ import type { UUID, LicenciaConduccion } from '../../types'
 
 interface LicenciaFormProps {
   personaId: UUID
+  personaDocumento?: string
   licencia?: LicenciaConduccion
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-function LicenciaForm({ personaId, licencia, onSuccess, onCancel }: LicenciaFormProps) {
+function LicenciaForm({ personaId, personaDocumento, licencia, onSuccess, onCancel }: LicenciaFormProps) {
   const { mutateAsync: createLicencia, isPending: isCreating } = useCreateLicencia()
   const { mutateAsync: updateLicencia, isPending: isUpdating } = useUpdateLicencia()
   const [error, setError] = useState<string | null>(null)
@@ -23,12 +24,20 @@ function LicenciaForm({ personaId, licencia, onSuccess, onCancel }: LicenciaForm
     setError(null)
     const fd = new FormData(e.currentTarget)
     
+    const fechaExp = fd.get('fecha_expedicion') as string
+    const fechaVen = fd.get('fecha_vencimiento') as string
+
+    if (new Date(fechaExp) >= new Date(fechaVen)) {
+      setError('La fecha de expedición debe ser menor a la fecha de vencimiento')
+      return
+    }
+
     const data = {
       persona_id: personaId,
-      numero_licencia: fd.get('numero_licencia') as string,
+      numero_licencia: (fd.get('numero_licencia') as string) || personaDocumento || '',
       categoria: fd.get('categoria') as any,
-      fecha_expedicion: fd.get('fecha_expedicion') as string,
-      fecha_vencimiento: fd.get('fecha_vencimiento') as string,
+      fecha_expedicion: fechaExp,
+      fecha_vencimiento: fechaVen,
       estado: (fd.get('estado') as any).toLowerCase(),
     }
 
@@ -60,9 +69,14 @@ function LicenciaForm({ personaId, licencia, onSuccess, onCancel }: LicenciaForm
             required 
             type="text" 
             name="numero_licencia" 
-            defaultValue={licencia?.numero_licencia}
-            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" 
+            defaultValue={licencia?.numero_licencia || personaDocumento}
+            readOnly={!isEdit && !!personaDocumento}
+            placeholder={personaDocumento ? 'Cédula del ciudadano' : 'Ej: 12345678'}
+            className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-800/50" 
           />
+          {!isEdit && personaDocumento && (
+            <p className="mt-1 text-[10px] text-slate-500 italic">El número de licencia autocompletado por cédula.</p>
+          )}
         </div>
         
         <div className="space-y-1">

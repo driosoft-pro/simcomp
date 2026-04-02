@@ -252,6 +252,7 @@ function PersonaDetail() {
             <div className="p-6 overflow-y-auto">
               <LicenciaForm 
                 personaId={personaId}
+                personaDocumento={data.numero_documento}
                 licencia={selectedLicencia}
                 onSuccess={() => {
                   setShowLicenciaForm(false)

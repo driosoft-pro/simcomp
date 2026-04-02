@@ -1,0 +1,226 @@
+version: "3.8"
+
+networks:
+  simcomp-public:
+    driver: overlay
+    attachable: true
+
+  simcomp-backend:
+    driver: overlay
+    attachable: true
+
+volumes:
+  auth_db_data:
+  personas_db_data:
+  automotores_db_data:
+  infracciones_db_data:
+  comparendos_db_data:
+
+configs:
+  gateway_conf:
+    file: ./nginx/gateway.conf
+
+services:
+  nginx-gateway:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - simcomp-public
+      - simcomp-backend
+    configs:
+      - source: gateway_conf
+        target: /etc/nginx/conf.d/default.conf
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+
+  frontend:
+    image: simcomp/frontend:latest
+    networks:
+      - simcomp-public
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ms-auth-service:
+    image: simcomp/ms-auth-service:latest
+    environment:
+      PORT: 8001
+      DB_HOST: db-auth
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: supersecret_simcomp_2026
+      NODE_ENV: production
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ms-personas:
+    image: simcomp/ms-personas:latest
+    environment:
+      PORT: 8002
+      DB_HOST: db-personas
+      DB_PORT: 5432
+      DB_NAME: personas_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NODE_ENV: production
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ms-automotores:
+    image: simcomp/ms-automotores:latest
+    environment:
+      PORT: 8003
+      DB_HOST: db-automotores
+      DB_PORT: 5432
+      DB_NAME: automotores_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NODE_ENV: production
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ms-infracciones:
+    image: simcomp/ms-infracciones:latest
+    environment:
+      PORT: 8004
+      DB_HOST: db-infracciones
+      DB_PORT: 5432
+      DB_NAME: infracciones_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NODE_ENV: production
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  ms-comparendos:
+    image: simcomp/ms-comparendos:latest
+    environment:
+      PORT: 8005
+      DB_HOST: db-comparendos
+      DB_PORT: 5432
+      DB_NAME: comparendos_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+      NODE_ENV: production
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+
+  ms-reportes:
+    image: simcomp/ms-reportes:latest
+    environment:
+      PORT: 8006
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+      COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  db-auth:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db-init/ms-auth-service_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
+
+  db-personas:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: personas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - personas_db_data:/var/lib/postgresql/data
+      - ./db-init/ms-personas_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
+
+  db-automotores:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: automotores_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - automotores_db_data:/var/lib/postgresql/data
+      - ./db-init/ms-automotores_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
+
+  db-infracciones:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: infracciones_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - infracciones_db_data:/var/lib/postgresql/data
+      - ./db-init/ms-infracciones_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
+
+  db-comparendos:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: comparendos_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - comparendos_db_data:/var/lib/postgresql/data
+      - ./db-init/ms-comparendos_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1

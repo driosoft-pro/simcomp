@@ -28,17 +28,19 @@ export async function getStatistics(): Promise<SystemStatistics> {
   return response.data.data
 }
 
-export async function exportByModule(modulo: string, format: 'csv' | 'excel' | 'pdf'): Promise<Blob> {
+export async function exportByModule(modulo: string, format: 'csv' | 'excel' | 'pdf', limit?: string): Promise<Blob> {
+  const query = limit ? `?limit=${limit}` : ''
   const response = await apiClient.get(
-    `${API_URLS.reportes}/export/${modulo}/${format}`,
+    `${API_URLS.reportes}/export/${modulo}/${format}${query}`,
     { responseType: 'blob' }
   )
   return response.data
 }
 
-export async function exportAll(format: 'zip' | 'excel'): Promise<Blob> {
+export async function exportAll(format: 'zip' | 'excel', limit?: string): Promise<Blob> {
+  const query = limit ? `?limit=${limit}` : ''
   const response = await apiClient.get(
-    `${API_URLS.reportes}/export/all/${format}`,
+    `${API_URLS.reportes}/export/all/${format}${query}`,
     { responseType: 'blob' }
   )
   return response.data

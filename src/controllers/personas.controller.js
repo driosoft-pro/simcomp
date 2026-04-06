@@ -22,14 +22,12 @@ export async function crearPersonaController(req, res) {
 
     const persona = await crearPersona(req.body);
 
-    // Si el creador es supervisor, crear automáticamente el usuario Agente
-    const requesterRole = req.headers["x-user-role"];
     if (requesterRole === "supervisor") {
       try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
-        const authBaseUrl = authServiceUrl.replace("/auth", "");
+        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+        const authApiUrl = authServiceUrl.endsWith("/api/auth") ? authServiceUrl.replace("/auth", "") : (authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`);
 
-        await fetch(`${authBaseUrl}/Usuarios`, {
+        await fetch(`${authApiUrl}/usuarios`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -47,7 +45,6 @@ export async function crearPersonaController(req, res) {
         console.log(`Usuario Agente auto-creado para persona ${persona.numero_documento}`);
       } catch (authError) {
         console.error("Error al auto-crear usuario para supervisor:", authError.message);
-        // No bloqueamos la creación de persona si falla el auth, pero informamos en logs
       }
     }
 
@@ -81,8 +78,9 @@ export async function listarPersonasController(req, res) {
       console.log(`Filtrando lista de personas para ${userRole}.`);
 
       try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-        const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
+        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+        const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
+        const response = await fetch(`${authApiUrl}/usuarios`, {
           headers: {
             "Authorization": req.headers["authorization"],
             "x-user-role": userRole // Pasar el rol para que el ms-auth también filtre si es necesario
@@ -148,9 +146,10 @@ export async function obtenerPersonaPorIdController(req, res) {
       } else {
         // Verificar si la persona tiene un usuario con rol permitido usando lookup directo
         try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
           const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
 
           if (response.ok) {
             const result = await response.json();
@@ -214,9 +213,10 @@ export async function obtenerPersonaPorDocumentoController(req, res) {
         // Es el propio perfil, permitir directamente
       } else {
         try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
           const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
 
           if (response.ok) {
             const result = await response.json();
@@ -294,9 +294,10 @@ export async function obtenerPersonaPorEmailController(req, res) {
         // Es el propio perfil, permitir directamente
       } else {
         try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
           const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authServiceUrl}/api/Usuarios/email/${encodedEmail}`);
+          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
 
           if (response.ok) {
             const result = await response.json();
@@ -345,6 +346,8 @@ export async function actualizarPersonaController(req, res) {
 
     const requesterRole = req.headers["x-user-role"];
     const requesterId = req.headers["x-user-id"];
+    // Si viene de ms-auth-service como sincronización interna, evitar bucle de vuelta
+    const isInternalSync = req.headers["x-internal-sync"] === "true";
 
     const personaActual = await obtenerPersonaPorId(persona_id);
     if (!personaActual) {
@@ -354,9 +357,9 @@ export async function actualizarPersonaController(req, res) {
     // Determine target role by calling ms-auth-service
     let targetRole = "ciudadano"; // Default
     try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
-      const authBaseUrl = authServiceUrl.replace("/auth", "");
-      const response = await fetch(`${authBaseUrl}/Usuarios/email/${personaActual.email}`);
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+      const authApiUrl = authServiceUrl.endsWith("/api/auth") ? authServiceUrl.replace("/auth", "") : (authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`);
+      const response = await fetch(`${authApiUrl}/usuarios/email/${personaActual.email}`);
       if (response.ok) {
         const result = await response.json();
         targetRole = result.data?.rol || "ciudadano";
@@ -425,7 +428,7 @@ export async function actualizarPersonaController(req, res) {
       }
     }
 
-    const persona = await actualizarPersona(persona_id, req.body);
+    const persona = await actualizarPersona(persona_id, updateData, { skipAuthSync: isInternalSync });
 
     return res.json({
       ok: true,

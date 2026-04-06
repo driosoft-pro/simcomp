@@ -6,7 +6,8 @@ import {
   createAutomotor,
   updateAutomotor,
   deleteAutomotor,
-  changeAutomotorStatus
+  changeAutomotorStatus,
+  actualizarDatosPropietarioMasivo
 } from "../services/automotores.service.js";
 
 export async function getAutomotores(req, res) {
@@ -194,6 +195,33 @@ export async function inmovilizarPorPlacaController(req, res) {
     return res.status(status).json({
       success: false,
       message: error.message
+    });
+  }
+}
+
+export async function syncPropietarioController(req, res) {
+  try {
+    const { oldDocumento, newDocumento, newNombre } = req.body;
+
+    if (!oldDocumento) {
+      return res.status(400).json({
+        success: false,
+        message: "El campo oldDocumento es requerido"
+      });
+    }
+
+    const affectedRows = await actualizarDatosPropietarioMasivo(oldDocumento, newDocumento, newNombre);
+
+    return res.status(200).json({
+      success: true,
+      message: `Sincronización completada. ${affectedRows} vehículos actualizados.`,
+      affectedRows
+    });
+  } catch (error) {
+    console.error("Error sincronizando propietario:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error al sincronizar datos del propietario masivamente"
     });
   }
 }

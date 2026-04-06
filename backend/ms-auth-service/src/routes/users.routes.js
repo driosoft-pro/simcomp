@@ -7,6 +7,7 @@ import {
   createUserController,
   updateUserController,
   changeUserStatusController,
+  syncPersonaController,
 } from "../controllers/users.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import roleMiddleware from "../middlewares/role.middleware.js";
@@ -112,6 +113,11 @@ router.get("/email/:email", getUserByEmailController);
  *         description: Usuario no encontrado
  */
 router.get("/username/:username", getUserByUsernameController);
+
+/**
+ * Ruta interna (sin JWT): ms-personas sincroniza documento/email en el usuario vinculado.
+ */
+router.patch("/internal/sync-persona", syncPersonaController);
 
 /**
  * @swagger

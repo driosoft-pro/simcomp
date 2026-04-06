@@ -115,69 +115,57 @@ export async function actualizarPersona(id, data, options = {}) {
   const docChanged = data.numero_documento && data.numero_documento !== oldDocumento;
   const usernameRequested = !!data.username;
 
-  // Cascading update to ms-auth-service
-  // (Solo si NO fue ms-auth quien inició la sincronización, para evitar bucle circular)
-  if (!skipAuthSync && (emailChanged || docChanged || usernameRequested)) {
+  // Cascading update to ms-auth-service via internal endpoint (no JWT needed)
+  if (!skipAuthSync && (emailChanged || docChanged)) {
     try {
       const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-      // Standardize base path to ensure it matches ms-auth-service's internal API route
-      const authApiUrl = authServiceUrl.endsWith("/api/auth") ? authServiceUrl.replace("/auth", "") : (authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`);
-      
-      // Intento 1: buscar usuario por email
-      let userId = null;
-      const findByEmailResponse = await fetch(`${authApiUrl}/usuarios/email/${encodeURIComponent(oldEmail)}`);
-      if (findByEmailResponse.ok) {
-        const userData = await findByEmailResponse.json();
-        userId = userData.data?.id;
-        console.log(`Usuario encontrado en ms-auth por email: ${oldEmail} → ID ${userId}`);
+      const authApiUrl = authServiceUrl.endsWith("/api/auth")
+        ? authServiceUrl.replace("/auth", "")
+        : authServiceUrl.endsWith("/api")
+        ? authServiceUrl
+        : `${authServiceUrl}/api`;
+
+      const syncPayload = { oldDocumento };
+      if (docChanged) syncPayload.newDocumento = data.numero_documento;
+      if (emailChanged) syncPayload.newEmail = data.email;
+
+      console.log(`[personas→auth] Sincronizando con ms-auth-service:`, syncPayload);
+      const syncRes = await fetch(`${authApiUrl}/usuarios/internal/sync-persona`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(syncPayload),
+      });
+
+      if (!syncRes.ok) {
+        const errBody = await syncRes.text();
+        console.error(`[personas→auth] Error HTTP ${syncRes.status}: ${errBody}`);
       } else {
-        // Intento 2: fallback por username (= numero_documento anterior)
-        console.warn(`No se encontró usuario por email ${oldEmail} en ms-auth (Status: ${findByEmailResponse.status}). Intentando por username/documento...`);
-        const findByDocResponse = await fetch(`${authApiUrl}/usuarios/username/${encodeURIComponent(oldDocumento)}`);
-        if (findByDocResponse.ok) {
-          const userData = await findByDocResponse.json();
-          userId = userData.data?.id;
-          console.log(`Usuario encontrado en ms-auth por username/documento: ${oldDocumento} → ID ${userId}`);
-        } else {
-          console.warn(`Tampoco se encontró usuario por username ${oldDocumento} en ms-auth (Status: ${findByDocResponse.status}). No se puede sincronizar.`);
-        }
-      }
-
-      if (userId) {
-        const updatePayload = {};
-        if (emailChanged) updatePayload.email = data.email;
-        if (docChanged) updatePayload.numero_documento = data.numero_documento;
-        
-        // Sync username if provided in data or if documento changed (auto-sync)
-        if (usernameRequested) {
-          updatePayload.username = data.username;
-        } else if (docChanged) {
-          updatePayload.username = data.numero_documento;
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
-          console.log(`Sincronizando cambios con ms-auth-service para usuario ${userId}:`, updatePayload);
-          await fetch(`${authApiUrl}/usuarios/${userId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatePayload),
-          });
-        }
+        const syncData = await syncRes.json();
+        console.log(`[personas→auth] Respuesta sync-auth:`, syncData.message);
       }
     } catch (error) {
-      console.error("Error synchronizing with ms-auth-service:", error.message);
+      console.error("[personas→auth] Error sincronizando con ms-auth-service:", error.message);
     }
   }
 
   // Cascading update to Licencias
-  if (data.numero_documento && data.numero_documento !== oldDocumento) {
+  // Solo actualiza las licencias cuyo numero_licencia coincide con el documento anterior
+  // (respeta licencias con números personalizados)
+  if (docChanged) {
     try {
-      await Licencia.update(
+      const { Op } = await import("sequelize");
+      const [affectedLicencias] = await Licencia.update(
         { numero_licencia: data.numero_documento },
-        { where: { persona_id: id } }
+        {
+          where: {
+            persona_id: id,
+            numero_licencia: oldDocumento,
+          },
+        }
       );
+      console.log(`[personas] Licencias actualizadas con nuevo documento: ${affectedLicencias}`);
     } catch (error) {
-      console.error("Error updating licenses:", error.message);
+      console.error("[personas] Error actualizando licencias:", error.message);
     }
   }
 

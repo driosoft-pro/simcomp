@@ -3,6 +3,7 @@ import {
   listUsers,
   getUser,
   getUserByEmailController,
+  getUserByUsernameController,
   createUserController,
   updateUserController,
   changeUserStatusController,
@@ -14,7 +15,7 @@ const router = Router();
 
 /**
  * @swagger
- * /Usuarios:
+ * /usuarios:
  *   get:
  *     summary: Listar usuarios
  *     tags: [Usuarios]
@@ -28,7 +29,7 @@ router.get("/", authMiddleware, roleMiddleware("admin", "supervisor", "agente", 
 
 /**
  * @swagger
- * /Usuarios:
+ * /usuarios:
  *   post:
  *     summary: Crear nuevo usuario
  *     tags: [Usuarios]
@@ -52,7 +53,7 @@ router.post("/", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"),
 
 /**
  * @swagger
- * /Usuarios/{id}:
+ * /usuarios/{id}:
  *   get:
  *     summary: Obtener usuario por id
  *     tags: [Usuarios]
@@ -74,7 +75,7 @@ router.get("/:id", authMiddleware, roleMiddleware("admin", "supervisor", "agente
 
 /**
  * @swagger
- * /Usuarios/email/{email}:
+ * /usuarios/email/{email}:
  *   get:
  *     summary: Obtener usuario por email (uso interno entre microservicios)
  *     tags: [Usuarios]
@@ -94,7 +95,27 @@ router.get("/email/:email", getUserByEmailController);
 
 /**
  * @swagger
- * /Usuarios/{id}:
+ * /usuarios/username/{username}:
+ *   get:
+ *     summary: Obtener usuario por username (uso interno entre microservicios)
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.get("/username/:username", getUserByUsernameController);
+
+/**
+ * @swagger
+ * /usuarios/{id}:
  *   put:
  *     summary: Actualizar usuario
  *     tags: [Usuarios]
@@ -118,11 +139,11 @@ router.get("/email/:email", getUserByEmailController);
  *       200:
  *         description: Usuario actualizado
  */
-router.put("/:id", authMiddleware, roleMiddleware("admin", "agente", "ciudadano"), updateUserController);
+router.put("/:id", authMiddleware, roleMiddleware("admin", "supervisor", "agente", "ciudadano"), updateUserController);
 
 /**
  * @swagger
- * /Usuarios/{id}/estado:
+ * /usuarios/{id}/estado:
  *   patch:
  *     summary: Cambiar estado del usuario
  *     tags: [Usuarios]

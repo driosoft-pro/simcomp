@@ -1,12 +1,12 @@
 export const APP_VERSION = '1.0'
 
 export const API_URLS = {
-  auth: import.meta.env.VITE_AUTH_API || 'http://localhost:3001/api/auth',
-  personas: import.meta.env.VITE_PERSONAS_API || 'http://localhost:3002/api',
-  automotores: import.meta.env.VITE_AUTOMOTORES_API || 'http://localhost:3003/api',
-  infracciones: import.meta.env.VITE_INFRACCIONES_API || 'http://localhost:3004/api',
-  comparendos: import.meta.env.VITE_COMPARENDOS_API || 'http://localhost:3005/api',
-  reportes: import.meta.env.VITE_REPORTES_API || 'http://localhost:3006/api/reportes',
+  auth: import.meta.env.VITE_AUTH_API || 'http://localhost:8001/api/auth',
+  personas: import.meta.env.VITE_PERSONAS_API || 'http://localhost:8002/api',
+  automotores: import.meta.env.VITE_AUTOMOTORES_API || 'http://localhost:8003/api',
+  infracciones: import.meta.env.VITE_INFRACCIONES_API || 'http://localhost:8004/api',
+  comparendos: import.meta.env.VITE_COMPARENDOS_API || 'http://localhost:8005/api',
+  reportes: import.meta.env.VITE_REPORTES_API || 'http://localhost:8006/api/reportes',
 } as const
 
 export const ROUTES = {

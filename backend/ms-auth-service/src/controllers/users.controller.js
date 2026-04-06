@@ -2,6 +2,7 @@ import {
   getAllUsers,
   getUserById,
   getUserByEmail,
+  getUserByUsername,
   createUser,
   updateUser,
   changeUserStatus,
@@ -120,6 +121,30 @@ export async function getUserByEmailController(req, res) {
   }
 }
 
+export async function getUserByUsernameController(req, res) {
+  try {
+    const { username } = req.params;
+    const user = await getUserByUsername(decodeURIComponent(username));
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error consultando usuario por username",
+    });
+  }
+}
+
 export async function createUserController(req, res) {
   try {
     const requesterRole = req.user.rol || req.headers["x-user-role"];
@@ -173,7 +198,8 @@ export async function updateUserController(req, res) {
 
     if (requesterRole === "admin") {
       canUpdate = true;
-      allowedFields = ["username", "email", "password", "rol", "estado"];
+      // numero_documento incluido para que el admin pueda actualizar y propague a ms-personas
+      allowedFields = ["username", "email", "password", "rol", "estado", "numero_documento"];
     } else if (isOwnProfile) {
       canUpdate = true;
       // All roles can update their own username, email, and password

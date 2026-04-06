@@ -45,8 +45,9 @@ export async function listarLicenciasController(req, res) {
     const userRole = req.headers["x-user-role"];
     if (userRole === "agente" || userRole === "supervisor") {
       try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-        const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
+        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+        const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
+        const response = await fetch(`${authApiUrl}/usuarios`, {
           headers: {
             "Authorization": req.headers["authorization"],
             "x-user-role": userRole
@@ -99,8 +100,9 @@ export async function listarLicenciasPorPersonaController(req, res) {
         return res.status(404).json({ ok: false, message: "Persona no encontrada" });
       }
 
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-      const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+      const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
+      const response = await fetch(`${authApiUrl}/usuarios`, {
         headers: {
           "Authorization": req.headers["authorization"],
           "x-user-role": userRole
@@ -165,8 +167,9 @@ export async function obtenerLicenciaPorNumeroController(req, res) {
         return res.status(403).json({ ok: false, message: "No se pudo validar el acceso a esta licencia" });
       }
 
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
-      const response = await fetch(`${authServiceUrl}/api/Usuarios`, {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+      const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
+      const response = await fetch(`${authApiUrl}/usuarios`, {
         headers: {
           "Authorization": req.headers["authorization"],
           "x-user-role": userRole

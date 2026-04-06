@@ -20,6 +20,13 @@ export async function getUserByEmail(email) {
   });
 }
 
+export async function getUserByUsername(username) {
+  return await User.findOne({
+    where: { username },
+    attributes: { exclude: ["password_hash"] },
+  });
+}
+
 export async function createUser(data) {
   const existingByEmail = await User.findOne({
     where: { email: data.email },
@@ -61,6 +68,7 @@ export async function updateUser(id, data) {
 
   const oldEmail = user.email;
   const oldUsername = user.username;
+  const oldNumeroDocumento = user.numero_documento; // Capturar ANTES de mutar el objeto
 
   if (data.username !== undefined) user.username = data.username;
   if (data.email !== undefined) user.email = data.email;
@@ -76,25 +84,55 @@ export async function updateUser(id, data) {
   await user.save();
 
   // Cascading update to ms-personas
-  if (data.email && data.email !== oldEmail) {
+  const emailChanged = data.email && data.email !== oldEmail;
+  // IMPORTANTE: usar oldNumeroDocumento (capturado antes del update) para comparar
+  const docChanged = data.numero_documento !== undefined && data.numero_documento !== oldNumeroDocumento;
+
+  if (emailChanged || docChanged) {
     try {
-      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002/api";
-      // Find persona by old email or username
-      const response = await fetch(`${personasServiceUrl}/Personas/documento/${oldUsername}`);
-      if (response.ok) {
-        const personaData = await response.json();
-        const personaId = personaData.id || personaData.data?.id;
-        if (personaId) {
-          await fetch(`${personasServiceUrl}/Personas/${personaId}`, {
+      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://localhost:8002/api";
+      let personaId = user.persona_id;
+
+      // Si no hay persona_id vinculado, buscar por documento
+      if (!personaId) {
+        // BUG FIX: buscar por el documento ANTERIOR (oldNumeroDocumento),
+        // porque la persona en BD aún tiene ese valor antes de esta sincronización
+        const docToSearch = docChanged ? oldNumeroDocumento : (oldNumeroDocumento || oldUsername);
+        console.log(`[auth→personas] Buscando persona por documento: ${docToSearch}`);
+        const findResponse = await fetch(`${personasServiceUrl}/personas/documento/${encodeURIComponent(docToSearch)}`);
+        if (findResponse.ok) {
+          const personaResult = await findResponse.json();
+          personaId = personaResult.data?.id || personaResult.data?.persona_id || personaResult.id;
+          console.log(`[auth→personas] Persona encontrada: ID ${personaId}`);
+        } else {
+          console.warn(`[auth→personas] Persona no encontrada para documento ${docToSearch} (Status: ${findResponse.status})`);
+        }
+      }
+
+      if (personaId) {
+        const updatePayload = {};
+        if (emailChanged) updatePayload.email = data.email;
+        if (docChanged) updatePayload.numero_documento = data.numero_documento;
+
+        if (Object.keys(updatePayload).length > 0) {
+          console.log(`Sincronizando cambios con ms-personas para persona ${personaId}:`, updatePayload);
+          // x-internal-sync: true evita que ms-personas intente re-sincronizar de vuelta con ms-auth
+          // (previene bucle circular auth → personas → auth)
+          // x-user-role: admin permite pasar el authMiddleware y roleMiddleware de ms-personas
+          await fetch(`${personasServiceUrl}/personas/${personaId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: data.email }),
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-sync": "true",
+              "x-user-role": "admin",
+              "x-user-id": "internal-sync"
+            },
+            body: JSON.stringify(updatePayload),
           });
         }
       }
     } catch (error) {
-      console.error("Error synchronizing email with ms-personas:", error.message);
-      // We don't throw here to avoid blocking the user update if the other service is down
+      console.error("Error synchronizing with ms-personas:", error.message);
     }
   }
 

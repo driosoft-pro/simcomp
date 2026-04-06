@@ -10,7 +10,8 @@ import {
   updateAutomotorController,
   deleteAutomotorController,
   changeAutomotorStatusController,
-  inmovilizarPorPlacaController
+  inmovilizarPorPlacaController,
+  syncPropietarioController
 } from "../controllers/automotores.controllers.js";
 
 const router = express.Router();
@@ -235,5 +236,30 @@ router.patch(
  *         description: Automotor no encontrado
  */
 router.patch("/placa/:placa/inmovilizar", inmovilizarPorPlacaController);
+
+/**
+ * @swagger
+ * /automotores/internal/sync-propietario:
+ *   patch:
+ *     summary: Sincronizar datos del propietario masivamente (Uso interno)
+ *     tags: [Automotores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldDocumento:
+ *                 type: string
+ *               newDocumento:
+ *                 type: string
+ *               newNombre:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Sincronización exitosa
+ */
+router.patch("/internal/sync-propietario", syncPropietarioController);
 
 export default router;

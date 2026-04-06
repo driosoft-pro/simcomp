@@ -73,8 +73,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
       - JWT_REFRESH_EXPIRES_DAYS=${JWT_REFRESH_EXPIRES_DAYS}
+      - PERSONAS_SERVICE_URL=http://ms-personas:8002
     ports:
       - "8001:8001"
+    volumes:
+      - ./backend/ms-auth-service:/app
+      - /app/node_modules
     depends_on:
       - db-auth
 
@@ -87,8 +91,12 @@ services:
       - DB_NAME=personas_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - AUTH_SERVICE_URL=http://ms-auth-service:8001
     ports:
       - "8002:8002"
+    volumes:
+      - ./backend/ms-personas:/app
+      - /app/node_modules
     depends_on:
       - db-personas
 
@@ -162,11 +170,11 @@ services:
   gateway:
     image: nginx:alpine
     ports:
-      - "3001:3001"
-      - "3002:3002"
-      - "3003:3003"
-      - "3004:3004"
-      - "3005:3005"
+      - "8001:8001"
+      - "8002:8002"
+      - "8003:8003"
+      - "8004:8004"
+      - "8005:8005"
     volumes:
       - ./nginx-gateway.conf:/etc/nginx/nginx.conf:ro
     depends_on:

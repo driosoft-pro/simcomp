@@ -7,6 +7,7 @@ import {
   getAutomotores,
   getAutomotorByIdController,
   getAutomotorByPlacaController,
+  getAutomotoresByPropietarioController,
   updateAutomotorController,
   deleteAutomotorController,
   changeAutomotorStatusController,
@@ -78,6 +79,29 @@ router.get("/", getAutomotores);
  *         description: Automotor no encontrado
  */
 router.get("/placa/:placa", getAutomotorByPlacaController);
+
+/**
+ * @swagger
+ * /automotores/propietario/{documento}:
+ *   get:
+ *     summary: Obtener automotores de un propietario por número de documento
+ *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: documento
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Número de documento del propietario
+ *     responses:
+ *       200:
+ *         description: Lista de automotores del propietario
+ *       500:
+ *         description: Error del servidor
+ */
+router.get("/propietario/:documento", getAutomotoresByPropietarioController);
 
 /**
  * @swagger

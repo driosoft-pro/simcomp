@@ -38,6 +38,11 @@ export async function createAutomotor(data) {
     // No bloqueamos si el servicio de personas está caído, pero registramos el error
   }
 
+  let estadoDefecto = data.estado || "activo";
+  if (data.condicion === "REPORTADO_ROBO" && estadoDefecto === "activo") {
+    estadoDefecto = "inmovilizado";
+  }
+
   const automotor = await Automotor.create({
     placa: data.placa,
     vin: data.vin,
@@ -51,7 +56,7 @@ export async function createAutomotor(data) {
     servicio: data.servicio || "PARTICULAR",
     propietario_documento: data.propietario_documento,
     propietario_nombre: data.propietario_nombre,
-    estado: data.estado || "activo",
+    estado: estadoDefecto,
     condicion: data.condicion || "LEGAL"
   });
 
@@ -81,8 +86,15 @@ export async function updateAutomotor(id, data) {
   if (data.servicio !== undefined) automotor.servicio = data.servicio;
   if (data.propietario_documento !== undefined) automotor.propietario_documento = data.propietario_documento;
   if (data.propietario_nombre !== undefined) automotor.propietario_nombre = data.propietario_nombre;
-  if (data.estado !== undefined) automotor.estado = data.estado;
-  if (data.condicion !== undefined) automotor.condicion = data.condicion;
+  if (data.estado !== undefined) {
+    automotor.estado = data.estado;
+  }
+  if (data.condicion !== undefined) {
+    automotor.condicion = data.condicion;
+    if (data.condicion === "REPORTADO_ROBO" && automotor.estado === "activo") {
+      automotor.estado = "inmovilizado";
+    }
+  }
 
   automotor.updated_at = new Date();
 
@@ -180,6 +192,15 @@ export async function getAutomotorByPlaca(placa) {
   return await Automotor.findOne({
     where: {
       placa: placaNormalizada,
+      deleted_at: null
+    }
+  });
+}
+
+export async function getAutomotoresByPropietario(documento) {
+  return await Automotor.findAll({
+    where: {
+      propietario_documento: documento,
       deleted_at: null
     }
   });

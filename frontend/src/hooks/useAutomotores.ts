@@ -34,11 +34,11 @@ export function useAutomotorByPlaca(placa: string) {
   })
 }
 
-export function useAutomotoresByPropietario(personaId: UUID) {
+export function useAutomotoresByPropietario(documento: string) {
   return useQuery<Automotor[]>({
-    queryKey: ['automotores-propietario', personaId],
-    queryFn: () => getAutomotoresByPropietario(personaId),
-    enabled: Boolean(personaId),
+    queryKey: ['automotores-propietario', documento],
+    queryFn: () => getAutomotoresByPropietario(documento),
+    enabled: Boolean(documento),
   })
 }
 

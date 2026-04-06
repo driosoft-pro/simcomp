@@ -2,6 +2,7 @@ import {
   getAllAutomotores,
   getAutomotorById,
   getAutomotorByPlaca,
+  getAutomotoresByPropietario,
   inmovilizarAutomotorPorPlaca,
   createAutomotor,
   updateAutomotor,
@@ -57,6 +58,22 @@ export async function getAutomotorByIdController(req, res) {
       message: "Error consultando automotor"
     });
 
+  }
+}
+
+export async function getAutomotoresByPropietarioController(req, res) {
+  try {
+    const automotores = await getAutomotoresByPropietario(req.params.documento);
+    return res.status(200).json({
+      success: true,
+      data: automotores
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error consultando automotores del propietario"
+    });
   }
 }
 

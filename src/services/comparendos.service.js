@@ -562,3 +562,33 @@ export async function actualizarComparendo(comparendoId, data, { userRole } = {}
     throw error;
   }
 }
+
+export async function sincronizarDatosPersona(oldDocumento, newDocumento, newNombre) {
+  if (!oldDocumento) throw new Error("Documento original requerido para la sincronización");
+
+  let affectedTotal = 0;
+
+  if (newDocumento || newNombre) {
+    const updatePayload = {};
+    if (newDocumento) updatePayload.ciudadano_documento = newDocumento;
+    if (newNombre) updatePayload.ciudadano_nombre = newNombre;
+
+    const [affectedCiudadano] = await Comparendo.update(updatePayload, {
+      where: { ciudadano_documento: oldDocumento }
+    });
+    affectedTotal += affectedCiudadano;
+  }
+
+  if (newDocumento || newNombre) {
+    const updatePayload = {};
+    if (newDocumento) updatePayload.agente_documento = newDocumento;
+    if (newNombre) updatePayload.agente_nombre = newNombre;
+
+    const [affectedAgente] = await Comparendo.update(updatePayload, {
+      where: { agente_documento: oldDocumento }
+    });
+    affectedTotal += affectedAgente;
+  }
+
+  return affectedTotal;
+}

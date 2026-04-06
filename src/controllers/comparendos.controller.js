@@ -11,6 +11,7 @@ import {
   revertirAPendiente,
   actualizarComparendo,
   obtenerSiguienteNumero,
+  sincronizarDatosPersona
 } from "../services/comparendos.service.js";
 
 export async function healthCheck(req, res) {
@@ -191,6 +192,33 @@ export async function obtenerSiguienteNumeroController(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: error.message,
+    });
+  }
+}
+
+export async function syncPersonaController(req, res) {
+  try {
+    const { oldDocumento, newDocumento, newNombre } = req.body;
+
+    if (!oldDocumento) {
+      return res.status(400).json({
+        success: false,
+        message: "El campo oldDocumento es requerido"
+      });
+    }
+
+    const affectedRows = await sincronizarDatosPersona(oldDocumento, newDocumento, newNombre);
+
+    return res.status(200).json({
+      success: true,
+      message: `Sincronización completada. ${affectedRows} comparendos actualizados.`,
+      affectedRows
+    });
+  } catch (error) {
+    console.error("Error sincronizando persona en comparendos:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error al sincronizar datos de la persona masivamente"
     });
   }
 }

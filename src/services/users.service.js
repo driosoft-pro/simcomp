@@ -27,6 +27,13 @@ export async function getUserByUsername(username) {
   });
 }
 
+export async function getUserByDocumento(numeroDocumento) {
+  return await User.findOne({
+    where: { numero_documento: numeroDocumento },
+    attributes: { exclude: ["password_hash"] },
+  });
+}
+
 export async function createUser(data) {
   const existingByEmail = await User.findOne({
     where: { email: data.email },
@@ -59,7 +66,8 @@ export async function createUser(data) {
   return user;
 }
 
-export async function updateUser(id, data) {
+export async function updateUser(id, data, options = {}) {
+  const { skipPersonaSync = false } = options;
   const user = await User.findByPk(id);
 
   if (!user) {
@@ -88,7 +96,7 @@ export async function updateUser(id, data) {
   // IMPORTANTE: usar oldNumeroDocumento (capturado antes del update) para comparar
   const docChanged = data.numero_documento !== undefined && data.numero_documento !== oldNumeroDocumento;
 
-  if (emailChanged || docChanged) {
+  if (!skipPersonaSync && (emailChanged || docChanged)) {
     try {
       const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://localhost:8002/api";
       let personaId = user.persona_id;

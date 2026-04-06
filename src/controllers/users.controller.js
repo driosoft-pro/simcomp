@@ -3,6 +3,7 @@ import {
   getUserById,
   getUserByEmail,
   getUserByUsername,
+  getUserByDocumento,
   createUser,
   updateUser,
   changeUserStatus,
@@ -288,6 +289,75 @@ export async function changeUserStatusController(req, res) {
     return res.status(status).json({
       success: false,
       message: error.message,
+    });
+  }
+}
+
+/**
+ * Endpoint interno: sincronizar datos de ms-personas → ms-auth-service.
+ * No requiere JWT. Busca el usuario por oldDocumento y actualiza
+ * numero_documento, username y/o email.
+ */
+export async function syncPersonaController(req, res) {
+  try {
+    const { oldDocumento, newDocumento, newEmail } = req.body;
+
+    if (!oldDocumento) {
+      return res.status(400).json({
+        success: false,
+        message: "El campo oldDocumento es requerido",
+      });
+    }
+
+    // Buscar usuario por documento anterior
+    let user = await getUserByDocumento(oldDocumento);
+
+    // Fallback: buscar por username (que suele ser igual al número de documento)
+    if (!user) {
+      user = await getUserByUsername(oldDocumento);
+    }
+
+    if (!user) {
+      console.warn(`[auth-sync] No se encontró usuario con documento/username: ${oldDocumento}`);
+      return res.status(200).json({
+        success: true,
+        message: "No se encontró usuario vinculado, sin cambios",
+      });
+    }
+
+    const updateData = {};
+    if (newDocumento && newDocumento !== oldDocumento) {
+      updateData.numero_documento = newDocumento;
+      // Actualizar username solo si actualmente coincide con el documento anterior
+      if (user.username === oldDocumento) {
+        updateData.username = newDocumento;
+      }
+    }
+    if (newEmail && newEmail !== user.email) {
+      updateData.email = newEmail;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "Sin cambios que aplicar al usuario",
+      });
+    }
+
+    console.log(`[auth-sync] Actualizando usuario ${user.id}:`, updateData);
+    // skipAuthSync = true para evitar bucle circular
+    const updated = await updateUser(user.id, updateData, { skipPersonaSync: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Usuario sincronizado correctamente",
+      data: { id: updated.id, username: updated.username, email: updated.email, numero_documento: updated.numero_documento },
+    });
+  } catch (error) {
+    console.error("[auth-sync] Error en sincronización interna:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error en sincronización interna",
     });
   }
 }

@@ -30,14 +30,20 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
 
   // Sync documento with licencia logic
   const [docNumber, setDocNumber] = useState(persona?.numero_documento || defaultDocumento || '')
+  // Capture the original document to detect if licNumber was auto-set from documento
+  const originalDocumento = persona?.numero_documento || defaultDocumento || ''
   const [licNumber, setLicNumber] = useState(firstLicencia?.numero_licencia || defaultDocumento || '')
-  const [licManuallyEdited, setLicManuallyEdited] = useState(isEdit && !!firstLicencia)
+  const [licManuallyEdited, setLicManuallyEdited] = useState(
+    isEdit && !!firstLicencia && firstLicencia.numero_licencia !== originalDocumento
+  )
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setDocNumber(val)
-    // Only auto-sync if not editing or if license hasn't been manually touched
-    if (!isEdit && !licManuallyEdited) {
+    // Sync licNumber if:
+    // - Not editing (create mode), OR
+    // - Editing and licNumber still matches the original documento (not custom)
+    if (!licManuallyEdited) {
       setLicNumber(val)
     }
   }

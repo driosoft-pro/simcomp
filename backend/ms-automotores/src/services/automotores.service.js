@@ -38,6 +38,11 @@ export async function createAutomotor(data) {
     // No bloqueamos si el servicio de personas está caído, pero registramos el error
   }
 
+  let estadoDefecto = data.estado || "activo";
+  if (data.condicion === "REPORTADO_ROBO" && estadoDefecto === "activo") {
+    estadoDefecto = "inmovilizado";
+  }
+
   const automotor = await Automotor.create({
     placa: data.placa,
     vin: data.vin,
@@ -51,7 +56,7 @@ export async function createAutomotor(data) {
     servicio: data.servicio || "PARTICULAR",
     propietario_documento: data.propietario_documento,
     propietario_nombre: data.propietario_nombre,
-    estado: data.estado || "activo",
+    estado: estadoDefecto,
     condicion: data.condicion || "LEGAL"
   });
 
@@ -65,6 +70,10 @@ export async function updateAutomotor(id, data) {
     throw new Error("Automotor no encontrado");
   }
 
+  // Capturar valores anteriores ANTES de mutar para detectar cambios
+  const oldPropietarioDocumento = automotor.propietario_documento;
+  const oldPropietarioNombre = automotor.propietario_nombre;
+
   if (data.placa !== undefined) automotor.placa = data.placa;
   if (data.vin !== undefined) automotor.vin = data.vin;
   if (data.numero_motor !== undefined) automotor.numero_motor = data.numero_motor;
@@ -77,12 +86,63 @@ export async function updateAutomotor(id, data) {
   if (data.servicio !== undefined) automotor.servicio = data.servicio;
   if (data.propietario_documento !== undefined) automotor.propietario_documento = data.propietario_documento;
   if (data.propietario_nombre !== undefined) automotor.propietario_nombre = data.propietario_nombre;
-  if (data.estado !== undefined) automotor.estado = data.estado;
-  if (data.condicion !== undefined) automotor.condicion = data.condicion;
+  if (data.estado !== undefined) {
+    automotor.estado = data.estado;
+  }
+  if (data.condicion !== undefined) {
+    automotor.condicion = data.condicion;
+    if (data.condicion === "REPORTADO_ROBO" && automotor.estado === "activo") {
+      automotor.estado = "inmovilizado";
+    }
+  }
 
   automotor.updated_at = new Date();
 
   await automotor.save();
+
+  // Sincronización inversa: si cambió el propietario_documento, notificar a ms-personas
+  const docChanged = data.propietario_documento !== undefined && data.propietario_documento !== oldPropietarioDocumento;
+  if (docChanged) {
+    try {
+      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://localhost:8002/api";
+      
+      // Buscar la persona por el documento ANTERIOR
+      const findResponse = await fetch(`${personasServiceUrl}/personas/documento/${encodeURIComponent(oldPropietarioDocumento)}`);
+      if (findResponse.ok) {
+        const result = await findResponse.json();
+        const persona = result.data;
+        if (persona && persona.id) {
+          console.log(`[automotores] Sincronizando cambio de propietario con ms-personas: ${oldPropietarioDocumento} → ${data.propietario_documento}`);
+          // x-internal-sync:true evita que ms-personas intente re-sincronizar de vuelta a ms-automotores
+          // (ya actualizamos el automotor, si personas llama sync-propietario no hará nada pues oldDocumento ya no existe)
+          await fetch(`${personasServiceUrl}/personas/${persona.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "x-user-role": "admin",
+              "x-user-id": "internal-sync"
+            },
+            body: JSON.stringify({
+              numero_documento: data.propietario_documento,
+              // Si también cambió el nombre, sincronizarlo
+              ...(data.propietario_nombre && data.propietario_nombre !== oldPropietarioNombre
+                ? { nombres: data.propietario_nombre }
+                : {})
+            }),
+          });
+        } else {
+          console.warn(`[automotores] No se encontró persona con documento ${oldPropietarioDocumento} en ms-personas para sincronizar.`);
+        }
+      } else if (findResponse.status === 404) {
+        console.warn(`[automotores] La persona con documento ${oldPropietarioDocumento} no existe en ms-personas (puede ser un cambio de propietario legítimo).`);
+      } else {
+        console.error(`[automotores] Error consultando ms-personas: ${findResponse.status}`);
+      }
+    } catch (err) {
+      console.error("[automotores] Error en sincronización inversa con ms-personas:", err.message);
+    }
+  }
+
   return automotor;
 }
 
@@ -137,6 +197,15 @@ export async function getAutomotorByPlaca(placa) {
   });
 }
 
+export async function getAutomotoresByPropietario(documento) {
+  return await Automotor.findAll({
+    where: {
+      propietario_documento: documento,
+      deleted_at: null
+    }
+  });
+}
+
 export async function inmovilizarAutomotorPorPlaca(placa) {
   const placaNormalizada = placa.toUpperCase();
 
@@ -156,4 +225,22 @@ export async function inmovilizarAutomotorPorPlaca(placa) {
   await automotor.save();
 
   return automotor;
+}
+
+export async function actualizarDatosPropietarioMasivo(oldDocumento, newDocumento, newNombre) {
+  if (!oldDocumento) throw new Error("Documento original requerido para la sincronización");
+
+  const updateFields = {};
+  if (newDocumento) updateFields.propietario_documento = newDocumento;
+  if (newNombre) updateFields.propietario_nombre = newNombre;
+
+  if (Object.keys(updateFields).length === 0) return 0;
+
+  const [affectedRows] = await Automotor.update(updateFields, {
+    where: {
+      propietario_documento: oldDocumento
+    }
+  });
+
+  return affectedRows;
 }

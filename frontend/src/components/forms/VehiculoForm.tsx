@@ -25,22 +25,25 @@ function VehiculoForm({ onSuccess, onCancel, defaultPlaca, defaultPropietarioDoc
     setError(null)
     const fd = new FormData(e.currentTarget)
     
-    const vehiculoData = {
-      placa: fd.get('placa') as string,
-      vin: fd.get('vin') as string,
-      numero_motor: fd.get('numero_motor') as string,
-      numero_chasis: fd.get('numero_chasis') as string,
-      marca: fd.get('marca') as string,
-      linea: fd.get('linea') as string,
-      modelo: parseInt(fd.get('modelo') as string, 10),
-      color: fd.get('color') as string,
-      clase: fd.get('clase') as any,
-      servicio: (fd.get('servicio') as any) || 'PARTICULAR',
-      propietario_documento: fd.get('propietario_documento') as string,
-      propietario_nombre: fd.get('propietario_nombre') as string,
-      estado: 'activo' as const,
-      condicion: (fd.get('condicion') as any) || 'LEGAL',
-    }
+      const condicionSeleccionada = (fd.get('condicion') as any) || 'LEGAL';
+      const estadoAsignado = condicionSeleccionada === 'REPORTADO_ROBO' ? 'inmovilizado' : 'activo';
+
+      const vehiculoData = {
+        placa: fd.get('placa') as string,
+        vin: fd.get('vin') as string,
+        numero_motor: fd.get('numero_motor') as string,
+        numero_chasis: fd.get('numero_chasis') as string,
+        marca: fd.get('marca') as string,
+        linea: fd.get('linea') as string,
+        modelo: parseInt(fd.get('modelo') as string, 10),
+        color: fd.get('color') as string,
+        clase: fd.get('clase') as any,
+        servicio: (fd.get('servicio') as any) || 'PARTICULAR',
+        propietario_documento: fd.get('propietario_documento') as string,
+        propietario_nombre: fd.get('propietario_nombre') as string,
+        estado: estadoAsignado as 'activo' | 'inmovilizado',
+        condicion: condicionSeleccionada,
+      }
 
     try {
       const result = await createVehiculo(vehiculoData)

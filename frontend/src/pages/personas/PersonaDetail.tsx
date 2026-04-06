@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { usePersona, useLicenciasByPersona } from '../../hooks/usePersonas'
+import { useAutomotoresByPropietario } from '../../hooks/useAutomotores'
 import { useAuth } from '../../hooks/useAuth'
-import { ArrowLeft, User, Hash, Phone, Mail, MapPin, CreditCard, IdCard, Calendar, ShieldCheck, Plus, X, Edit, Info } from 'lucide-react'
+import { ArrowLeft, User, Hash, Phone, Mail, MapPin, CreditCard, IdCard, Calendar, ShieldCheck, Plus, X, Edit, Info, Car } from 'lucide-react'
 import type { Persona, LicenciaConduccion } from '../../types'
 import LicenciaForm from '../../components/forms/LicenciaForm'
 import PersonaForm from '../../components/forms/PersonaForm'
@@ -45,6 +46,7 @@ function PersonaDetail() {
   const personaId = id ?? ''
   const { data, isLoading, isError, error } = usePersona(personaId)
   const { data: licencias } = useLicenciasByPersona(personaId)
+  const { data: vehiculos } = useAutomotoresByPropietario(data?.numero_documento ?? '')
   const [showLicenciaForm, setShowLicenciaForm] = useState(false)
   const [selectedLicencia, setSelectedLicencia] = useState<LicenciaConduccion | undefined>(undefined)
   const [showEditForm, setShowEditForm] = useState(false)
@@ -230,6 +232,67 @@ function PersonaDetail() {
           </div>
         )}
       </div>
+
+      {/* Vehículos del propietario */}
+      {vehiculos && vehiculos.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+            <Car size={18} className="text-blue-500" />
+            <h2 className="font-bold text-slate-800 dark:text-slate-200">
+              Vehículos registrados
+            </h2>
+            <span className="ml-auto rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+              {vehiculos.length}
+            </span>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {vehiculos.map((v) => (
+                <div
+                  key={v.automotor_id ?? v.id}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                >
+                  {/* Encabezado: placa + estado */}
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-base font-extrabold tracking-widest text-slate-800 dark:text-slate-100">
+                      {v.placa}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                        v.estado === 'activo'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : v.estado === 'inmovilizado'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                      }`}
+                    >
+                      {v.estado.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {/* Marca / Línea / Modelo */}
+                  <p className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {v.marca} {v.linea} · {v.modelo}
+                  </p>
+
+                  {/* Detalles en grid */}
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                    <span><span className="font-semibold text-slate-600 dark:text-slate-300">Clase:</span> {v.clase}</span>
+                    <span><span className="font-semibold text-slate-600 dark:text-slate-300">Color:</span> {v.color}</span>
+                    <span><span className="font-semibold text-slate-600 dark:text-slate-300">Servicio:</span> {v.servicio}</span>
+                    <span><span className="font-semibold text-slate-600 dark:text-slate-300">Condición:</span> {v.condicion}</span>
+                    {v.vin && (
+                      <span className="col-span-2">
+                        <span className="font-semibold text-slate-600 dark:text-slate-300">VIN:</span> {v.vin}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Licencia */}
       {showLicenciaForm && (

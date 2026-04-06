@@ -2,11 +2,13 @@ import {
   getAllAutomotores,
   getAutomotorById,
   getAutomotorByPlaca,
+  getAutomotoresByPropietario,
   inmovilizarAutomotorPorPlaca,
   createAutomotor,
   updateAutomotor,
   deleteAutomotor,
-  changeAutomotorStatus
+  changeAutomotorStatus,
+  actualizarDatosPropietarioMasivo
 } from "../services/automotores.service.js";
 
 export async function getAutomotores(req, res) {
@@ -56,6 +58,22 @@ export async function getAutomotorByIdController(req, res) {
       message: "Error consultando automotor"
     });
 
+  }
+}
+
+export async function getAutomotoresByPropietarioController(req, res) {
+  try {
+    const automotores = await getAutomotoresByPropietario(req.params.documento);
+    return res.status(200).json({
+      success: true,
+      data: automotores
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error consultando automotores del propietario"
+    });
   }
 }
 
@@ -194,6 +212,33 @@ export async function inmovilizarPorPlacaController(req, res) {
     return res.status(status).json({
       success: false,
       message: error.message
+    });
+  }
+}
+
+export async function syncPropietarioController(req, res) {
+  try {
+    const { oldDocumento, newDocumento, newNombre } = req.body;
+
+    if (!oldDocumento) {
+      return res.status(400).json({
+        success: false,
+        message: "El campo oldDocumento es requerido"
+      });
+    }
+
+    const affectedRows = await actualizarDatosPropietarioMasivo(oldDocumento, newDocumento, newNombre);
+
+    return res.status(200).json({
+      success: true,
+      message: `Sincronización completada. ${affectedRows} vehículos actualizados.`,
+      affectedRows
+    });
+  } catch (error) {
+    console.error("Error sincronizando propietario:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error al sincronizar datos del propietario masivamente"
     });
   }
 }

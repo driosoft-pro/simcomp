@@ -13,6 +13,7 @@ import {
   revertirAPendienteController,
   actualizarComparendoController,
   obtenerSiguienteNumeroController,
+  syncPersonaController
 } from "../controllers/comparendos.controller.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
@@ -689,5 +690,30 @@ router.put(
   validateRequest,
   actualizarComparendoController
 );
+
+/**
+ * @swagger
+ * /comparendos/internal/sync-persona:
+ *   patch:
+ *     summary: Sincronizar datos de persona masivamente (Uso interno)
+ *     tags: [Comparendos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldDocumento:
+ *                 type: string
+ *               newDocumento:
+ *                 type: string
+ *               newNombre:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Sincronización exitosa
+ */
+router.patch("/comparendos/internal/sync-persona", syncPersonaController);
 
 export default router;

@@ -30,14 +30,20 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
 
   // Sync documento with licencia logic
   const [docNumber, setDocNumber] = useState(persona?.numero_documento || defaultDocumento || '')
+  // Capture the original document to detect if licNumber was auto-set from documento
+  const originalDocumento = persona?.numero_documento || defaultDocumento || ''
   const [licNumber, setLicNumber] = useState(firstLicencia?.numero_licencia || defaultDocumento || '')
-  const [licManuallyEdited, setLicManuallyEdited] = useState(isEdit && !!firstLicencia)
+  const [licManuallyEdited, setLicManuallyEdited] = useState(
+    isEdit && !!firstLicencia && firstLicencia.numero_licencia !== originalDocumento
+  )
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setDocNumber(val)
-    // Only auto-sync if not editing or if license hasn't been manually touched
-    if (!isEdit && !licManuallyEdited) {
+    // Sync licNumber if:
+    // - Not editing (create mode), OR
+    // - Editing and licNumber still matches the original documento (not custom)
+    if (!licManuallyEdited) {
       setLicNumber(val)
     }
   }
@@ -206,21 +212,22 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Dirección <span className="text-red-500">*</span></label>
             <input required type="text" name="direccion" defaultValue={persona?.direccion} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
           </div>
-          {isEdit && (
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Estado <span className="text-red-500">*</span></label>
-              <select required name="estado" defaultValue={persona?.estado} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-              </select>
-            </div>
-          )}
         </div>
+
+        {isEdit && (
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Estado <span className="text-red-500">*</span></label>
+            <select required name="estado" defaultValue={persona?.estado} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Datos de Licencia */}

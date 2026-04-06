@@ -85,7 +85,8 @@ export async function obtenerPersonaPorEmail(email) {
   });
 }
 
-export async function actualizarPersona(id, data) {
+export async function actualizarPersona(id, data, options = {}) {
+  const { skipAuthSync = false } = options;
   const persona = await Persona.findByPk(id);
 
   if (!persona) {
@@ -94,6 +95,7 @@ export async function actualizarPersona(id, data) {
 
   const oldEmail = persona.email;
   const oldDocumento = persona.numero_documento;
+  const oldNombreCompleto = `${persona.nombres} ${persona.apellidos}`.trim();
 
   await persona.update({
     tipo_documento: data.tipo_documento,
@@ -108,48 +110,102 @@ export async function actualizarPersona(id, data) {
     estado: data.estado,
   });
 
-  // Cascading update to ms-auth-service
-  if ((data.email && data.email !== oldEmail) || (data.numero_documento && data.numero_documento !== oldDocumento)) {
-    try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001/api/auth";
-      const authBaseUrl = authServiceUrl.replace("/auth", "");
-      
-      // Find user by old email or old username
-      const findResponse = await fetch(`${authBaseUrl}/Usuarios/email/${oldEmail}`);
-      if (findResponse.ok) {
-        const userData = await findResponse.json();
-        const userId = userData.data?.id;
-        if (userId) {
-          const updatePayload = {};
-          if (data.email && data.email !== oldEmail) updatePayload.email = data.email;
-          if (data.numero_documento && data.numero_documento !== oldDocumento) {
-             updatePayload.username = data.numero_documento;
-             // If document changed, typically password is also reset to document by default or similar logic
-          }
+  // Variables de detección de cambios
+  const emailChanged = data.email && data.email !== oldEmail;
+  const docChanged = data.numero_documento && data.numero_documento !== oldDocumento;
+  const usernameRequested = !!data.username;
 
-          if (Object.keys(updatePayload).length > 0) {
-            await fetch(`${authBaseUrl}/Usuarios/${userId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(updatePayload),
-            });
-          }
-        }
+  // Cascading update to ms-auth-service via internal endpoint (no JWT needed)
+  if (!skipAuthSync && (emailChanged || docChanged)) {
+    try {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://localhost:8001";
+      const authApiUrl = authServiceUrl.endsWith("/api/auth")
+        ? authServiceUrl.replace("/auth", "")
+        : authServiceUrl.endsWith("/api")
+        ? authServiceUrl
+        : `${authServiceUrl}/api`;
+
+      const syncPayload = { oldDocumento };
+      if (docChanged) syncPayload.newDocumento = data.numero_documento;
+      if (emailChanged) syncPayload.newEmail = data.email;
+
+      console.log(`[personas→auth] Sincronizando con ms-auth-service:`, syncPayload);
+      const syncRes = await fetch(`${authApiUrl}/usuarios/internal/sync-persona`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(syncPayload),
+      });
+
+      if (!syncRes.ok) {
+        const errBody = await syncRes.text();
+        console.error(`[personas→auth] Error HTTP ${syncRes.status}: ${errBody}`);
+      } else {
+        const syncData = await syncRes.json();
+        console.log(`[personas→auth] Respuesta sync-auth:`, syncData.message);
       }
     } catch (error) {
-      console.error("Error synchronizing with ms-auth-service:", error.message);
+      console.error("[personas→auth] Error sincronizando con ms-auth-service:", error.message);
     }
   }
 
   // Cascading update to Licencias
-  if (data.numero_documento && data.numero_documento !== oldDocumento) {
+  // Solo actualiza las licencias cuyo numero_licencia coincide con el documento anterior
+  // (respeta licencias con números personalizados)
+  if (docChanged) {
     try {
-      await Licencia.update(
+      const { Op } = await import("sequelize");
+      const [affectedLicencias] = await Licencia.update(
         { numero_licencia: data.numero_documento },
-        { where: { persona_id: id } }
+        {
+          where: {
+            persona_id: id,
+            numero_licencia: oldDocumento,
+          },
+        }
       );
+      console.log(`[personas] Licencias actualizadas con nuevo documento: ${affectedLicencias}`);
     } catch (error) {
-      console.error("Error updating licenses:", error.message);
+      console.error("[personas] Error actualizando licencias:", error.message);
+    }
+  }
+
+  // Cascading update to ms-automotores and ms-comparendos
+  const newNombreCompleto = `${persona.nombres} ${persona.apellidos}`.trim();
+  const nameChanged = oldNombreCompleto !== newNombreCompleto;
+
+  if (docChanged || nameChanged) {
+    const payload = { oldDocumento };
+    if (docChanged) payload.newDocumento = data.numero_documento;
+    if (nameChanged) payload.newNombre = newNombreCompleto;
+
+    // ms-automotores
+    try {
+      const automotoresServiceUrl = process.env.AUTOMOTORES_SERVICE_URL || "http://localhost:8003/api";
+      const autoUrl = automotoresServiceUrl.endsWith("/api") ? automotoresServiceUrl : `${automotoresServiceUrl}/api`;
+      
+      console.log(`Sincronizando cambios de persona con ms-automotores:`, payload);
+      await fetch(`${autoUrl}/automotores/internal/sync-propietario`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error("Error sincronizando con ms-automotores:", err.message);
+    }
+
+    // ms-comparendos
+    try {
+      const comparendosServiceUrl = process.env.COMPARENDOS_SERVICE_URL || "http://localhost:8005/api";
+      const compUrl = comparendosServiceUrl.endsWith("/api") ? comparendosServiceUrl : `${comparendosServiceUrl}/api`;
+      
+      console.log(`Sincronizando cambios de persona con ms-comparendos:`, payload);
+      await fetch(`${compUrl}/comparendos/internal/sync-persona`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error("Error sincronizando con ms-comparendos:", err.message);
     }
   }
 

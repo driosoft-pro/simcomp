@@ -26,9 +26,9 @@ export async function searchAutomotorByPlaca(placa: string): Promise<Automotor> 
   return { ...data, automotor_id: (data as any).id }
 }
 
-export async function getAutomotoresByPropietario(personaId: UUID): Promise<Automotor[]> {
+export async function getAutomotoresByPropietario(documento: string): Promise<Automotor[]> {
   const response = await apiClient.get<ApiResponse<Automotor[]>>(
-    `${API_URLS.automotores}/automotores/propietario/${personaId}`,
+    `${API_URLS.automotores}/automotores/propietario/${encodeURIComponent(documento)}`,
   )
   return response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
 }

@@ -7,10 +7,12 @@ import {
   getAutomotores,
   getAutomotorByIdController,
   getAutomotorByPlacaController,
+  getAutomotoresByPropietarioController,
   updateAutomotorController,
   deleteAutomotorController,
   changeAutomotorStatusController,
-  inmovilizarPorPlacaController
+  inmovilizarPorPlacaController,
+  syncPropietarioController
 } from "../controllers/automotores.controllers.js";
 
 const router = express.Router();
@@ -77,6 +79,29 @@ router.get("/", getAutomotores);
  *         description: Automotor no encontrado
  */
 router.get("/placa/:placa", getAutomotorByPlacaController);
+
+/**
+ * @swagger
+ * /automotores/propietario/{documento}:
+ *   get:
+ *     summary: Obtener automotores de un propietario por número de documento
+ *     tags: [Automotores]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: documento
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Número de documento del propietario
+ *     responses:
+ *       200:
+ *         description: Lista de automotores del propietario
+ *       500:
+ *         description: Error del servidor
+ */
+router.get("/propietario/:documento", getAutomotoresByPropietarioController);
 
 /**
  * @swagger
@@ -235,5 +260,30 @@ router.patch(
  *         description: Automotor no encontrado
  */
 router.patch("/placa/:placa/inmovilizar", inmovilizarPorPlacaController);
+
+/**
+ * @swagger
+ * /automotores/internal/sync-propietario:
+ *   patch:
+ *     summary: Sincronizar datos del propietario masivamente (Uso interno)
+ *     tags: [Automotores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldDocumento:
+ *                 type: string
+ *               newDocumento:
+ *                 type: string
+ *               newNombre:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Sincronización exitosa
+ */
+router.patch("/internal/sync-propietario", syncPropietarioController);
 
 export default router;

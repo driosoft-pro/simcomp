@@ -95,10 +95,8 @@ Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo hos
 
 ## Máquinas Virtuales
 
-| VM              | IP              | RAM    | CPU | Rol                                |
-|-----------------|-----------------|--------|-----|------------------------------------|
 | srv-simcomp-dns | 192.168.100.2   | 1 GB   | 1   | DNS BIND9 — zona simcomp.co        |
-| srv-simcomp-api | 192.168.100.3   | 4 GB   | 2   | 6 servicios Node.js + PostgreSQL + PM2 |
+| srv-simcomp-api | 192.168.100.3   | 4 GB   | 2   | 6 servicios Node.js + PostgreSQL 16 + PM2 |
 | srv-simcomp-web | 192.168.100.4   | 2 GB   | 1   | Nginx API Gateway + React SPA      |
 
 ---
@@ -196,6 +194,59 @@ Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant,
 
 ---
 
+## Publicación de Imágenes en Docker Hub
+
+El proyecto incluye scripts de automatización para construir y subir las imágenes de todos los microservicios y el frontend a Docker Hub de manera masiva.
+
+### Qué hace esta automatización
+- **Detección automática**: Identifica si estás usando `docker` o `podman` y usa los comandos equivalentes.
+- **Gestión de Contexto**: Asegura que cada imagen se construya desde su carpeta raíz correspondiente para evitar errores de copia de archivos.
+- **Etiquetado automático**: Sube las imágenes con el prefijo de usuario y versión especificados.
+
+### Uso en Linux
+
+```bash
+# 1. Dar permisos de ejecución
+chmod +x build-and-push-dockerhub.sh
+
+# 2. Configurar variables y ejecutar
+export DOCKERHUB_USER="tu_usuario"
+export VERSION="v1.0.0"
+./build-and-push-dockerhub.sh
+```
+
+### Uso en Windows (PowerShell)
+
+```powershell
+# 1. Configurar variables
+$env:DOCKERHUB_USER="tu_usuario"
+$env:VERSION="v1.0.0"
+
+# 2. (Opcional) Si usas token de acceso
+$env:DOCKERHUB_TOKEN="tu_token_aqui"
+
+# 3. Ejecutar script
+.\build-and-push-dockerhub.ps1
+```
+
+> [!TIP]
+> Si PowerShell bloquea la ejecución de scripts, puedes habilitarla temporalmente con:
+> `Set-ExecutionPolicy -Scope Process Bypass`
+
+### Construcción Individual
+Si deseas construir solo un servicio específico, puedes pasar el nombre de la carpeta como argumento:
+
+- **Linux**: `./build-and-push-dockerhub.sh ms-auth-service`
+- **Windows**: `.\build-and-push-dockerhub.ps1 -Only ms-auth-service`
+
+### Recomendación Importante sobre el Contexto
+Cada `Dockerfile` debe respetar su propio contexto. Asegúrate de que:
+1. El `Dockerfile` esté dentro de la carpeta del servicio.
+2. Todos los archivos usados en `COPY` o `ADD` estén dentro de esa misma carpeta. 
+   *Ejemplo: Si el frontend usa un archivo de Nginx, este debe estar en `frontend/nginx.conf` y no en una carpeta externa.*
+
+---
+
 ## Comandos Vagrant
 
 ```bash
@@ -275,4 +326,4 @@ vagrant up
 
 ---
 
-*SIMCOMP — Vagrant + Ansible · 3 VMs · 192.168.100.x · Node.js 22 + PostgreSQL 14 + PM2 + Nginx JWT Gateway · v1.1.0*
+*SIMCOMP — Vagrant + Ansible · 3 VMs · 192.168.100.x · Node.js 22 + PostgreSQL 16 + PM2 + Nginx JWT Gateway · v1.1.0*

@@ -33,7 +33,7 @@ Tecnologías base del proyecto:
 
 - Node.js 22
 - Express 4
-- PostgreSQL 14
+- PostgreSQL 16
 - Vagrant
 - Ansible
 - Swagger / OpenAPI
@@ -512,11 +512,11 @@ Para garantizar un aislamiento total de los datos en una misma VM (`srv-simcomp-
 pg_lsclusters
 
 # Iniciar/Detener/Reiniciar un cluster específico (ej. personas)
-sudo pg_ctlcluster 14 personas start
-sudo pg_ctlcluster 14 personas restart
+sudo pg_ctlcluster 16 personas start
+sudo pg_ctlcluster 16 personas restart
 
 # Ver logs de un cluster
-sudo tail -f /var/log/postgresql/postgresql-14-personas.log
+sudo tail -f /var/log/postgresql/postgresql-16-personas.log
 ```
 
 ---

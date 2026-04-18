@@ -1,96 +1,101 @@
 # =============================================================================
-# SIMCOMP — Vagrantfile
-# Sistema de Comparendos de Tránsito
+# SIMCOMP — Vagrantfile (DOCKER VERSION)
+# Sistema de Comparendos de Tránsito en Docker Swarm
 # Máquinas virtuales:
-#   srv-simcomp-dns  192.168.100.2  → DNS (BIND9) + dominio simcomp.co
-#   srv-simcomp-api  192.168.100.3  → Backend Node.js (8001-8005) + PostgreSQL (5432-5436)
-#   srv-simcomp-web  192.168.100.4  → Nginx API Gateway (8001-8005) + React SPA (Puerto 80)
+#   managerDocker  192.168.100.2  → Swarm Manager + Nginx Gateway
+#   workerDocker1  192.168.100.3  → Swarm Worker (Microservicios)
+#   workerDocker2  192.168.100.4  → Swarm Worker (Microservicios)
 #
-# Servicios en srv-simcomp-api:
-#   ms-auth-service      :8001 (DB :5432)
-#   ms-personas          :8002 (DB :5433)
-#   ms-automotores       :8003 (DB :5434)
-#   ms-infracciones      :8004 (DB :5435)
-#   ms-comparendos       :8005 (DB :5436)
-#   ms-reportes          :8006 (DB :5437)
+# Puerto Expuesto (Global):
+#   simcomp.co (Puerto 80) -> Gateway Nginx -> Containers
 # =============================================================================
 
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+DOCKER_INSTALL = <<-SHELL
+  apt-get update
+  apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+  apt-get update
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  usermod -aG docker vagrant
+  systemctl enable docker
+  systemctl start docker
+
+  cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "buildkit": true
+  }
+}
+EOF
+
+  systemctl restart docker
+SHELL
 
 Vagrant.configure("2") do |config|
-
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = false
+
+  # Carpeta del proyecto compartida
   config.vm.synced_folder ".", "/vagrant", disabled: false
 
-  # ============================================================================
-  # SVR-DNS — 192.168.100.2
-  # BIND9, zona simcomp.co, forwarders a 8.8.8.8
-  # ============================================================================
-  config.vm.define "svr-dns" do |dns|
-    dns.vm.hostname = "svr-dns"
-    dns.vm.network "private_network", ip: "192.168.100.2"
+  # ---------------------------------------------------------------------------
+  # managerDocker - 192.168.100.2
+  # ---------------------------------------------------------------------------
+  config.vm.define "managerDocker" do |manager|
+    manager.vm.hostname = "managerDocker"
+    manager.vm.network "private_network", ip: "192.168.100.2"
 
-    dns.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-DNS"
-      vb.memory = 1024
-      vb.cpus   = 1
+    manager.vm.provider "virtualbox" do |vb|
+      vb.name = "managerDocker"
+      vb.memory = 3072
+      vb.cpus = 2
     end
 
-    dns.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "svr-dns"
-      ansible.verbose        = "v"
-      
-    end
+    manager.vm.provision "shell", inline: DOCKER_INSTALL
   end
 
-  # ============================================================================
-  # SVR-API — 192.168.100.3
-  # PostgreSQL x5 dbs, Node.js 20, 5 microservicios con PM2
-  # auth-service :8001, personas :8002, vehiculos :8003,
-  # infracciones :8004, comparendos :8005
-  # ============================================================================
-  config.vm.define "svr-api" do |api|
-    api.vm.hostname = "svr-api"
-    api.vm.network "private_network", ip: "192.168.100.3"
+  # ---------------------------------------------------------------------------
+  # workerDocker1 - 192.168.100.3
+  # ---------------------------------------------------------------------------
+  config.vm.define "workerDocker1" do |worker1|
+    worker1.vm.hostname = "workerDocker1"
+    worker1.vm.network "private_network", ip: "192.168.100.3"
 
-    api.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-API"
-      vb.memory = 4096
-      vb.cpus   = 2
-    end
-
-    api.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "svr-api"
-      ansible.verbose        = "v"
-    end
-  end
-
-  # ============================================================================
-  # SVR-WEB — 192.168.100.4
-  # Nginx API Gateway con validación JWT + React SPA (build estático)
-  # Rutas públicas:  /api/auth/*
-  # Rutas protegidas: /api/personas /api/vehiculos /api/infracciones /api/comparendos
-  # ============================================================================
-  config.vm.define "svr-web" do |web|
-    web.vm.hostname = "svr-web"
-    web.vm.network "private_network", ip: "192.168.100.4"
-
-    web.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-WEB"
+    worker1.vm.provider "virtualbox" do |vb|
+      vb.name = "workerDocker1"
       vb.memory = 2048
-      vb.cpus   = 1
+      vb.cpus = 1
     end
 
-    web.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "provisioning/site.yml"
-      ansible.inventory_path = "provisioning/inventory/hosts.ini"
-      ansible.limit          = "svr-web"
-      ansible.verbose        = "v"
-    end
+    worker1.vm.provision "shell", inline: DOCKER_INSTALL
   end
 
+  # ---------------------------------------------------------------------------
+  # workerDocker2 - 192.168.100.4
+  # ---------------------------------------------------------------------------
+  config.vm.define "workerDocker2" do |worker2|
+    worker2.vm.hostname = "workerDocker2"
+    worker2.vm.network "private_network", ip: "192.168.100.4"
+
+    worker2.vm.provider "virtualbox" do |vb|
+      vb.name = "workerDocker2"
+      vb.memory = 2048
+      vb.cpus = 1
+    end
+
+    worker2.vm.provision "shell", inline: DOCKER_INSTALL
+  end
 end

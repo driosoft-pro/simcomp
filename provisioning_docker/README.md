@@ -38,81 +38,108 @@ provisioning_docker/
 
 ---
 
-## 🚀 Instrucciones de Despliegue
+## 🚀 Instrucciones de Despliegue (Swarm)
 
-### 1. Iniciar las Máquinas Virtuales
-Desde la raíz del proyecto, ejecuta:
+### 1. Levantar las VMs
+Desde la raíz del proyecto:
 ```bash
-vagrant up -f Vagrantfile_docker
+# Si usas el Vagrantfile principal (ya configurado para Swarm)
+vagrant up
 ```
+*Si tu Vagrantfile especial se llama distinto (ej: Vagrantfile_docker), asegúrate de usarlo.*
 
-### 2. Inicializar el Swarm
-Accede al manager e inicializa el cluster:
+### 2. Entrar al Manager e Inicializar
 ```bash
 vagrant ssh managerDocker
-cd /vagrant/provisioning_docker
-./scripts/init-swarm-manager.sh
 ```
-*Copia el comando `docker swarm join --token ...` que aparecerá en la terminal.*
 
-### 3. Unir los Workers
-En terminales separadas, accede a cada worker y pega el comando copiado:
+Dentro del manager, verifica Docker e inicializa el Swarm:
+```bash
+docker --version
+docker swarm init --advertise-addr 192.168.100.2
+```
+
+### 3. Obtener token y unir Workers
+Para obtener el comando de unión:
+```bash
+docker swarm join-token worker
+```
+Te dará un comando parecido a: `docker swarm join --token SWMTKN-xxxxx 192.168.100.2:2377`.
+
+**Unir Worker 1:**
+En otra terminal local:
 ```bash
 vagrant ssh workerDocker1
-# Pegar el comando de join aquí
+# Pegar el comando obtenido arriba
+docker swarm join --token SWMTKN-xxxxx 192.168.100.2:2377
+```
 
+**Unir Worker 2:**
+En otra terminal local:
+```bash
 vagrant ssh workerDocker2
-# Pegar el comando de join aquí
+# Pegar el comando obtenido arriba
+docker swarm join --token SWMTKN-xxxxx 192.168.100.2:2377
+```
+
+**Validar nodos desde el manager:**
+```bash
+vagrant ssh managerDocker
+docker node ls
 ```
 
 ### 4. Desplegar el Stack
-Regresa al **managerDocker** y ejecuta el despliegue:
+Dentro del manager:
 ```bash
-vagrant ssh managerDocker
 cd /vagrant/provisioning_docker
-./scripts/deploy-stack.sh
+docker stack deploy -c stack.yml simcomp
+```
+
+### 5. Verificación del Despliegue
+Coomandos útiles para validar el estado:
+```bash
+docker stack ls
+docker service ls
+docker stack services simcomp
+
+# Ver tareas y errores si algo falla:
+docker service ps simcomp_haproxy
+docker service ps simcomp_frontend
+
+# Ver logs en tiempo real:
+docker service logs -f simcomp_ms-auth-service
 ```
 
 ---
 
-## 🌐 Configuración de Acceso (Importante)
+## 🌐 Acceso desde el Equipo Local
 
-Para acceder al sistema desde el navegador de tu máquina host a través del dominio `http://simcomp.co`, debes realizar las siguientes configuraciones:
+Mapear `simcomp.co` al manager en `192.168.100.2`.
 
-### 🐧 En Linux (Host)
-Debes mapear la IP del manager al dominio en tu archivo de hosts:
-1. Abre una terminal.
-2. Edita el archivo hosts: `sudo nano /etc/hosts`
-3. Agrega la siguiente línea al final:
-   ```text
-   192.168.100.2  simcomp.co
-   ```
-4. Guarda y cierra (Ctrl+O, Enter, Ctrl+X).
+**En Linux:**
+```bash
+echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
+```
 
-### 🪟 En Windows (Host)
-En Windows, VirtualBox a veces requiere que configures manualmente el adaptador de red para alcanzar el segmento `192.168.100.x`:
-
-1. Ve a **Panel de Control** > **Centro de redes y recursos compartidos** > **Cambiar configuración del adaptador**.
-2. Identifica el adaptador llamado **"VirtualBox Host-Only Network"**.
-3. Clic derecho > **Propiedades** > Selecciona **Protocolo de Internet versión 4 (TCP/IPv4)** > **Propiedades**.
-4. Haz clic en **Opciones avanzadas** > pestaña **Configuración de IP** > **Agregar** (en la sección Direcciones IP).
-5. Ingresa una IP en el mismo rango, por ejemplo:
-   - **Dirección IP**: `192.168.100.1`
-   - **Máscara de subred**: `255.255.255.0`
-6. Acepta todos los cambios.
-7. Finalmente, edita el archivo hosts de Windows (usualmente en `C:\Windows\System32\drivers\etc\hosts`) como Administrador y agrega:
-   ```text
-   192.168.100.2  simcomp.co
-   ```
+**Pruebas de acceso:**
+- Web: [http://simcomp.co](http://simcomp.co)
+- API: `curl http://simcomp.co/api/health`
+- Panel HAProxy: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
+  - **Usuario:** `admin`
+  - **Clave:** `Admin123*`
 
 ---
 
-## 📊 Monitoreo y Pruebas
+## 🛠️ Comandos de Gestión (Manager)
 
-- **Estado de Nodos**: `docker node ls`
-- **Estado de Servicios**: `docker service ls`
-- **Logs de un Servicio**: `docker service logs -f simcomp_<nombre_servicio>`
-- **Dashboard API Docs**: `http://simcomp.co/api/docs` (vía Gateway)
+- **Escalar un servicio:**
+  ```bash
+  docker service scale simcomp_frontend=3
+  docker service scale simcomp_ms-comparendos=4
+  ```
+- **Eliminar el stack:**
+  ```bash
+  docker stack rm simcomp
+  ```
 
-> [!TIP]
-> Si encuentras errores de conexión a la base de datos al inicio, es normal mientras los contenedores de PostgreSQL terminan de inicializarse. Los servicios se reiniciarán automáticamente.
+

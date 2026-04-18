@@ -1,6 +1,6 @@
-# SIMCOMP — Despliegue en Vagrant
+# SIMCOMP — Sistema de Comparendos de Tránsito
 
-Guía para desplegar en **3 VMs** con Vagrant + Ansible. Sin Docker en producción.
+Sistema integral de gestión de comparendos de tránsito desplegado en **Docker Swarm** para alta disponibilidad y balanceo de carga.
 
 ---
 
@@ -12,119 +12,97 @@ Guía para desplegar en **3 VMs** con Vagrant + Ansible. Sin Docker en producci�
 - Dashboard dark
 ![DashboardDark.png](img/DashboardDark.png)
 
-- Dashboard light
-![DashboardLight.png](img/DashboardLight.png)
-
-- Usuarios
-![Usuarios.png](img/Usuarios.png)
-
-- Personas
-![Personas.png](img/Personas.png)
-
-- Automotores
-![Automotores.png](img/Automotores.png)
-
-- Infracciones
-![Infracciones.png](img/Infracciones.png)
-
-- Comparendos
-![Comparendos.png](img/Comparendos.png)
-
-- Comparendo
-![Comparendo.png](img/Comparendo.png)
-
-- Pagar
-![PagoComparendo.png](img/PagoComparendo.png)
-
-- Recibo
-![ReciboComparendo.png](img/ReciboComparendo.png)
-
 - Reportes
 ![Reportes.png](img/Reportes.png)
 
--## Arquitectura (Red 192.168.100.x)
+---
 
+## 🏗️ Arquitectura de Despliegue (Docker Swarm)
+
+Para la sustentación y pruebas de carga, utilizamos un cluster de 3 nodos virtualizados:
+
+| Nodo | IP | Rol | Descripción |
+| :--- | :--- | :--- | :--- |
+| **managerDocker** | `192.168.100.2` | Manager | Orquestador, Nginx Gateway y HAProxy. |
+| **workerDocker1** | `192.168.100.3` | Worker | Microservicios y Bases de Datos. |
+| **workerDocker2** | `192.168.100.4` | Worker | Microservicios y Bases de Datos. |
+
+### Componentes del Stack:
+1. **HAProxy**: Balanceador de carga de entrada (Puerto 80) y panel de estadísticas (Puerto 8404).
+2. **Nginx API Gateway**: Proxy inverso con validación de JWT para proteger microservicios.
+3. **Frontend**: Aplicación React (Vite) servida por Nginx.
+4. **6 Microservicios**: Auth, Personas, Automotores, Infracciones, Comparendos y Reportes.
+5. **PostgreSQL 16**: 5 bases de datos independientes con persistencia en volúmenes.
+
+---
+
+## 🚀 Guía Rápida de Despliegue (Modo Swarm)
+
+### 1. Preparar las VMs
+```bash
+vagrant up
 ```
-Tu navegador → 192.168.100.4 (Nginx / Frontend)
 
-srv-simcomp-dns  192.168.100.2   BIND9 — zona simcomp.co
-srv-simcomp-api  192.168.100.3   5 microservicios + PostgreSQL + PM2 (Puertos 800x / 543x)
-srv-simcomp-web  192.168.100.4   Nginx API Gateway + React SPA (Puertos 80 / 800x)
+### 2. Configurar el Cluster
+1. **Manager**:
+   ```bash
+   vagrant ssh managerDocker
+   docker swarm init --advertise-addr 192.168.100.2
+   docker swarm join-token worker  # Copiar el comando generado
+   ```
+2. **Workers**: Entrar en `workerDocker1` y `workerDocker2` en terminales separadas y pegar el comando de unión.
 
-Servicios en srv-simcomp-api (192.168.100.3):
-  auth-service         :8001  →  usuarios_db     (puerto 5432)
-  personas-service     :8002  →  personas_db     (puerto 5433)
-  automotores-service  :8003  →  vehiculos_db    (puerto 5434)
-  infracciones-service :8004  →  infracciones_db (puerto 5435)
-  comparendos-service  :8005  →  comparendos_db  (puerto 5436)
-  reportes-service     :8006  →  (sin DB propia, consolida datos)
-
-Gateways en srv-simcomp-web (192.168.100.4):
-  Port 80            → React SPA (Frontend principal)
-  :8001 (Gateway)    → srv-simcomp-api:8001 (Auth)
-  :8002 (Gateway)    → srv-simcomp-api:8002 (Personas + JWT)
-  :8003 (Gateway)    → srv-simcomp-api:8003 (Automotores + JWT)
-  :8004 (Gateway)    → srv-simcomp-api:8004 (Infracciones + JWT)
-  :8005 (Gateway)    → srv-simcomp-api:8005 (Comparendos + JWT)
-  :8006 (Gateway)    → srv-simcomp-api:8006 (Reportes + JWT)
+### 3. Desplegar Aplicación
+Desde el **managerDocker**:
+```bash
+cd /vagrant/provisioning_docker
+docker stack deploy -c stack.yml simcomp
 ```
 
----
-
-## Configuración de Dominio Local (Hosts)
-
-Para que los dominios `simcomp.co` funcionen en tu navegador desde el equipo host, debes editar el archivo de hosts.
-
-### En Linux (Debian/Ubuntu/Fedora):
-1. Abrir terminal.
-2. Ejecutar:
-   ```bash
-   echo "192.168.100.4 simcomp.co www.simcomp.co api.simcomp.co" | sudo tee -a /etc/hosts
-   ```
-
-### En Windows:
-1. Abrir **Bloc de Notas** como **Administrador**.
-2. Abrir el archivo: `C:\Windows\System32\drivers\etc\hosts`.
-3. Añadir al final la siguiente línea:
-   ```text
-   192.168.100.4 simcomp.co www.simcomp.co api.simcomp.co
-   ```
-4. Guardar los cambios.
+### 4. Acceso al Sistema
+Para que los dominios funcionen en tu navegador (Host):
+- **Linux**: `echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts`
+- **Frontend**: [http://simcomp.co](http://simcomp.co)
+- **HAProxy Stats**: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats) (admin / Admin123*)
 
 ---
 
-## Máquinas Virtuales
+## 🧪 Pruebas de Carga (JMeter)
 
-| srv-simcomp-dns | 192.168.100.2   | 1 GB   | 1   | DNS BIND9 — zona simcomp.co        |
-| srv-simcomp-api | 192.168.100.3   | 4 GB   | 2   | 6 servicios Node.js + PostgreSQL 16 + PM2 |
-| srv-simcomp-web | 192.168.100.4   | 2 GB   | 1   | Nginx API Gateway + React SPA      |
+Se recomienda ejecutar JMeter desde tu PC local apuntando a `http://simcomp.co`. El proyecto incluye archivos `.jmx` optimizados en la carpeta `jmeter/`.
+
+### Archivos de Prueba Disponibles:
+- **`simcomp-login.jmx`**: Prueba el endpoint de autenticación y extrae el token JWT.
+- **`simcomp-comparendos.jmx`**: Realiza login y luego consultas al microservicio de comparendos usando el token obtenido.
+- **`simcomp-workflow-completo.jmx`**: Simula un flujo real (Login -> Personas -> Vehículos -> Comparendos).
+- **`simcomp-estres-frontend.jmx`**: Prueba masiva de carga al servidor web de la aplicación.
+
+### Ejecución por Línea de Comandos (Recomendado):
+Para evitar el consumo de recursos de la interfaz gráfica, usa el modo CLI:
+```bash
+jmeter -n -t jmeter/simcomp-workflow-completo.jmx -l results.jtl
+```
+
+Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)) el balanceo entre los contenedores.
 
 ---
 
-## Qué hace el aprovisionamiento automatizado
 
-### srv-simcomp-web (Frontend & Gateway)
-- Instala **Node.js 22** y **Nginx**.
-- **Build Automático**: Sincroniza el código fuente, genera el archivo `.env` apuntando a `simcomp.co` y ejecuta `npm install && npm run build` dentro de la VM.
-- **Gateway JWT**: Configura Nginx para validar el token JWT contra el microservicio de Auth antes de permitir el acceso a los otros servicios.
+## 🛠️ Comandos de Sustentación
+
+- **Escalar frontend**: `docker service scale simcomp_frontend=3`
+- **Ver logs**: `docker service logs -f simcomp_ms-auth-service`
+- **Estado nodos**: `docker node ls`
+- **Servicios**: `docker service ls`
 
 ---
 
-## Despliegue y Verificación
+## 🔄 Otras Formas de Despliegue (Alternativas)
 
-1. **Levantar el entorno**:
-   ```bash
-   vagrant up
-   ```
+Si deseas probar el sistema sin Swarm:
+- **Docker Compose (Local)**: `docker compose up -d`
+- **Vagrant Nativo (Sin Docker)**: Usa `Vagrantfile_native` y Ansible.
 
-2. **Acceso al sistema**:
-   - **Frontend**: [http://simcomp.co](http://simcomp.co)
-   - **Documentación API**: [http://api.simcomp.co:8001/api/docs](http://api.simcomp.co:8001/api/docs)
-   - **Salud de servicios**: [http://api.simcomp.co:8002/api/health](http://api.simcomp.co:8002/api/health)
-
-3. **Credenciales por defecto**:
-   - **Usuario**: `admin@simcomp.co`
-   - **Password**: `Admin123*`
 
 ---
 

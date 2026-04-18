@@ -510,7 +510,7 @@ podman run -d \
   -e POSTGRES_DB=auth_db \
   -e POSTGRES_USER=auth_user \
   -e POSTGRES_PASSWORD=auth_pass \
-  -p 5433:5432 \
+  -p 5432:5432 \
   -v auth-db-data:/var/lib/postgresql/data \
   docker.io/library/postgres:16
 ```

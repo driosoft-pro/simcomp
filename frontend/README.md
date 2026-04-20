@@ -2,12 +2,13 @@
 
 Panel de administración del Sistema de Comparendos de Tránsito.
 
-**Nuevas Características Módulos Fronend:**
-- Implementación de **Indicadores de Estado de Servicios** en línea.
-- Nuevo diseño con temática gubernamental (inspirado en tránsito Cali).
-- **Modo Oscuro** (Dark Mode) con sincronización fluida y contrastes accesibles.
-- **Mascota animada interactiva** (Cono de Tráfico) para feedback de acceso.
-- Módulo de reportes integrados (`ms-reportes`) y tableros interactivos.
+## Funcionalidades Principales
+
+- **Dashboard de Monitoreo**: Indicadores de estado de servicios en tiempo real.
+- **Interfaz Gubernamental**: Diseño optimizado inspirado en estándares de movilidad y tránsito.
+- **Experiencia de Usuario**: Modo oscuro nativo con contrastes accesibles y transiciones fluidas.
+- **Interactividad**: Mascota animada para feedback contextual durante la autenticación.
+- **Analítica**: Módulo de reportes avanzados con tableros interactivos.
 
 **Stack:** React 19 + TypeScript + Vite + TailwindCSS 3 + React Query + React Hook Form + pnpm
 

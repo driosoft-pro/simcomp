@@ -1,6 +1,6 @@
-# SIMCOMP — Provisioning Docker (Swarm Edition)
+# SIMCOMP — Orquestación con Docker Swarm
 
-Este directorio contiene toda la infraestructura y configuración necesaria para desplegar el **Sistema de Comparendos de Tránsito (SIMCOMP)** utilizando **Docker Swarm** sobre máquinas virtuales gestionadas por **Vagrant**.
+Configuración de orquestación de contenedores para garantizar alta disponibilidad, balanceo de carga y escalabilidad horizontal del sistema.
 
 ## 🏗️ Arquitectura del Cluster
 
@@ -27,7 +27,7 @@ provisioning_docker/
 └── README.md         # Documentación del entorno (este archivo).
 ```
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías de Orquestación
 
 - **Orquestación**: Docker Swarm
 - **Virtualización**: Vagrant & VirtualBox (Ubuntu 22.04)
@@ -124,7 +124,7 @@ echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
 **Pruebas de acceso:**
 - Web: [http://simcomp.co](http://simcomp.co)
 - API: `curl http://simcomp.co/api/health`
-- Panel HAProxy: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
+- Dashboard de Estadísticas (HAProxy): [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
   - **Usuario:** `admin`
   - **Clave:** `Admin123*`
 

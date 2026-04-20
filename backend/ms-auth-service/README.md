@@ -1,4 +1,4 @@
-# ms-auth-service
+# Servicio de Autenticación (ms-auth-service) — SIMCOMP
 
 Microservicio de autenticación y gestión de usuarios para el proyecto **SIMCOMP**.
 
@@ -13,7 +13,7 @@ Este servicio se encarga de:
 
 ---
 
-## Tecnologías usadas
+## Stack Tecnológico
 
 - Node.js
 - Express
@@ -62,7 +62,7 @@ ms-auth-service/
 
 ---
 
-## Qué contiene
+## Arquitectura de Datos
 
 ### 1. Base de datos
 La base de datos PostgreSQL contiene dos tablas principales:
@@ -524,7 +524,7 @@ pnpm node scripts/generate-seed-hashes.js
 
 ---
 
-## Estado actual del microservicio
+## Lógica de Operación
 
 Este microservicio ya deja lista la base para:
 
@@ -536,6 +536,10 @@ Este microservicio ya deja lista la base para:
 
 ---
 
-## Autor y contexto
+## Información del Proyecto
 
-Microservicio desarrollado como base del proyecto académico **SIMCOMP**, dentro del sistema de comparendos por microservicios.
+Este microservicio forma parte del ecosistema **SIMCOMP**, diseñado bajo una arquitectura de microservicios para la gestión integral de comparendos de tránsito.
+
+---
+
+*SIMCOMP — Auth Service v1.1.0*

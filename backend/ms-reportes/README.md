@@ -1,8 +1,8 @@
-# ms-reportes - SIMCOMP
+# Servicio de Reportes y Analítica (ms-reportes) — SIMCOMP
 
 Microservicio de reportes para el proyecto **SIMCOMP**. Su responsabilidad es centralizar procesos de importacion/exportacion de datos y generacion de archivos administrativos sin mover la logica de negocio de los microservicios de dominio.
 
-## Funcionalidades
+## Funcionalidades del Servicio
 
 - Importar CSV por modulo
 - Exportar CSV por modulo
@@ -164,7 +164,7 @@ ms-reportes:
     - ms-comparendos
 ```
 
-## Recomendaciones tecnicas
+## Recomendaciones Técnicas
 
 ### 1. Endpoints bulk
 Para mejorar rendimiento en importaciones masivas, conviene que los microservicios de dominio expongan endpoints tipo:
@@ -196,10 +196,10 @@ Cuando se importe el dataset completo, el orden recomendado es:
 4. infracciones
 5. comparendos
 
-## Rutas que debes tener listas
+## Información del Proyecto
 
-- `src/config/swagger.js`
-- `src/app.js`
-- `src/routes/reportes.routes.js`
+Este microservicio forma parte del ecosistema **SIMCOMP**, diseñado bajo una arquitectura de microservicios para la gestión integral de comparendos de tránsito.
 
-Estas son las rutas y archivos que habilitan Swagger correctamente.
+---
+
+*SIMCOMP — Reportes Service v1.1.0*

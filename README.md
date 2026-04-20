@@ -17,9 +17,9 @@ Sistema integral de gestión de comparendos de tránsito desplegado en **Docker 
 
 ---
 
-## 🏗️ Arquitectura de Despliegue (Docker Swarm)
+## 🏗️ Arquitectura de Alta Disponibilidad (Docker Swarm)
 
-Para la sustentación y pruebas de carga, utilizamos un cluster de 3 nodos virtualizados:
+El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resiliencia y balanceo de carga:
 
 | Nodo | IP | Rol | Descripción |
 | :--- | :--- | :--- | :--- |
@@ -36,7 +36,7 @@ Para la sustentación y pruebas de carga, utilizamos un cluster de 3 nodos virtu
 
 ---
 
-## 🚀 Guía Rápida de Despliegue (Modo Swarm)
+## 🚀 Guía de Despliegue (Modo Swarm)
 
 ### 1. Preparar las VMs
 ```bash
@@ -88,7 +88,7 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 ---
 
 
-## 🛠️ Comandos de Sustentación
+## 🛠️ Operaciones y Gestión del Stack
 
 - **Escalar frontend**: `docker service scale simcomp_frontend=3`
 - **Ver logs**: `docker service logs -f simcomp_ms-auth-service`
@@ -172,9 +172,9 @@ Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant,
 
 ---
 
-## Publicación de Imágenes en Docker Hub
+## 📦 Gestión de Imágenes en Docker Hub
 
-El proyecto incluye scripts de automatización para construir y subir las imágenes de todos los microservicios y el frontend a Docker Hub de manera masiva.
+El proyecto incluye herramientas de automatización para la construcción y distribución de imágenes de microservicios y frontend.
 
 ### Qué hace esta automatización
 - **Detección automática**: Identifica si estás usando `docker` o `podman` y usa los comandos equivalentes.

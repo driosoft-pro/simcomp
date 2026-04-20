@@ -1,6 +1,6 @@
 # SIMCOMP — Aprovisionamiento de Infraestructura
 
-Este directorio contiene la configuración de **Ansible** para desplegar los servicios de SIMCOMP en máquinas virtuales gestionadas por **Vagrant**.
+Infraestructura como Código (IaC) para el despliegue automatizado de SIMCOMP mediante **Ansible** y **Vagrant**.
 
 ## Arquitectura de Red
 El sistema se distribuye en tres máquinas virtuales con las siguientes configuraciones de red:
@@ -32,7 +32,7 @@ provisioning/
 
 ---
 
-## Tecnologías Utilizadas
+## Stack de Infraestructura
 
 El entorno de infraestructura y aprovisionamiento se basa en el siguiente stack tecnológico:
 

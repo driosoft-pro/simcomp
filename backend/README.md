@@ -1,33 +1,12 @@
-# REQUERIMIENTOS DEL PROYECTO
-# Sistema de Comparendos de Tránsito — Microservicios
-# =====================================================
+# Especificación Técnica de Microservicios — SIMCOMP
 
-## INFORMACIÓN DEL DOCUMENTO
-
-**Asignatura:** Redes e Infraestructuras  
-**Universidad:** Universidad Autónoma de Occidente  
-**Facultad:** Facultad de Ingeniería  
-**Programa:** Ingeniería de Datos e Inteligencia Artificial  
-
-**Autores**
-- Deyton Riascos Ortiz — 2246208
-- Samuel Izquierdo Bonilla — 2246993
-- Mauricio Taborda Gongora — 2246998
-
-**Entidad de referencia:** Secretaría de Tránsito y Transporte — Valle del Cauca, Colombia  
-**Versión:** 1.0  
-**Fecha:** 11 de marzo de 2026  
-**Tipo de documento:** Diseño Técnico — Arquitectura de Microservicios  
-**Patrón arquitectónico:** Microservicios REST  
+Plataforma distribuida para la gestión integral de comparendos de tránsito. Este documento detalla la arquitectura, modelos de datos y endpoints de la capa de servicios.
 
 ---
 
 ## DESCRIPCIÓN GENERAL
 
-Sistema distribuido para gestionar comparendos de tránsito mediante una arquitectura de
-**microservicios REST**. De acuerdo con el documento de requerimientos, la solución se
-estructura en **5 microservicios independientes**, cada uno con responsabilidad única y
-base de datos propia.
+Sistema escalable estructurado en **6 microservicios independientes**, cada uno con responsabilidad única y persistencia de datos aislada.
 
 Tecnologías base del proyecto:
 
@@ -52,8 +31,6 @@ Tecnologías base del proyecto:
 
 ## RESUMEN DE MICROSERVICIOS
 
-> Nota: el documento fuente menciona 5 microservicios. En el resumen general aparecen 4
-> de negocio y adicionalmente se detalla un microservicio de autenticación.
 
 | Microservicio | Responsabilidad | Puerto |
 |---|---|---:|
@@ -68,8 +45,7 @@ Tecnologías base del proyecto:
 
 ## ESTRUCTURA DEL PROYECTO
 
-La estructura debe reflejar los nombres y responsabilidades definidos en el documento
-de requerimientos:
+Organización del código fuente por servicios:
 
 ```text
 sistema-comparendos/
@@ -381,9 +357,7 @@ npm install
 
 ## ENDPOINTS API POR MICROSERVICIO
 
-> El documento de requerimientos no define de forma explícita todas las rutas HTTP,
-> pero esta propuesta de endpoints es consistente con las entidades y responsabilidades
-> descritas.
+Definición de rutas HTTP para la interacción con los servicios:
 
 ### ms-auth-service — `http://localhost:8001`
 
@@ -523,7 +497,7 @@ sudo tail -f /var/log/postgresql/postgresql-16-personas.log
 
 ## MÁQUINA DE ESTADOS DEL COMPARENDO
 
-El documento de requerimientos incluye una máquina de estados base para el comparendo:
+Lógica de transición de estados definida para el ciclo de vida del comparendo:
 
 | Estado origen | Estado destino | Condición / trigger |
 |---|---|---|
@@ -756,6 +730,20 @@ Usuatios y contraseñas:
 - Agentes: Agente123*
 - Ciudadanos con usuario: su número de documento
 
+
+---
+
+---
+
+## CONTEXTO DEL PROYECTO
+
+**Entidad de referencia:** Secretaría de Tránsito y Transporte — Valle del Cauca, Colombia  
+**Desarrollado por:** 
+- Deyton Riascos Ortiz
+- Samuel Izquierdo Bonilla
+- Mauricio Taborda Gongora
+
+*Universidad Autónoma de Occidente — Ingeniería de Datos e Inteligencia Artificial*
 
 ---
 

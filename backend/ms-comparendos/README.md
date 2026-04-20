@@ -1,4 +1,4 @@
-# ms-comparendos
+# Servicio de Comparendos (ms-comparendos) — SIMCOMP
 
 Microservicio **core del sistema SIMCOMP** encargado del **registro, ciclo de vida y cálculo de comparendos**.
 
@@ -13,7 +13,7 @@ Este servicio se encarga de:
 
 ---
 
-## Tecnologías usadas
+## Stack Tecnológico
 
 - Node.js
 - Express
@@ -54,7 +54,7 @@ ms-comparendos/
 
 ---
 
-## Qué contiene
+## Arquitectura de Datos
 
 ### 1. Base de datos
 La base de datos PostgreSQL contiene las tablas principales:
@@ -362,7 +362,7 @@ docker compose up -d
 
 ---
 
-## Estado actual del microservicio
+## Lógica de Operación
 
 Este microservicio deja lista la base para:
 
@@ -375,6 +375,10 @@ Este microservicio deja lista la base para:
 
 ---
 
-## Autor y contexto
+## Información del Proyecto
 
-Microservicio desarrollado como parte del proyecto académico **SIMCOMP**, dentro del sistema de comparendos por microservicios.
+Este microservicio forma parte del ecosistema **SIMCOMP**, diseñado bajo una arquitectura de microservicios para la gestión integral de comparendos de tránsito.
+
+---
+
+*SIMCOMP — Comparendos Service v1.1.0*

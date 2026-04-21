@@ -7,7 +7,7 @@ set -Eeuo pipefail
 # =========================================================
 
 # ---------- Configuración por defecto ----------
-DEFAULT_DOCKERHUB_USER="deytonro"
+DEFAULT_DOCKERHUB_USER="tu_usuario"
 DEFAULT_VERSION="v1.0.0"
 DEFAULT_REGISTRY="docker.io"
 DEFAULT_ENV_FILE=".env.docker-push"
@@ -27,22 +27,19 @@ error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 usage() {
   cat <<EOF
-Uso: $0 [build|push|all]
+Uso: $0 [acción] [servicio]
 
 Acciones:
   build   Construye las imágenes
   push    Sube las imágenes
-  all     Hace login, build y push
+  all     Hace login, build y push (por defecto)
 
-Variables soportadas:
-  DOCKERHUB_USER
-  VERSION
-  REGISTRY
-  CONTAINER_CLI
-  ENV_FILE
+Servicio (opcional):
+  Nombre del servicio a procesar (ej: simcomp-auth-service).
+  Si no se especifica, se procesan todos.
 
-Archivo de entorno por defecto:
-  .env.docker-push
+Variables soportadas en ENV_FILE (.env.docker-push):
+  DOCKERHUB_USER, DOCKERHUB_PASS, VERSION, REGISTRY, CONTAINER_CLI
 EOF
 }
 
@@ -79,15 +76,19 @@ load_env_file() {
   local env_file="$1"
 
   if [[ ! -f "$env_file" ]]; then
-    warn "No se encontró $env_file. Se usarán variables por defecto o del entorno."
+    warn "No se encontró $env_file. Usando variables por defecto."
     return
   fi
 
   log "Cargando configuración desde $env_file ..."
-  set -a
-  # shellcheck disable=SC1090
-  source "$env_file"
-  set +a
+  # Exportar variables ignorando comentarios y líneas vacías
+  while IFS='=' read -r key value; do
+    [[ "$key" =~ ^#.*$ ]] && continue
+    [[ -z "$key" ]] && continue
+    # Quitar posibles comillas
+    value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+    export "$key=$value"
+  done < "$env_file"
 }
 
 # ---------- Validar contexto ----------
@@ -96,26 +97,28 @@ has_valid_context() {
   [[ -d "$context_dir" && -f "$context_dir/Dockerfile" ]]
 }
 
-# ---------- Variables ----------
-ACTION="${1:-${ACTION:-$DEFAULT_ACTION}}"
+# ---------- Argumentos ----------
+ACTION="all"
+TARGET_SERVICE=""
+
+if [[ $# -ge 1 ]]; then
+  case "$1" in
+    build|push|all) ACTION="$1" ;;
+    -h|--help) usage; exit 0 ;;
+    *) error "Acción inválida: $1"; usage; exit 1 ;;
+  esac
+fi
+
+if [[ $# -ge 2 ]]; then
+  TARGET_SERVICE="$2"
+fi
+
+# Cargar configuración
 ENV_FILE="${ENV_FILE:-$DEFAULT_ENV_FILE}"
-
-case "$ACTION" in
-  build|push|all) ;;
-  -h|--help)
-    usage
-    exit 0
-    ;;
-  *)
-    error "Acción inválida: $ACTION"
-    usage
-    exit 1
-    ;;
-esac
-
 load_env_file "$ENV_FILE"
 
 DOCKERHUB_USER="${DOCKERHUB_USER:-$DEFAULT_DOCKERHUB_USER}"
+DOCKERHUB_PASS="${DOCKERHUB_PASS:-}"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 REGISTRY="${REGISTRY:-$DEFAULT_REGISTRY}"
 CLI="$(detect_container_cli)"
@@ -142,12 +145,37 @@ SERVICES=(
   "simcomp-haproxy-balance|./haproxy"
 )
 
+# Filtrar servicios si se especificó uno
+if [[ -n "$TARGET_SERVICE" ]]; then
+  NEW_SERVICES=()
+  FOUND=false
+  for item in "${SERVICES[@]}"; do
+    IFS='|' read -r image_name _ <<< "$item"
+    if [[ "$image_name" == "$TARGET_SERVICE" ]]; then
+      NEW_SERVICES+=("$item")
+      FOUND=true
+      break
+    fi
+  done
+  if [[ "$FOUND" == "false" ]]; then
+    error "Servicio no encontrado: $TARGET_SERVICE"
+    exit 1
+  fi
+  SERVICES=("${NEW_SERVICES[@]}")
+  log "Filtrado para procesar solo: $TARGET_SERVICE"
+fi
+
 BUILT_SERVICES=()
 
 login_registry() {
   log "Autenticando en $REGISTRY con $CLI ..."
-  "$CLI" login "$REGISTRY"
-  ok "Autenticación completada."
+  if [[ -n "$DOCKERHUB_PASS" ]]; then
+    echo "$DOCKERHUB_PASS" | "$CLI" login "$REGISTRY" -u "$DOCKERHUB_USER" --password-stdin
+    ok "Autenticación automática completada."
+  else
+    warn "DOCKERHUB_PASS no definido. Se requerirá login manual."
+    "$CLI" login "$REGISTRY"
+  fi
 }
 
 build_images() {
@@ -187,11 +215,6 @@ push_images() {
   for item in "${items_to_push[@]}"; do
     IFS='|' read -r image_name context_dir <<< "$item"
 
-    if ! has_valid_context "$context_dir"; then
-      warn "Saltando push de $image_name: no existe el contexto o falta Dockerfile en $context_dir"
-      continue
-    fi
-
     version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
     latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
 
@@ -221,7 +244,7 @@ main() {
   esac
 
   echo
-  ok "Proceso finalizado."
+  ok "Proceso finalizado correctamente."
 }
 
 main "$@"

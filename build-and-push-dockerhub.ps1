@@ -6,10 +6,15 @@
 
 [CmdletBinding()]
 param(
+    [Parameter(Position = 0)]
     [ValidateSet("build", "push", "all")]
     [string]$Action = "all",
 
+    [Parameter(Position = 1)]
+    [string]$TargetService = "",
+
     [string]$DockerHubUser = $env:DOCKERHUB_USER,
+    [string]$DockerHubPass = $env:DOCKERHUB_PASS,
     [string]$Version = $env:VERSION,
     [string]$Registry = $env:REGISTRY,
     [string]$ContainerCli = $env:CONTAINER_CLI,
@@ -29,10 +34,17 @@ function Invoke-CommandChecked {
         [string]$FilePath,
 
         [Parameter(Mandatory = $true)]
-        [string[]]$Arguments
+        [string[]]$Arguments,
+        
+        [string]$InputObject = $null
     )
 
-    & $FilePath @Arguments
+    if ($InputObject) {
+        $InputObject | & $FilePath @Arguments
+    } else {
+        & $FilePath @Arguments
+    }
+
     if ($LASTEXITCODE -ne 0) {
         throw "Falló el comando: $FilePath $($Arguments -join ' ')"
     }
@@ -45,7 +57,7 @@ function Load-EnvFile {
     )
 
     if (!(Test-Path $Path)) {
-        Write-Warn "No se encontró $Path. Se usarán variables por defecto o del entorno."
+        Write-Warn "No se encontró $Path. Usando variables por defecto."
         return
     }
 
@@ -100,7 +112,8 @@ function Test-BuildContext {
 # ---------- Cargar variables ----------
 Load-EnvFile -Path $EnvFile
 
-if (!$DockerHubUser) { $DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "deytonro" } }
+if (!$DockerHubUser) { $DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "tu_usuario" } }
+if (!$DockerHubPass) { $DockerHubPass = $env:DOCKERHUB_PASS }
 if (!$Version)       { $Version       = if ($env:VERSION)        { $env:VERSION }        else { "v1.0.0" } }
 if (!$Registry)      { $Registry      = if ($env:REGISTRY)       { $env:REGISTRY }       else { "docker.io" } }
 
@@ -126,12 +139,28 @@ $Services = @(
     @{ Name = "simcomp-haproxy-balance";     Context = "./haproxy" }
 )
 
+# Filtrar si se especificó un servicio
+if ($TargetService) {
+    $filtered = $Services | Where-Object { $_.Name -eq $TargetService }
+    if (!$filtered) {
+        Write-Fail "Servicio no encontrado: $TargetService"
+        exit 1
+    }
+    $Services = @($filtered)
+    Write-Info "Filtrado para procesar solo: $TargetService"
+}
+
 $BuiltServices = New-Object System.Collections.Generic.List[object]
 
 function Login-Registry {
     Write-Info "Autenticando en $Registry con $CLI ..."
-    Invoke-CommandChecked -FilePath $CLI -Arguments @("login", $Registry)
-    Write-Ok "Autenticación completada."
+    if ($DockerHubPass) {
+        Invoke-CommandChecked -FilePath $CLI -Arguments @("login", $Registry, "-u", $DockerHubUser, "--password-stdin") -InputObject $DockerHubPass
+        Write-Ok "Autenticación automática completada."
+    } else {
+        Write-Warn "DOCKERHUB_PASS no definido. Se requerirá login manual."
+        Invoke-CommandChecked -FilePath $CLI -Arguments @("login", $Registry)
+    }
 }
 
 function Build-Images {
@@ -160,14 +189,8 @@ function Push-Images {
 
     foreach ($service in $toPush) {
         $imageName = $service.Name
-        $context = $service.Context
         $versionTag = "${Registry}/${DockerHubUser}/${imageName}:${Version}"
         $latestTag  = "${Registry}/${DockerHubUser}/${imageName}:latest"
-
-        if (!(Test-BuildContext -Context $context)) {
-            Write-Warn "Saltando push de ${imageName}: no existe el contexto o falta Dockerfile en $context"
-            continue
-        }
 
         Write-Info "Subiendo $imageName ..."
         Invoke-CommandChecked -FilePath $CLI -Arguments @("push", $versionTag)
@@ -194,4 +217,4 @@ switch ($Action) {
 }
 
 Write-Host ""
-Write-Ok "Proceso finalizado."
+Write-Ok "Proceso finalizado correctamente."

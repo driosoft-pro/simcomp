@@ -1,0 +1,290 @@
+services:
+  db-auth:
+    image: docker.io/deytonro/simcomp-auth-db:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d auth_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  db-personas:
+    image: docker.io/deytonro/simcomp-personas-db:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: personas_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - personas_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d personas_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  db-automotores:
+    image: docker.io/deytonro/simcomp-automotores-db:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: automotores_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - automotores_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d automotores_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  db-infracciones:
+    image: docker.io/deytonro/simcomp-infracciones-db:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: infracciones_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - infracciones_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d infracciones_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  db-comparendos:
+    image: docker.io/deytonro/simcomp-comparendos-db:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: comparendos_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - comparendos_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d comparendos_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  ms-auth-service:
+    image: docker.io/deytonro/simcomp-auth-service:latest
+    environment:
+      PORT: 8001
+      DB_HOST: db-auth
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+      JWT_SECRET: ${JWT_SECRET:-secret123}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+    ports:
+      - "8001:8001"
+    networks:
+      - simcomp_net
+    depends_on:
+      db-auth:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ms-personas:
+    image: docker.io/deytonro/simcomp-personas-service:latest
+    environment:
+      PORT: 8002
+      DB_HOST: db-personas
+      DB_PORT: 5432
+      DB_NAME: personas_db
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+    networks:
+      - simcomp_net
+    depends_on:
+      db-personas:
+        condition: service_healthy
+      ms-auth-service:
+        condition: service_started
+    restart: unless-stopped
+
+  ms-automotores:
+    image: docker.io/deytonro/simcomp-automotores-service:latest
+    environment:
+      PORT: 8003
+      DB_HOST: db-automotores
+      DB_PORT: 5432
+      DB_NAME: automotores_db
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+    networks:
+      - simcomp_net
+    depends_on:
+      db-automotores:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ms-infracciones:
+    image: docker.io/deytonro/simcomp-infracciones-service:latest
+    environment:
+      PORT: 8004
+      DB_HOST: db-infracciones
+      DB_PORT: 5432
+      DB_NAME: infracciones_db
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+    networks:
+      - simcomp_net
+    depends_on:
+      db-infracciones:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ms-comparendos:
+    image: docker.io/deytonro/simcomp-comparendos-service:latest
+    environment:
+      PORT: 8005
+      DB_HOST: db-comparendos
+      DB_PORT: 5432
+      DB_NAME: comparendos_db
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-admin123}
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+    networks:
+      - simcomp_net
+    depends_on:
+      db-comparendos:
+        condition: service_healthy
+      ms-personas:
+        condition: service_started
+      ms-automotores:
+        condition: service_started
+      ms-infracciones:
+        condition: service_started
+    restart: unless-stopped
+
+  ms-reportes:
+    image: docker.io/deytonro/simcomp-reportes-service:latest
+    environment:
+      PORT: 8006
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+      COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
+    networks:
+      - simcomp_net
+    depends_on:
+      ms-personas:
+        condition: service_started
+      ms-automotores:
+        condition: service_started
+      ms-infracciones:
+        condition: service_started
+      ms-comparendos:
+        condition: service_started
+    restart: unless-stopped
+
+  gateway1:
+    image: docker.io/deytonro/simcomp-gateway:latest
+    ports:
+      - "8081:80"
+    networks:
+      - simcomp_net
+    depends_on:
+      ms-auth-service:
+        condition: service_started
+      ms-personas:
+        condition: service_started
+      ms-automotores:
+        condition: service_started
+      ms-infracciones:
+        condition: service_started
+      ms-comparendos:
+        condition: service_started
+      ms-reportes:
+        condition: service_started
+    restart: unless-stopped
+
+  gateway2:
+    image: docker.io/deytonro/simcomp-gateway:latest
+    ports:
+      - "8082:80"
+    networks:
+      - simcomp_net
+    depends_on:
+      ms-auth-service:
+        condition: service_started
+      ms-personas:
+        condition: service_started
+      ms-automotores:
+        condition: service_started
+      ms-infracciones:
+        condition: service_started
+      ms-comparendos:
+        condition: service_started
+      ms-reportes:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    image: docker.io/deytonro/simcomp-frontend:latest
+    networks:
+      - simcomp_net
+    restart: unless-stopped
+
+  haproxy:
+    image: docker.io/deytonro/simcomp-haproxy-balance:latest
+    ports:
+      - "8080:8080"
+      - "8404:8404"
+    networks:
+      - simcomp_net
+    depends_on:
+      gateway1:
+        condition: service_started
+      gateway2:
+        condition: service_started
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+
+networks:
+  simcomp_net:
+    driver: bridge
+
+volumes:
+  auth_db_data:
+  personas_db_data:
+  automotores_db_data:
+  infracciones_db_data:
+  comparendos_db_data:

@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
+import { getEnv } from "../utils/env.js";
+
 
 export async function getAllUsers() {
   return await User.findAll({
@@ -98,7 +100,7 @@ export async function updateUser(id, data, options = {}) {
 
   if (!skipPersonaSync && (emailChanged || docChanged)) {
     try {
-      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://localhost:8002/api";
+      const personasServiceUrl = getEnv("PERSONAS_SERVICE_URL", "http://localhost:8002/api");
       let personaId = user.persona_id;
 
       // Si no hay persona_id vinculado, buscar por documento

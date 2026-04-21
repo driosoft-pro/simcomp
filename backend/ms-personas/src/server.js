@@ -1,13 +1,15 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import sequelize from "./config/database.js";
+import { getEnv } from "./utils/env.js";
 import "./models/persona.model.js";
 import "./models/licencia.model.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8002;
-const SERVICE_NAME = process.env.SERVICE_NAME || "ms-personas";
+const PORT = getEnv("PORT", 8002);
+const SERVICE_NAME = getEnv("SERVICE_NAME", "ms-personas");
+
 
 async function startServer() {
   try {

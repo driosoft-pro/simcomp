@@ -55,24 +55,20 @@ Este servicio requiere estas dependencias, que ya quedaron agregadas en `package
 npm install swagger-jsdoc swagger-ui-express
 ```
 
-## Variables de entorno
+## ⚙️ Configuración de Entorno y Despliegue
 
-Ejemplo de `.env`:
+Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
-```env
-SERVICE_NAME=ms-reportes
-PORT=8006
-NODE_ENV=development
+| Archivo | Modo | Uso |
+| :--- | :--- | :--- |
+| `.env.local` | Local Nativo | Ejecución directa (`npm run dev`). |
+| `.env.vagrant` | Vagrant | Despliegue en VMs con IP `192.168.100.x`. |
+| `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
+| `.env.swarm` | Docker Swarm | Producción. |
 
-AUTH_SERVICE_URL=http://localhost:8001
-PERSONAS_SERVICE_URL=http://localhost:8002
-AUTOMOTORES_SERVICE_URL=http://localhost:8003
-INFRACCIONES_SERVICE_URL=http://localhost:8004
-COMPARENDOS_SERVICE_URL=http://localhost:8005
+### 🔗 Integración con Microservicios
+Este servicio consume datos de todos los microservicios del ecosistema. Las URLs se configuran dinámicamente según el archivo `.env` seleccionado.
 
-REQUEST_TIMEOUT_MS=15000
-MAX_IMPORT_ROWS=10000
-```
 
 ## Instalacion
 

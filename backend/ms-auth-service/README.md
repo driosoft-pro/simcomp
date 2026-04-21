@@ -134,24 +134,22 @@ http://localhost:8001/api/docs/
 
 ---
 
-## Variables de entorno
+## ⚙️ Configuración de Entorno y Despliegue
 
-Archivo `.env`:
+Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
-```env
-SERVICE_NAME=ms-auth-service
-PORT=8001
+| Archivo | Modo | Uso |
+| :--- | :--- | :--- |
+| `.env.local` | Local Nativo | Ejecución directa (`pnpm dev`). |
+| `.env.vagrant` | Vagrant | Despliegue en VMs con IP `192.168.100.x`. |
+| `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
+| `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=auth_db
-DB_USER=auth_user
-DB_PASSWORD=auth_pass
+### 🔐 Manejo de Secretos (Swarm)
+En modo Swarm, las variables críticas como `DB_PASSWORD` y `JWT_SECRET` se leen automáticamente desde el sistema de secretos de Docker:
+- `/run/secrets/db_password`
+- `/run/secrets/jwt_secret`
 
-JWT_SECRET=supersecretkey_auth_2026
-JWT_EXPIRES_IN=1h
-JWT_REFRESH_EXPIRES_DAYS=7
-```
 
 ---
 

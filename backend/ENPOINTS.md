@@ -1,22 +1,25 @@
-# Catálogo de Endpoints — SIMCOMP
+# Documentación de Endpoints SIMCOMP
 
-## 1. Auth & Usuarios (Puerto Externo 8001 / Interno 3001)
-### Autenticación
-- **POST** `/api/auth/login` - Iniciar sesión (admin, agente, supervisor)
-- **POST** `/api/auth/refresh` - Renovar access token
-- **POST** `/api/auth/logout` - Cerrar sesión
-- **POST** `/api/auth/validate` - (Interno) Validar token para el Gateway
+Esta guía detalla los puntos de acceso (endpoints) para interactuar con el ecosistema de microservicios de SIMCOMP.
 
-### Gestión de Usuarios
-- **GET** `/api/usuarios` - Listar todos los usuarios
-- **POST** `/api/usuarios` - Crear un nuevo usuario
-- **GET** `/api/usuarios/{id}` - Obtener detalle por ID
-- **PUT** `/api/usuarios/{id}` - Actualizar datos de usuario
-- **PATCH** `/api/usuarios/{id}/estado` - Activar/Desactivar usuario
+> [!IMPORTANT]
+> **Acceso Unificado**: En esta versión, todos los servicios son accesibles a través del puerto **80** (HAProxy/Gateway). Ya no es necesario usar los puertos individuales de los microservicios en un entorno de producción/Swarm.
 
 ---
 
-## 2. Personas & Licencias (Puerto Externo 8002 / Interno 3002)
+## 1. Autenticación (`/auth`)
+Gestionado por `ms-auth-service`.
+
+- **POST** `/auth/login` - Iniciar sesión (Retorna JWT)
+- **POST** `/auth/register` - Registro de nuevos usuarios
+- **POST** `/auth/refresh` - Refrescar token JWT
+- **GET** `/auth/me` - Obtener información del perfil actual (Requiere JWT)
+
+---
+
+## 2. Personas y Licencias (`/api/personas`, `/api/licencias`)
+Gestionado por `ms-personas`.
+
 ### Ciudadanos
 - **GET** `/api/personas` - Listar todas las personas
 - **POST** `/api/personas` - Registrar nueva persona
@@ -31,7 +34,9 @@
 
 ---
 
-## 3. Automotores (Puerto Externo 8003 / Interno 3003)
+## 3. Automotores (`/api/automotores`)
+Gestionado por `ms-automotores`.
+
 - **GET** `/api/automotores` - Listar todos los vehículos
 - **POST** `/api/automotores` - Registrar un automotor
 - **GET** `/api/automotores/{id}` - Detalle por ID
@@ -42,7 +47,9 @@
 
 ---
 
-## 4. Infracciones (Puerto Externo 8004 / Interno 3004)
+## 4. Infracciones (`/api/infracciones`)
+Gestionado por `ms-infracciones`.
+
 - **GET** `/api/infracciones` - Catálogo completo de infracciones
 - **POST** `/api/infracciones` - Crear nueva infracción
 - **GET** `/api/infracciones/{id}` - Detalle por ID
@@ -52,7 +59,9 @@
 
 ---
 
-## 5. Comparendos (Puerto Externo 8005 / Interno 3005)
+## 5. Comparendos (`/api/comparendos`)
+Gestionado por `ms-comparendos`.
+
 - **GET** `/api/comparendos` - Listar todos los comparendos registrados
 - **POST** `/api/comparendos` - **Registrar Comparendo** (Valida persona, vehículo e infracción)
 - **GET** `/api/comparendos/{id}` - Detalle completo
@@ -64,7 +73,31 @@
 
 ---
 
-## Utilidades de Red
-- **Health Checks**: `GET /api/health` en todos los servicios.
-- **Documentación**: `GET /api/docs` (Swagger UI) en cada puerto.
-- **Gateway**: Todos los endpoints anteriores son accesibles vía `api.simcomp.co:800X` con validación JWT centralizada.
+## 6. Reportes (`/api/reportes`)
+Gestionado por `ms-reportes`.
+
+- **GET** `/api/reportes/dashboard` - Estadísticas generales del sistema
+- **GET** `/api/reportes/recaudo` - Reporte financiero por fechas
+- **GET** `/api/reportes/infracciones-frecuentes` - Top de infracciones cometidas
+
+---
+
+## Infraestructura y Monitoreo
+
+### HAProxy Stats
+- **URL**: `http://localhost:8404/stats`
+- **Usuario**: `admin`
+- **Password**: `Admin123*`
+
+### Documentación API (Swagger)
+- **Rutas**: `/docs` o `/swagger` en la mayoría de los servicios a través del puerto 80.
+
+### Acceso a Frontend
+- **URL**: `http://localhost/` (Puerto 80 predeterminado)
+
+---
+
+## Notas Técnicas
+- **Formato**: Todas las respuestas son en `application/json`.
+- **JWT**: Los endpoints bajo `/api` requieren el header `Authorization: Bearer <token>`.
+- **Zonas Horarias**: Todas las fechas se manejan en formato ISO 8601 (UTC).

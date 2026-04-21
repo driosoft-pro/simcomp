@@ -1,7 +1,9 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
+import { getEnv } from "../utils/env.js";
 
 dotenv.config();
+
 
 /*
 Configuración de conexión a PostgreSQL para el microservicio
@@ -11,12 +13,12 @@ Las variables deben definirse en el .env del servicio.
 */
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || "infracciones_db",
-  process.env.DB_USER || "infracciones_user",
-  process.env.DB_PASSWORD || "infracciones_pass",
+  getEnv("DB_NAME", "infracciones_db"),
+  getEnv("DB_USER", "admin"),
+  getEnv("DB_PASSWORD", "admin123"),
   {
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 5435,
+    host: getEnv("DB_HOST", "localhost"),
+    port: Number(getEnv("DB_PORT", 5435)),
     dialect: "postgres",
     logging: false,
   }

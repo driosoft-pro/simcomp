@@ -13,6 +13,75 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# ---------------------------------------------------------------------------
+# Scripts de Provisionamiento
+# ---------------------------------------------------------------------------
+
+COMMON_SETUP = <<-SHELL
+  echo "[INFO] Configurando resolución de nombres local..."
+  grep -q "simcomp.co" /etc/hosts || echo "192.168.100.2 simcomp.co" >> /etc/hosts
+  grep -q "managerDocker" /etc/hosts || echo "192.168.100.2 managerDocker" >> /etc/hosts
+  grep -q "workerDocker1" /etc/hosts || echo "192.168.100.3 workerDocker1" >> /etc/hosts
+  grep -q "workerDocker2" /etc/hosts || echo "192.168.100.4 workerDocker2" >> /etc/hosts
+
+  echo "[INFO] Instalando dependencias de Docker..."
+  apt-get update -y
+  apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+  apt-get update -y
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  usermod -aG docker vagrant
+  systemctl enable docker
+  systemctl start docker
+
+  # Habilitar BuildKit
+  cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "buildkit": true
+  }
+}
+EOF
+  systemctl restart docker
+SHELL
+
+SWARM_MANAGER = <<-SHELL
+  echo "[INFO] Inicializando Swarm Manager..."
+  docker swarm init --advertise-addr 192.168.100.2 || echo "[WARN] Swarm ya inicializado"
+  
+  # Guardar token en carpeta compartida para los workers
+  docker swarm join-token worker -q > /vagrant/swarm_token.txt
+  echo "[INFO] Token de unión guardado en /vagrant/swarm_token.txt"
+SHELL
+
+SWARM_WORKER = <<-SHELL
+  echo "[INFO] Esperando token de unión..."
+  while [ ! -f /vagrant/swarm_token.txt ]; do
+    sleep 2
+  done
+
+  echo "[INFO] Uniéndose al cluster Swarm..."
+  if ! docker node ls >/dev/null 2>&1; then
+    docker swarm join --token $(cat /vagrant/swarm_token.txt) 192.168.100.2:2377
+  else
+    echo "[INFO] Ya es parte de un cluster."
+  fi
+SHELL
+
+# ---------------------------------------------------------------------------
+# Configuración Vagrant
+# ---------------------------------------------------------------------------
+
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = false
@@ -33,36 +102,8 @@ Vagrant.configure("2") do |config|
       vb.cpus = 2
     end
 
-    manager.vm.provision "shell", inline: <<-SHELL
-      apt-get update
-      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
-
-      install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-      chmod a+r /etc/apt/keyrings/docker.asc
-
-      echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-        tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-      apt-get update
-      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-      usermod -aG docker vagrant
-      systemctl enable docker
-      systemctl start docker
-
-      cat <<EOF >/etc/docker/daemon.json
-{
-  "features": {
-    "buildkit": true
-  }
-}
-EOF
-
-      systemctl restart docker
-    SHELL
+    manager.vm.provision "shell", inline: COMMON_SETUP
+    manager.vm.provision "shell", inline: SWARM_MANAGER
   end
 
   # ---------------------------------------------------------------------------
@@ -78,36 +119,8 @@ EOF
       vb.cpus = 2
     end
 
-    worker1.vm.provision "shell", inline: <<-SHELL
-      apt-get update
-      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
-
-      install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-      chmod a+r /etc/apt/keyrings/docker.asc
-
-      echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-        tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-      apt-get update
-      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-      usermod -aG docker vagrant
-      systemctl enable docker
-      systemctl start docker
-
-      cat <<EOF >/etc/docker/daemon.json
-{
-  "features": {
-    "buildkit": true
-  }
-}
-EOF
-
-      systemctl restart docker
-    SHELL
+    worker1.vm.provision "shell", inline: COMMON_SETUP
+    worker1.vm.provision "shell", inline: SWARM_WORKER
   end
 
   # ---------------------------------------------------------------------------
@@ -123,35 +136,7 @@ EOF
       vb.cpus = 2
     end
 
-    worker2.vm.provision "shell", inline: <<-SHELL
-      apt-get update
-      apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
-
-      install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-      chmod a+r /etc/apt/keyrings/docker.asc
-
-      echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-        tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-      apt-get update
-      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-      usermod -aG docker vagrant
-      systemctl enable docker
-      systemctl start docker
-
-      cat <<EOF >/etc/docker/daemon.json
-{
-  "features": {
-    "buildkit": true
-  }
-}
-EOF
-
-      systemctl restart docker
-    SHELL
+    worker2.vm.provision "shell", inline: COMMON_SETUP
+    worker2.vm.provision "shell", inline: SWARM_WORKER
   end
 end

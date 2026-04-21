@@ -38,23 +38,22 @@ El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resil
 
 ## 🚀 Guía de Despliegue (Modo Swarm)
 
-### 1. Preparar las VMs
+### 1. Preparar las VMs e Infraestructura
 ```bash
 vagrant up
 ```
+*Este comando ahora automatiza la instalación de Docker, la configuración de `/etc/hosts` y la inicialización del cluster Swarm (Manager + 2 Workers).*
 
-### 2. Configurar el Cluster
-1. **Manager**:
-   ```bash
-   vagrant ssh managerDocker
-   docker swarm init --advertise-addr 192.168.100.2
-   docker swarm join-token worker  # Copiar el comando generado
-   ```
-2. **Workers**: Entrar en `workerDocker1` y `workerDocker2` en terminales separadas y pegar el comando de unión.
+### 2. Verificar el Cluster
+Una vez finalizado el `vagrant up`, puedes verificar que los nodos estén unidos:
+```bash
+vagrant ssh managerDocker -c "docker node ls"
+```
 
 ### 3. Desplegar Aplicación
 Desde el **managerDocker**:
 ```bash
+vagrant ssh managerDocker
 cd /vagrant/provisioning_docker
 docker stack deploy -c stack.yml simcomp
 ```
@@ -97,11 +96,26 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 
 ---
 
-## 🔄 Otras Formas de Despliegue (Alternativas)
+## 🔄 Modos de Despliegue y Configuración
 
-Si deseas probar el sistema sin Swarm:
-- **Docker Compose (Local)**: `docker compose up -d`
-- **Vagrant Nativo (Sin Docker)**: Usa `Vagrantfile_native` y Ansible.
+El sistema está preparado para funcionar en 4 escenarios distintos. Cada componente (Frontend y Microservicios) incluye archivos `.env` preconfigurados para cada caso:
+
+| Modo | Archivo | Descripción |
+| :--- | :--- | :--- |
+| **Local Nativo** | `.env.local` | Ejecución directa en el PC anfitrión (localhost). |
+| **Vagrant Nativo** | `.env.vagrant` | Despliegue en VMs mediante `Vagrantfile_native` y Ansible. |
+| **Docker Local** | `.env.docker` | Uso de `docker-compose.local.yml` con imágenes de Docker Hub. |
+| **Docker Swarm** | `.env.swarm` | Cluster distribuido en Vagrant. **Usa Docker Secrets** para datos sensibles. |
+
+### 🔐 Gestión de Secretos (Modo Swarm)
+En el despliegue de Swarm, las contraseñas de base de datos y llaves JWT **no se almacenan en archivos .env**. El sistema las lee desde `/run/secrets/` inyectados por el orquestador.
+
+Para que el stack funcione en Swarm, debes crear los secretos manualmente una única vez:
+```bash
+echo "admin123" | docker secret create db_password -
+echo "secret123" | docker secret create jwt_secret -
+```
+
 
 
 ---
@@ -225,7 +239,9 @@ Cada `Dockerfile` debe respetar su propio contexto. Asegúrate de que:
 
 ---
 
-## Comandos Vagrant
+## Comandos Vagrant (Versión Nativa / Ansible)
+> [!NOTE]
+> Estos comandos aplican solo si usas `Vagrantfile_native`.
 
 ```bash
 vagrant status

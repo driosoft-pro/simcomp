@@ -2,8 +2,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { Op } from "sequelize";
+import { getEnv } from "../utils/env.js";
 import User from "../models/user.model.js";
 import RefreshToken from "../models/refreshToken.model.js";
+
 
 export function buildAccessToken(user) {
   return jwt.sign(
@@ -15,10 +17,11 @@ export function buildAccessToken(user) {
       persona_id: user.persona_id,
       numero_documento: user.numero_documento,
     },
-    process.env.JWT_SECRET,
+    getEnv("JWT_SECRET", "secret123"),
     {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1h",
+      expiresIn: getEnv("JWT_EXPIRES_IN", "1h"),
     }
+
   );
 }
 
@@ -51,7 +54,7 @@ export async function createRefreshToken(usuarioId) {
 
   const expiresAt = new Date();
   expiresAt.setDate(
-    expiresAt.getDate() + Number(process.env.JWT_REFRESH_EXPIRES_DAYS || 7)
+    expiresAt.getDate() + Number(getEnv("JWT_REFRESH_EXPIRES_DAYS", 7))
   );
 
   return RefreshToken.create({
@@ -99,7 +102,7 @@ export async function revokeRefreshToken(refreshTokenValue) {
 
 export async function verifyAccessToken(token) {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getEnv("JWT_SECRET", "secret123"));
     return decoded;
   } catch (error) {
     throw new Error("Token inválido o expirado");

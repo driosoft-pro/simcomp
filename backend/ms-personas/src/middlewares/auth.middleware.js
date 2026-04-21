@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getEnv } from "../utils/env.js";
 
 /**
  * Middleware para asegurar que los headers de usuario estén presentes.
@@ -22,7 +23,7 @@ export const authMiddleware = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getEnv("JWT_SECRET", "secret123"));
     
     // Inyectamos los headers esperados por los controladores
     req.headers["x-user-id"] = decoded.sub;

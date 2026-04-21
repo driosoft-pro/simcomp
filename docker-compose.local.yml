@@ -256,16 +256,23 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  frontend:
+  frontend1:
+    image: docker.io/deytonro/simcomp-frontend:latest
+    networks:
+      - simcomp_net
+    restart: unless-stopped
+
+  frontend2:
     image: docker.io/deytonro/simcomp-frontend:latest
     networks:
       - simcomp_net
     restart: unless-stopped
 
   haproxy:
-    image: docker.io/deytonro/simcomp-haproxy-balance:latest
+    build: ./haproxy
+    # image: docker.io/deytonro/simcomp-haproxy-balance:latest
     ports:
-      - "8080:8080"
+      - "80:80"
       - "8404:8404"
     networks:
       - simcomp_net
@@ -274,7 +281,9 @@ services:
         condition: service_started
       gateway2:
         condition: service_started
-      frontend:
+      frontend1:
+        condition: service_started
+      frontend2:
         condition: service_started
     restart: unless-stopped
 

@@ -7,8 +7,11 @@ set -Eeuo pipefail
 # =========================================================
 
 # ---------- Configuración por defecto ----------
+DEFAULT_DOCKERHUB_USER="deytonro"
 DEFAULT_VERSION="v1.0.0"
 DEFAULT_REGISTRY="docker.io"
+DEFAULT_ENV_FILE=".env.docker-push"
+DEFAULT_ACTION="all"
 
 # ---------- Colores ----------
 RED='\033[0;31m'
@@ -22,15 +25,48 @@ ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
+usage() {
+  cat <<EOF
+Uso: $0 [build|push|all]
+
+Acciones:
+  build   Construye las imágenes
+  push    Sube las imágenes
+  all     Hace login, build y push
+
+Variables soportadas:
+  DOCKERHUB_USER
+  VERSION
+  REGISTRY
+  CONTAINER_CLI
+  ENV_FILE
+
+Archivo de entorno por defecto:
+  .env.docker-push
+EOF
+}
+
+# ---------- Manejo de errores ----------
+trap 'error "Ocurrió un error en la línea $LINENO."' ERR
+
 # ---------- Detectar herramienta ----------
 detect_container_cli() {
-  if command -v docker >/dev/null 2>&1; then
-    echo "docker"
-    return
+  if [[ -n "${CONTAINER_CLI:-}" ]]; then
+    if command -v "$CONTAINER_CLI" >/dev/null 2>&1; then
+      echo "$CONTAINER_CLI"
+      return
+    fi
+    error "La CLI indicada en CONTAINER_CLI no existe: $CONTAINER_CLI"
+    exit 1
   fi
 
   if command -v podman >/dev/null 2>&1; then
     echo "podman"
+    return
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    echo "docker"
     return
   fi
 
@@ -39,83 +75,153 @@ detect_container_cli() {
 }
 
 # ---------- Cargar Variables de Entorno ----------
-if [[ -f ".env.docker-pus" ]]; then
-  log "Cargando configuración desde .env.docker-pus..."
-  # Exportar variables ignorando comentarios y líneas vacías
-  export $(grep -v '^#' .env.docker-pus | xargs)
-fi
+load_env_file() {
+  local env_file="$1"
 
-# ---------- Variables de entorno ----------
-DOCKERHUB_USER="${DOCKERHUB_USER:-deytonro}"
+  if [[ ! -f "$env_file" ]]; then
+    warn "No se encontró $env_file. Se usarán variables por defecto o del entorno."
+    return
+  fi
+
+  log "Cargando configuración desde $env_file ..."
+  set -a
+  # shellcheck disable=SC1090
+  source "$env_file"
+  set +a
+}
+
+# ---------- Validar contexto ----------
+has_valid_context() {
+  local context_dir="$1"
+  [[ -d "$context_dir" && -f "$context_dir/Dockerfile" ]]
+}
+
+# ---------- Variables ----------
+ACTION="${1:-${ACTION:-$DEFAULT_ACTION}}"
+ENV_FILE="${ENV_FILE:-$DEFAULT_ENV_FILE}"
+
+case "$ACTION" in
+  build|push|all) ;;
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    error "Acción inválida: $ACTION"
+    usage
+    exit 1
+    ;;
+esac
+
+load_env_file "$ENV_FILE"
+
+DOCKERHUB_USER="${DOCKERHUB_USER:-$DEFAULT_DOCKERHUB_USER}"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 REGISTRY="${REGISTRY:-$DEFAULT_REGISTRY}"
-CLI="${CONTAINER_CLI:-$(detect_container_cli)}"
-
+CLI="$(detect_container_cli)"
 
 # ---------- Servicios ----------
-# Formato: "nombre_imagen:directorio_contexto"
+# Formato: "nombre_imagen|directorio_contexto"
 SERVICES=(
-  "simcomp-auth-db:./backend/ms-auth-service/db"
-  "simcomp-personas-db:./backend/ms-personas/db"
-  "simcomp-automotores-db:./backend/ms-automotores/db"
-  "simcomp-infracciones-db:./backend/ms-infracciones/db"
-  "simcomp-comparendos-db:./backend/ms-comparendos/db"
-  "simcomp-auth-service:./backend/ms-auth-service"
-  "simcomp-personas-service:./backend/ms-personas"
-  "simcomp-automotores-service:./backend/ms-automotores"
-  "simcomp-infracciones-service:./backend/ms-infracciones"
-  "simcomp-comparendos-service:./backend/ms-comparendos"
-  "simcomp-reportes-service:./backend/ms-reportes"
-  "simcomp-frontend:./frontend"
-  "simcomp-gateway:./provisioning_docker/nginx"
-  "simcomp-haproxy-balance:./haproxy"
+  "simcomp-auth-db|./backend/ms-auth-service/db"
+  "simcomp-personas-db|./backend/ms-personas/db"
+  "simcomp-automotores-db|./backend/ms-automotores/db"
+  "simcomp-infracciones-db|./backend/ms-infracciones/db"
+  "simcomp-comparendos-db|./backend/ms-comparendos/db"
+  "simcomp-reportes-db|./backend/ms-reportes/db"
+
+  "simcomp-auth-service|./backend/ms-auth-service"
+  "simcomp-personas-service|./backend/ms-personas"
+  "simcomp-automotores-service|./backend/ms-automotores"
+  "simcomp-infracciones-service|./backend/ms-infracciones"
+  "simcomp-comparendos-service|./backend/ms-comparendos"
+  "simcomp-reportes-service|./backend/ms-reportes"
+
+  "simcomp-frontend|./frontend"
+  "simcomp-gateway|./provisioning_docker/nginx"
+  "simcomp-haproxy-balance|./haproxy"
 )
 
-# ---------- Build ----------
-build_images() {
-  for item in "${SERVICES[@]}"; do
-    IFS=":" read -r image_name context_dir <<< "$item"
-    local version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
-    local latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+BUILT_SERVICES=()
 
-    if [[ ! -d "$context_dir" ]]; then
-      warn "Saltando $image_name: No existe el directorio $context_dir"
+login_registry() {
+  log "Autenticando en $REGISTRY con $CLI ..."
+  "$CLI" login "$REGISTRY"
+  ok "Autenticación completada."
+}
+
+build_images() {
+  local item image_name context_dir version_tag latest_tag
+
+  for item in "${SERVICES[@]}"; do
+    IFS='|' read -r image_name context_dir <<< "$item"
+
+    if ! has_valid_context "$context_dir"; then
+      warn "Saltando $image_name: no existe el contexto o falta Dockerfile en $context_dir"
       continue
     fi
 
-    log "Construyendo $image_name..."
-    "$CLI" build -t "$version_tag" -t "$latest_tag" "$context_dir"
+    version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
+    latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+
+    log "Construyendo $image_name ..."
+    "$CLI" build -t "$version_tag" "$context_dir"
+    "$CLI" tag "$version_tag" "$latest_tag"
+
+    BUILT_SERVICES+=("$item")
     ok "$image_name construido."
   done
 }
 
-# ---------- Push ----------
 push_images() {
-  for item in "${SERVICES[@]}"; do
-    IFS=":" read -r image_name _ <<< "$item"
-    local version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
-    local latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+  local items_to_push=()
 
-    log "Subiendo $image_name..."
+  if [[ ${#BUILT_SERVICES[@]} -gt 0 ]]; then
+    items_to_push=("${BUILT_SERVICES[@]}")
+  else
+    items_to_push=("${SERVICES[@]}")
+  fi
+
+  local item image_name context_dir version_tag latest_tag
+
+  for item in "${items_to_push[@]}"; do
+    IFS='|' read -r image_name context_dir <<< "$item"
+
+    if ! has_valid_context "$context_dir"; then
+      warn "Saltando push de $image_name: no existe el contexto o falta Dockerfile en $context_dir"
+      continue
+    fi
+
+    version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
+    latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+
+    log "Subiendo $image_name ..."
     "$CLI" push "$version_tag"
     "$CLI" push "$latest_tag"
     ok "$image_name subido."
   done
 }
 
-# ---------- Main ----------
 main() {
-  log "Usando CLI: $CLI | Usuario: $DOCKERHUB_USER | Versión: $VERSION"
-  
-  # Login
-  log "Autenticando en $REGISTRY..."
-  "$CLI" login "$REGISTRY"
+  log "CLI: $CLI | Usuario: $DOCKERHUB_USER | Versión: $VERSION | Acción: $ACTION"
 
-  build_images
-  push_images
+  case "$ACTION" in
+    build)
+      build_images
+      ;;
+    push)
+      login_registry
+      push_images
+      ;;
+    all)
+      login_registry
+      build_images
+      push_images
+      ;;
+  esac
 
   echo
-  ok "Todo construido y subido correctamente a Docker Hub."
+  ok "Proceso finalizado."
 }
 
 main "$@"

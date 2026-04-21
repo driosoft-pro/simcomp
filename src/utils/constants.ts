@@ -1,13 +1,16 @@
 export const APP_VERSION = '1.0'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
 export const API_URLS = {
-  auth: import.meta.env.VITE_AUTH_API || 'http://localhost:8001/api/auth',
-  personas: import.meta.env.VITE_PERSONAS_API || 'http://localhost:8002/api',
-  automotores: import.meta.env.VITE_AUTOMOTORES_API || 'http://localhost:8003/api',
-  infracciones: import.meta.env.VITE_INFRACCIONES_API || 'http://localhost:8004/api',
-  comparendos: import.meta.env.VITE_COMPARENDOS_API || 'http://localhost:8005/api',
-  reportes: import.meta.env.VITE_REPORTES_API || 'http://localhost:8006/api/reportes',
-} as const
+  auth: import.meta.env.VITE_AUTH_API || `${API_BASE}/auth`,
+  personas: import.meta.env.VITE_PERSONAS_API || `${API_BASE}/personas`,
+  automotores: import.meta.env.VITE_AUTOMOTORES_API || `${API_BASE}/automotores`,
+  infracciones: import.meta.env.VITE_INFRACCIONES_API || `${API_BASE}/infracciones`,
+  comparendos: import.meta.env.VITE_COMPARENDOS_API || `${API_BASE}/comparendos`,
+  reportes: import.meta.env.VITE_REPORTES_API || `${API_BASE}/reportes`,
+} as const;
+
 
 export const ROUTES = {
   login: '/login',

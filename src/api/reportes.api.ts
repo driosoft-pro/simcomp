@@ -23,7 +23,7 @@ export interface ImportResult {
 
 export async function getStatistics(): Promise<SystemStatistics> {
   const response = await apiClient.get<ApiResponse<SystemStatistics>>(
-    `${API_URLS.reportes}/estadisticas`,
+    `${API_URLS.reportes}/reportes/estadisticas`,
   )
   return response.data.data
 }
@@ -31,7 +31,7 @@ export async function getStatistics(): Promise<SystemStatistics> {
 export async function exportByModule(modulo: string, format: 'csv' | 'excel' | 'pdf', limit?: string): Promise<Blob> {
   const query = limit ? `?limit=${limit}` : ''
   const response = await apiClient.get(
-    `${API_URLS.reportes}/export/${modulo}/${format}${query}`,
+    `${API_URLS.reportes}/reportes/export/${modulo}/${format}${query}`,
     { responseType: 'blob' }
   )
   return response.data
@@ -40,7 +40,7 @@ export async function exportByModule(modulo: string, format: 'csv' | 'excel' | '
 export async function exportAll(format: 'zip' | 'excel', limit?: string): Promise<Blob> {
   const query = limit ? `?limit=${limit}` : ''
   const response = await apiClient.get(
-    `${API_URLS.reportes}/export/all/${format}${query}`,
+    `${API_URLS.reportes}/reportes/export/all/${format}${query}`,
     { responseType: 'blob' }
   )
   return response.data
@@ -51,7 +51,7 @@ export async function importData(modulo: string, file: File): Promise<ImportResu
   formData.append('file', file)
   
   const response = await apiClient.post<ApiResponse<ImportResult>>(
-    `${API_URLS.reportes}/import/${modulo}`,
+    `${API_URLS.reportes}/reportes/import/${modulo}`,
     formData,
     {
       headers: {
@@ -63,6 +63,7 @@ export async function importData(modulo: string, file: File): Promise<ImportResu
 }
 
 export async function getReportesHealth(): Promise<{ success: boolean; message: string }> {
-  const response = await apiClient.get<ApiResponse<any>>(`${API_URLS.reportes}/health`)
+  const response = await apiClient.get<ApiResponse<any>>(`${API_URLS.reportes}/reportes/health`)
   return { success: response.status === 200, message: response.data.message || 'OK' }
 }
+

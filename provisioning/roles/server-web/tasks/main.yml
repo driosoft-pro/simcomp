@@ -75,19 +75,15 @@
     /opt/simcomp/frontend/
   changed_when: true
 
-- name: Crear .env para el frontend
+- name: Copiar .env.vagrant como .env para el build del frontend
   ansible.builtin.copy:
+    src: /vagrant/frontend/.env.vagrant
     dest: /opt/simcomp/frontend/.env
     owner: vagrant
     group: vagrant
     mode: "0644"
-    content: |
-      VITE_AUTH_API=http://simcomp.co/api/auth
-      VITE_PERSONAS_API=http://simcomp.co/api
-      VITE_AUTOMOTORES_API=http://simcomp.co/api
-      VITE_INFRACCIONES_API=http://simcomp.co/api
-      VITE_COMPARENDOS_API=http://simcomp.co/api
-      VITE_REPORTES_API=http://simcomp.co/api/reportes
+    remote_src: true
+
 
 - name: Instalar dependencias del frontend
   community.general.npm:

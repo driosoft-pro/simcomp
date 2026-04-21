@@ -287,118 +287,61 @@
   changed_when: true
 
 # ── 8. Generar archivos .env de producción ────────────────────────────────────
+# ── 8. Copiar archivos .env desde .env.vagrant ────────────────────────────────
 - name: .env — ms-auth-service
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-auth-service/.env.vagrant
     dest: /opt/simcomp/ms-auth-service/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-auth-service
-      PORT=8001
-      DB_HOST=localhost
-      DB_PORT=5432
-      DB_NAME=auth_db
-      DB_USER=auth_user
-      DB_PASSWORD=auth_pass
-      JWT_SECRET=supersecretkey_auth_2026
-      JWT_EXPIRES_IN=1h
-      JWT_REFRESH_EXPIRES_DAYS=7
-  no_log: true
+    remote_src: true
 
 - name: .env — ms-personas
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-personas/.env.vagrant
     dest: /opt/simcomp/ms-personas/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-personas
-      PORT=8002
-      DB_HOST=localhost
-      DB_PORT=5432
-      DB_NAME=personas_db
-      DB_USER=personas_user
-      DB_PASSWORD=personas_pass
-      JWT_SECRET=supersecretkey_auth_2026
-      PERSONAS_SERVICE_URL=http://127.0.0.1:8002/api
-      AUTOMOTORES_SERVICE_URL=http://127.0.0.1:8003/api
-      INFRACCIONES_SERVICE_URL=http://127.0.0.1:8004/api
-  no_log: true
+    remote_src: true
 
 - name: .env — ms-automotores
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-automotores/.env.vagrant
     dest: /opt/simcomp/ms-automotores/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-automotores
-      PORT=8003
-      DB_HOST=localhost
-      DB_PORT=5432
-      DB_NAME=automotores_db
-      DB_USER=automotores_user
-      DB_PASSWORD=automotores_pass
-      JWT_SECRET=supersecretkey_auth_2026
-      PERSONAS_SERVICE_URL=http://127.0.0.1:8002/api
-  no_log: true
+    remote_src: true
 
 - name: .env — ms-infracciones
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-infracciones/.env.vagrant
     dest: /opt/simcomp/ms-infracciones/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-infracciones
-      PORT=8004
-      DB_HOST=localhost
-      DB_PORT=5432
-      DB_NAME=infracciones_db
-      DB_USER=infracciones_user
-      DB_PASSWORD=infracciones_pass
-      JWT_SECRET=supersecretkey_auth_2026
-      PERSONAS_SERVICE_URL=http://127.0.0.1:8002/api
-      AUTOMOTORES_SERVICE_URL=http://127.0.0.1:8003/api
-      INFRACCIONES_SERVICE_URL=http://127.0.0.1:8004/api
-  no_log: true
+    remote_src: true
 
 - name: .env — ms-comparendos
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-comparendos/.env.vagrant
     dest: /opt/simcomp/ms-comparendos/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-comparendos
-      PORT=8005
-      DB_HOST=localhost
-      DB_PORT=5432
-      DB_NAME=comparendos_db
-      DB_USER=comparendos_user
-      DB_PASSWORD=comparendos_pass
-      JWT_SECRET=supersecretkey_auth_2026
-      PERSONAS_SERVICE_URL=http://127.0.0.1:8002/api
-      AUTOMOTORES_SERVICE_URL=http://127.0.0.1:8003/api
-      INFRACCIONES_SERVICE_URL=http://127.0.0.1:8004/api
-  no_log: true
+    remote_src: true
 
 - name: .env — ms-reportes
   ansible.builtin.copy:
+    src: /vagrant/backend/ms-reportes/.env.vagrant
     dest: /opt/simcomp/ms-reportes/.env
     owner: vagrant
     group: vagrant
     mode: "0600"
-    content: |
-      SERVICE_NAME=ms-reportes
-      PORT=8006
-      AUTH_SERVICE_URL=http://127.0.0.1:8001
-      PERSONAS_SERVICE_URL=http://127.0.0.1:8002
-      AUTOMOTORES_SERVICE_URL=http://127.0.0.1:8003
-      INFRACCIONES_SERVICE_URL=http://127.0.0.1:8004
-      COMPARENDOS_SERVICE_URL=http://127.0.0.1:8005
-  no_log: true
+    remote_src: true
+
 
 # ── 9. Ejecutar scripts de inicialización de BD ───────────────────────────────
 

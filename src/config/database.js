@@ -1,16 +1,18 @@
 import dotenv from "dotenv";
 import { Sequelize } from "sequelize";
+import { getEnv } from "../utils/env.js";
 
 dotenv.config();
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  getEnv("DB_NAME", "personas_db"),
+  getEnv("DB_USER", "admin"),
+  getEnv("DB_PASSWORD", "admin123"),
   {
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
+    host: getEnv("DB_HOST", "localhost"),
+    port: Number(getEnv("DB_PORT", 5433)),
     dialect: "postgres",
+
     logging: false,
     define: {
       freezeTableName: true,

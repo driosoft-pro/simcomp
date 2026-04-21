@@ -17,7 +17,6 @@ El entorno se basa en un cluster de 3 nodos:
 ```text
 provisioning_docker/
 ├── db-init/          # Scritps SQL para inicialización de bases de datos.
-├── jmeter/           # Pruebas de carga y rendimiento (opcional).
 ├── nginx/            # Configuraciones de Nginx (Gateway y Frontend).
 │   ├── gateway.conf          # Configuración del Proxy Inverso principal.
 │   └── frontend.default.conf  # Configuración del servidor web de React.

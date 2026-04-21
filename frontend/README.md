@@ -110,27 +110,20 @@ frontend/
 
 ---
 
-## Variables de Entorno
+## ⚙️ Configuración de Entorno y Despliegue
 
-### Desarrollo local (`.env`)
-```env
-VITE_AUTH_API=http://localhost:8001/api/auth
-VITE_PERSONAS_API=http://localhost:8002/api
-VITE_AUTOMOTORES_API=http://localhost:8003/api
-VITE_INFRACCIONES_API=http://localhost:8004/api
-VITE_COMPARENDOS_API=http://localhost:8005/api
-VITE_REPORTES_API=http://localhost:8006/api
-```
+El frontend utiliza una única variable base `VITE_API_BASE_URL` para comunicarse con el Gateway o Balanceador. Soporta 4 modos mediante archivos `.env`:
 
-### Producción Vagrant (`.env.production`)
-```env
-VITE_AUTH_API=http://api.simcomp.co:3001/api/auth
-VITE_PERSONAS_API=http://api.simcomp.co:3002/api
-VITE_AUTOMOTORES_API=http://api.simcomp.co:3003/api
-VITE_INFRACCIONES_API=http://api.simcomp.co:3004/api
-VITE_COMPARENDOS_API=http://api.simcomp.co:3005/api
-VITE_REPORTES_API=http://api.simcomp.co:3006/api
-```
+| Archivo | Modo | Uso |
+| :--- | :--- | :--- |
+| `.env.local` | Local Nativo | Desarrollo en host (`http://localhost:8080/api`). |
+| `.env.vagrant` | Vagrant | VMs Vagrant (`http://192.168.100.3:8080/api`). |
+| `.env.docker` | Docker Local | Contenedores locales (`/api`). |
+| `.env.swarm` | Docker Swarm | Cluster Swarm (`/api`). |
+
+### 🔗 Comunicación Unificada
+Ya no es necesario configurar una URL por microservicio. Todas las peticiones se dirigen a la ruta relativa `/api`, la cual es gestionada por el balanceador (HAProxy) o el Gateway.
+
 
 ---
 

@@ -143,20 +143,22 @@ http://localhost:8005/api/docs/
 
 ---
 
-## Variables de entorno
+## ⚙️ Configuración de Entorno y Despliegue
 
-Archivo `.env`:
+Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
-```env
-SERVICE_NAME=ms-comparendos
-PORT=8005
+| Archivo | Modo | Uso |
+| :--- | :--- | :--- |
+| `.env.local` | Local Nativo | Ejecución directa (`pnpm dev`). |
+| `.env.vagrant` | Vagrant | Despliegue en VMs con IP `192.168.100.x`. |
+| `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
+| `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-DB_HOST=localhost
-DB_PORT=5436
-DB_NAME=comparendos_db
-DB_USER=comparendos_user
-DB_PASSWORD=comparendos_pass
-```
+### 🔐 Manejo de Secretos (Swarm)
+En modo Swarm, las variables críticas como `DB_PASSWORD` y `JWT_SECRET` se leen automáticamente desde el sistema de secretos de Docker:
+- `/run/secrets/db_password`
+- `/run/secrets/jwt_secret`
+
 
 ---
 

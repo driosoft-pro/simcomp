@@ -3,12 +3,14 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
+import { getEnv } from "./utils/env.js";
 
 import personasRoutes from "./routes/personas.routes.js";
 import licenciasRoutes from "./routes/licencias.routes.js";
 import swaggerSpec from "./swagger/swagger.js";
 
 const app = express();
+
 
 app.use(helmet({
   hsts: false,
@@ -22,7 +24,7 @@ app.get("/api/health", (req, res) => {
   console.log("Health check requested for ms-personas");
   res.status(200).json({
     ok: true,
-    service: process.env.SERVICE_NAME || "ms-personas",
+    service: getEnv("SERVICE_NAME", "ms-personas"),
     status: "running",
   });
 });

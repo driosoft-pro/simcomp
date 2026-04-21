@@ -5,7 +5,7 @@ node_modules
 .env.vagrant
 .env.swarm
 .env.producción
-.env.docker-pus
+.env.docker-push
 dist
 coverage
 *.log

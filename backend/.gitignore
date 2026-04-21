@@ -1,4 +1,10 @@
 # ─── Node.js / npm ────────────────────────────────────────────────────────
+.env
+.env.local
+.env.vagrant
+.env.swarm
+.env.producción
+.env.docker-pus
 node_modules/
 npm-debug.log*
 yarn-debug.log*

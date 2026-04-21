@@ -101,20 +101,21 @@ http://localhost:8004/api/docs/
 
 ---
 
-## Variables de entorno
+## ⚙️ Configuración de Entorno y Despliegue
 
-Archivo `.env`:
+Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
-```env
-SERVICE_NAME=ms-infracciones
-PORT=8004
+| Archivo | Modo | Uso |
+| :--- | :--- | :--- |
+| `.env.local` | Local Nativo | Ejecución directa (`pnpm dev`). |
+| `.env.vagrant` | Vagrant | Despliegue en VMs con IP `192.168.100.x`. |
+| `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
+| `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-DB_HOST=localhost
-DB_PORT=5435
-DB_NAME=infracciones_db
-DB_USER=infracciones_user
-DB_PASSWORD=infracciones_pass
-```
+### 🔐 Manejo de Secretos (Swarm)
+En modo Swarm, la contraseña de la base de datos se lee automáticamente desde el sistema de secretos de Docker:
+- `/run/secrets/db_password`
+
 
 ---
 

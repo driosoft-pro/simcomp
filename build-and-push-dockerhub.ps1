@@ -6,11 +6,26 @@
 
 [CmdletBinding()]
 param(
-    [string]$DockerHubUser = $(if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "deytonro" }),
-    [string]$Version = $(if ($env:VERSION) { $env:VERSION } else { "v1.0.0" }),
-    [string]$Registry = $(if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" }),
+    [string]$DockerHubUser = $env:DOCKERHUB_USER,
+    [string]$Version = $env:VERSION,
+    [string]$Registry = $env:REGISTRY,
     [string]$ContainerCli = $env:CONTAINER_CLI
 )
+
+# ---------- Cargar Variables de Entorno ----------
+if (Test-Path ".env.docker-pus") {
+    Write-Host "[INFO] Cargando configuración desde .env.docker-pus..." -ForegroundColor Cyan
+    Get-Content ".env.docker-pus" | Where-Object { $_ -match '=' -and $_ -notmatch '^#' } | ForEach-Object {
+        $name, $value = $_.Split('=', 2)
+        [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim())
+    }
+}
+
+# Valores por defecto si no están definidos
+if (!$DockerHubUser) { $DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "deytonro" } }
+if (!$Version)       { $Version = if ($env:VERSION) { $env:VERSION } else { "v1.0.0" } }
+if (!$Registry)      { $Registry = if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" } }
+
 
 $ErrorActionPreference = "Stop"
 

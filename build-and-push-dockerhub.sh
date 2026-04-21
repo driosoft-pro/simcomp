@@ -38,12 +38,19 @@ detect_container_cli() {
   exit 1
 }
 
-CLI="${CONTAINER_CLI:-$(detect_container_cli)}"
+# ---------- Cargar Variables de Entorno ----------
+if [[ -f ".env.docker-pus" ]]; then
+  log "Cargando configuración desde .env.docker-pus..."
+  # Exportar variables ignorando comentarios y líneas vacías
+  export $(grep -v '^#' .env.docker-pus | xargs)
+fi
 
 # ---------- Variables de entorno ----------
 DOCKERHUB_USER="${DOCKERHUB_USER:-deytonro}"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 REGISTRY="${REGISTRY:-$DEFAULT_REGISTRY}"
+CLI="${CONTAINER_CLI:-$(detect_container_cli)}"
+
 
 # ---------- Servicios ----------
 # Formato: "nombre_imagen:directorio_contexto"

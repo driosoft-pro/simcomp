@@ -107,23 +107,23 @@ if (!$Registry)      { $Registry      = if ($env:REGISTRY)       { $env:REGISTRY
 $CLI = Get-ContainerCli -PreferredCli $ContainerCli
 
 $Services = @(
-    @{ Name = "simcomp-auth-db";           Context = "./backend/ms-auth-service/db" },
-    @{ Name = "simcomp-personas-db";       Context = "./backend/ms-personas/db" },
-    @{ Name = "simcomp-automotores-db";    Context = "./backend/ms-automotores/db" },
-    @{ Name = "simcomp-infracciones-db";   Context = "./backend/ms-infracciones/db" },
-    @{ Name = "simcomp-comparendos-db";    Context = "./backend/ms-comparendos/db" },
-    @{ Name = "simcomp-reportes-db";       Context = "./backend/ms-reportes/db" },
+    @{ Name = "simcomp-auth-db";             Context = "./backend/ms-auth-service/db" },
+    @{ Name = "simcomp-personas-db";         Context = "./backend/ms-personas/db" },
+    @{ Name = "simcomp-automotores-db";      Context = "./backend/ms-automotores/db" },
+    @{ Name = "simcomp-infracciones-db";     Context = "./backend/ms-infracciones/db" },
+    @{ Name = "simcomp-comparendos-db";      Context = "./backend/ms-comparendos/db" },
+    @{ Name = "simcomp-reportes-db";         Context = "./backend/ms-reportes/db" },
 
-    @{ Name = "simcomp-auth-service";      Context = "./backend/ms-auth-service" },
-    @{ Name = "simcomp-personas-service";  Context = "./backend/ms-personas" },
+    @{ Name = "simcomp-auth-service";        Context = "./backend/ms-auth-service" },
+    @{ Name = "simcomp-personas-service";    Context = "./backend/ms-personas" },
     @{ Name = "simcomp-automotores-service"; Context = "./backend/ms-automotores" },
-    @{ Name = "simcomp-infracciones-service"; Context = "./backend/ms-infracciones" },
-    @{ Name = "simcomp-comparendos-service";  Context = "./backend/ms-comparendos" },
-    @{ Name = "simcomp-reportes-service";     Context = "./backend/ms-reportes" },
+    @{ Name = "simcomp-infracciones-service";Context = "./backend/ms-infracciones" },
+    @{ Name = "simcomp-comparendos-service"; Context = "./backend/ms-comparendos" },
+    @{ Name = "simcomp-reportes-service";    Context = "./backend/ms-reportes" },
 
-    @{ Name = "simcomp-frontend";          Context = "./frontend" },
-    @{ Name = "simcomp-gateway";           Context = "./provisioning_docker/nginx" },
-    @{ Name = "simcomp-haproxy-balance";   Context = "./haproxy" }
+    @{ Name = "simcomp-frontend";            Context = "./frontend" },
+    @{ Name = "simcomp-gateway";             Context = "./provisioning_docker/nginx" },
+    @{ Name = "simcomp-haproxy-balance";     Context = "./haproxy" }
 )
 
 $BuiltServices = New-Object System.Collections.Generic.List[object]
@@ -138,11 +138,11 @@ function Build-Images {
     foreach ($service in $Services) {
         $imageName = $service.Name
         $context = $service.Context
-        $versionTag = "$Registry/$DockerHubUser/$imageName:$Version"
-        $latestTag  = "$Registry/$DockerHubUser/$imageName:latest"
+        $versionTag = "${Registry}/${DockerHubUser}/${imageName}:${Version}"
+        $latestTag  = "${Registry}/${DockerHubUser}/${imageName}:latest"
 
         if (!(Test-BuildContext -Context $context)) {
-            Write-Warn "Saltando $imageName: no existe el contexto o falta Dockerfile en $context"
+            Write-Warn "Saltando ${imageName}: no existe el contexto o falta Dockerfile en $context"
             continue
         }
 
@@ -161,11 +161,11 @@ function Push-Images {
     foreach ($service in $toPush) {
         $imageName = $service.Name
         $context = $service.Context
-        $versionTag = "$Registry/$DockerHubUser/$imageName:$Version"
-        $latestTag  = "$Registry/$DockerHubUser/$imageName:latest"
+        $versionTag = "${Registry}/${DockerHubUser}/${imageName}:${Version}"
+        $latestTag  = "${Registry}/${DockerHubUser}/${imageName}:latest"
 
         if (!(Test-BuildContext -Context $context)) {
-            Write-Warn "Saltando push de $imageName: no existe el contexto o falta Dockerfile en $context"
+            Write-Warn "Saltando push de ${imageName}: no existe el contexto o falta Dockerfile en $context"
             continue
         }
 

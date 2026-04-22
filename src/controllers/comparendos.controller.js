@@ -1,4 +1,5 @@
 import { validationResult } from "express-validator";
+import { getEnv } from "../utils/env.js";
 import {
   crearComparendo,
   listarComparendos,
@@ -17,7 +18,7 @@ import {
 export async function healthCheck(req, res) {
   return res.json({
     ok: true,
-    service: process.env.SERVICE_NAME,
+    service: getEnv("SERVICE_NAME"),
     timestamp: new Date().toISOString(),
   });
 }

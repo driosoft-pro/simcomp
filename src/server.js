@@ -1,13 +1,14 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import sequelize from "./config/database.js";
+import { getEnv } from "./utils/env.js";
 import "./models/comparendo.model.js";
 import "./models/comparendoEstadoHistorial.model.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8005;
-const SERVICE_NAME = process.env.SERVICE_NAME || "ms-comparendos";
+const PORT = getEnv("PORT");
+const SERVICE_NAME = getEnv("SERVICE_NAME");
 
 async function startServer(retries = 5) {
   while (retries > 0) {

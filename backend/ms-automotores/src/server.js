@@ -1,10 +1,11 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import sequelize from "./config/database.js";
+import { getEnv } from "./utils/env.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8003;
+const PORT = getEnv("PORT");
 
 async function start(retries = 5) {
   while (retries > 0) {
@@ -13,7 +14,7 @@ async function start(retries = 5) {
       console.log("Database connection established");
 
       app.listen(PORT, () => {
-        console.log(`[${process.env.SERVICE_NAME}] running on port ${PORT}`);
+        console.log(`[${getEnv("SERVICE_NAME")}] running on port ${PORT}`);
       });
       return;
     } catch (error) {

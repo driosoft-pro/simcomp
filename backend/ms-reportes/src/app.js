@@ -6,6 +6,8 @@ import swaggerUi from "swagger-ui-express";
 import reportesRoutes from "./routes/reportes.routes.js";
 import { swaggerSpec } from "./config/swagger.js";
 
+import { env } from "./config/env.js";
+
 const app = express();
 
 app.use(helmet());
@@ -27,7 +29,7 @@ app.get("/api/docs.json", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: process.env.SERVICE_NAME || "ms-reportes",
+    service: env.serviceName,
     status: "OK",
   });
 });

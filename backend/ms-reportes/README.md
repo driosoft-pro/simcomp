@@ -64,7 +64,13 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.local` | Local Nativo | Ejecución directa (`npm run dev`). |
 | `.env.vagrant` | Vagrant | Despliegue en VMs con IP `192.168.100.x`. |
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
-| `.env.swarm` | Docker Swarm | Producción. |
+| `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets** para datos sensibles. |
+
+### 🔐 Manejo de Secretos (Swarm)
+En modo Swarm, la llave `JWT_SECRET` se lee automáticamente desde el sistema de secretos de Docker:
+- `/run/secrets/jwt_secret`
+
+**Se han eliminado todos los valores por defecto del código fuente.** Si las URLs de los servicios o la llave secreta no están definidas, el microservicio no funcionará correctamente.
 
 ### 🔗 Integración con Microservicios
 Este servicio consume datos de todos los microservicios del ecosistema. Las URLs se configuran dinámicamente según el archivo `.env` seleccionado.

@@ -5,15 +5,15 @@ services:
   # =========================
 
   db-auth:
-    image: deytonro/simcomp-auth-db:latest
+    image: docker.io/deytonro/simcomp-auth-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,15 +21,15 @@ services:
       - simcomp-net
 
   db-personas:
-    image: deytonro/simcomp-personas-db:latest
+    image: docker.io/deytonro/simcomp-personas-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: personas_db
+      POSTGRES_USER: ${PERSONAS_DB_USER}
+      POSTGRES_PASSWORD: ${PERSONAS_DB_PASSWORD}
+      POSTGRES_DB: ${PERSONAS_DB_NAME}
     volumes:
       - personas_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${PERSONAS_DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -37,15 +37,15 @@ services:
       - simcomp-net
 
   db-automotores:
-    image: deytonro/simcomp-automotores-db:latest
+    image: docker.io/deytonro/simcomp-automotores-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: automotores_db
+      POSTGRES_USER: ${AUTOMOTORES_DB_USER}
+      POSTGRES_PASSWORD: ${AUTOMOTORES_DB_PASSWORD}
+      POSTGRES_DB: ${AUTOMOTORES_DB_NAME}
     volumes:
       - automotores_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTOMOTORES_DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -53,15 +53,15 @@ services:
       - simcomp-net
 
   db-infracciones:
-    image: deytonro/simcomp-infracciones-db:latest
+    image: docker.io/deytonro/simcomp-infracciones-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: infracciones_db
+      POSTGRES_USER: ${INFRACCIONES_DB_USER}
+      POSTGRES_PASSWORD: ${INFRACCIONES_DB_PASSWORD}
+      POSTGRES_DB: ${INFRACCIONES_DB_NAME}
     volumes:
       - infracciones_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${INFRACCIONES_DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -69,15 +69,15 @@ services:
       - simcomp-net
 
   db-comparendos:
-    image: deytonro/simcomp-comparendos-db:latest
+    image: docker.io/deytonro/simcomp-comparendos-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: comparendos_db
+      POSTGRES_USER: ${COMPARENDOS_DB_USER}
+      POSTGRES_PASSWORD: ${COMPARENDOS_DB_PASSWORD}
+      POSTGRES_DB: ${COMPARENDOS_DB_NAME}
     volumes:
       - comparendos_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${COMPARENDOS_DB_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -89,7 +89,7 @@ services:
   # =========================
 
   ms-auth-service:
-    image: deytonro/simcomp-auth-service:latest
+    image: docker.io/deytonro/simcomp-auth-service:latest
     restart: always
     depends_on:
       db-auth:
@@ -98,17 +98,17 @@ services:
       - "8001:8001"
     environment:
       PORT: 8001
-      DB_HOST: db-auth
-      DB_PORT: 5432
-      DB_NAME: auth_db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      AUTH_DB_HOST: db-auth
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: ${AUTH_DB_NAME}
+      AUTH_DB_USER: ${AUTH_DB_USER}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
     networks:
       - simcomp-net
 
   ms-personas:
-    image: deytonro/simcomp-personas-service:latest
+    image: docker.io/deytonro/simcomp-personas-service:latest
     restart: always
     depends_on:
       db-personas:
@@ -117,17 +117,17 @@ services:
       - "8002:8002"
     environment:
       PORT: 8002
-      DB_HOST: db-personas
-      DB_PORT: 5432
-      DB_NAME: personas_db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      PERSONAS_DB_HOST: db-personas
+      PERSONAS_DB_PORT: 5432
+      PERSONAS_DB_NAME: ${PERSONAS_DB_NAME}
+      PERSONAS_DB_USER: ${PERSONAS_DB_USER}
+      PERSONAS_DB_PASSWORD: ${PERSONAS_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
     networks:
       - simcomp-net
 
   ms-automotores:
-    image: deytonro/simcomp-automotores-service:latest
+    image: docker.io/deytonro/simcomp-automotores-service:latest
     restart: always
     depends_on:
       db-automotores:
@@ -138,18 +138,18 @@ services:
       - "8003:8003"
     environment:
       PORT: 8003
-      DB_HOST: db-automotores
-      DB_PORT: 5432
-      DB_NAME: automotores_db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      AUTOMOTORES_DB_HOST: db-automotores
+      AUTOMOTORES_DB_PORT: 5432
+      AUTOMOTORES_DB_NAME: ${AUTOMOTORES_DB_NAME}
+      AUTOMOTORES_DB_USER: ${AUTOMOTORES_DB_USER}
+      AUTOMOTORES_DB_PASSWORD: ${AUTOMOTORES_DB_PASSWORD}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
       JWT_SECRET: ${JWT_SECRET}
     networks:
       - simcomp-net
 
   ms-infracciones:
-    image: deytonro/simcomp-infracciones-service:latest
+    image: docker.io/deytonro/simcomp-infracciones-service:latest
     restart: always
     depends_on:
       db-infracciones:
@@ -158,17 +158,17 @@ services:
       - "8004:8004"
     environment:
       PORT: 8004
-      DB_HOST: db-infracciones
-      DB_PORT: 5432
-      DB_NAME: infracciones_db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      INFRACCIONES_DB_HOST: db-infracciones
+      INFRACCIONES_DB_PORT: 5432
+      INFRACCIONES_DB_NAME: ${INFRACCIONES_DB_NAME}
+      INFRACCIONES_DB_USER: ${INFRACCIONES_DB_USER}
+      INFRACCIONES_DB_PASSWORD: ${INFRACCIONES_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
     networks:
       - simcomp-net
 
   ms-comparendos:
-    image: deytonro/simcomp-comparendos-service:latest
+    image: docker.io/deytonro/simcomp-comparendos-service:latest
     restart: always
     depends_on:
       db-comparendos:
@@ -183,11 +183,11 @@ services:
       - "8005:8005"
     environment:
       PORT: 8005
-      DB_HOST: db-comparendos
-      DB_PORT: 5432
-      DB_NAME: comparendos_db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      COMPARENDOS_DB_HOST: db-comparendos
+      COMPARENDOS_DB_PORT: 5432
+      COMPARENDOS_DB_NAME: ${COMPARENDOS_DB_NAME}
+      COMPARENDOS_DB_USER: ${COMPARENDOS_DB_USER}
+      COMPARENDOS_DB_PASSWORD: ${COMPARENDOS_DB_PASSWORD}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
       AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
@@ -196,7 +196,7 @@ services:
       - simcomp-net
 
   ms-reportes:
-    image: deytonro/simcomp-reportes-service:latest
+    image: docker.io/deytonro/simcomp-reportes-service:latest
     restart: always
     depends_on:
       ms-auth-service:
@@ -227,7 +227,7 @@ services:
   # =========================
 
   gateway1:
-    image: deytonro/simcomp-gateway:latest
+    image: docker.io/deytonro/simcomp-gateway:latest
     restart: always
     depends_on:
       ms-auth-service:
@@ -248,7 +248,7 @@ services:
       - simcomp-net
 
   gateway2:
-    image: deytonro/simcomp-gateway:latest
+    image: docker.io/deytonro/simcomp-gateway:latest
     restart: always
     depends_on:
       ms-auth-service:
@@ -273,7 +273,7 @@ services:
   # =========================
 
   haproxy:
-    image: deytonro/simcomp-haproxy-balance:latest
+    image: docker.io/deytonro/simcomp-haproxy-balance:latest
     ports:
       - "8080:8080"
       - "8404:8404"
@@ -290,13 +290,13 @@ services:
   # =========================
 
   frontend1:
-    image: deytonro/simcomp-frontend:latest
+    image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
     networks:
       - simcomp-net
 
   frontend2:
-    image: deytonro/simcomp-frontend:latest
+    image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
     networks:
       - simcomp-net

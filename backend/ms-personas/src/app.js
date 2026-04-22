@@ -24,7 +24,7 @@ app.get("/api/health", (req, res) => {
   console.log("Health check requested for ms-personas");
   res.status(200).json({
     ok: true,
-    service: getEnv("SERVICE_NAME", "ms-personas"),
+    service: getEnv("SERVICE_NAME"),
     status: "running",
   });
 });

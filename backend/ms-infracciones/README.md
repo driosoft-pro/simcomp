@@ -113,8 +113,14 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
 ### 🔐 Manejo de Secretos (Swarm)
-En modo Swarm, la contraseña de la base de datos se lee automáticamente desde el sistema de secretos de Docker:
-- `/run/secrets/db_password`
+En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
+
+Secretos requeridos:
+- `/run/secrets/infracciones_db_password` (para `INFRACCIONES_DB_PASSWORD`)
+- `/run/secrets/jwt_secret` (para `JWT_SECRET`)
+
+> [!CAUTION]
+> Si estas variables no están definidas en el entorno o en los secretos, el servicio no iniciará para proteger la integridad del sistema.
 
 
 ---

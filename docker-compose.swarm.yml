@@ -5,7 +5,7 @@ services:
   db-auth:
     image: docker.io/deytonro/simcomp-auth-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_USER: ${AUTH_DB_USER:-admin}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: auth_db
     volumes:
@@ -25,7 +25,7 @@ services:
   db-personas:
     image: docker.io/deytonro/simcomp-personas-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_USER: ${PERSONAS_DB_USER:-admin}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: personas_db
     volumes:
@@ -45,7 +45,7 @@ services:
   db-automotores:
     image: docker.io/deytonro/simcomp-automotores-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_USER: ${AUTOMOTORES_DB_USER:-admin}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: automotores_db
     volumes:
@@ -65,7 +65,7 @@ services:
   db-infracciones:
     image: docker.io/deytonro/simcomp-infracciones-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_USER: ${INFRACCIONES_DB_USER:-admin}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: infracciones_db
     volumes:
@@ -85,7 +85,7 @@ services:
   db-comparendos:
     image: docker.io/deytonro/simcomp-comparendos-db:latest
     environment:
-      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_USER: ${COMPARENDOS_DB_USER:-admin}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: comparendos_db
     volumes:
@@ -109,10 +109,10 @@ services:
     image: docker.io/deytonro/simcomp-auth-service:latest
     environment:
       PORT: 8001
-      DB_HOST: db-auth
-      DB_PORT: 5432
-      DB_NAME: auth_db
-      DB_USER: ${DB_USER:-admin}
+      AUTH_DB_HOST: db-auth
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: auth_db
+      AUTH_DB_USER: ${AUTH_DB_USER:-admin}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
@@ -133,10 +133,10 @@ services:
     image: docker.io/deytonro/simcomp-personas-service:latest
     environment:
       PORT: 8002
-      DB_HOST: db-personas
-      DB_PORT: 5432
-      DB_NAME: personas_db
-      DB_USER: ${DB_USER:-admin}
+      PERSONAS_DB_HOST: db-personas
+      PERSONAS_DB_PORT: 5432
+      PERSONAS_DB_NAME: personas_db
+      PERSONAS_DB_USER: ${PERSONAS_DB_USER:-admin}
       AUTH_SERVICE_URL: http://ms-auth-service:8001
     networks:
       - simcomp_net
@@ -155,10 +155,10 @@ services:
     image: docker.io/deytonro/simcomp-automotores-service:latest
     environment:
       PORT: 8003
-      DB_HOST: db-automotores
-      DB_PORT: 5432
-      DB_NAME: automotores_db
-      DB_USER: ${DB_USER:-admin}
+      AUTOMOTORES_DB_HOST: db-automotores
+      AUTOMOTORES_DB_PORT: 5432
+      AUTOMOTORES_DB_NAME: automotores_db
+      AUTOMOTORES_DB_USER: ${AUTOMOTORES_DB_USER:-admin}
     networks:
       - simcomp_net
     secrets:
@@ -175,10 +175,10 @@ services:
     image: docker.io/deytonro/simcomp-infracciones-service:latest
     environment:
       PORT: 8004
-      DB_HOST: db-infracciones
-      DB_PORT: 5432
-      DB_NAME: infracciones_db
-      DB_USER: ${DB_USER:-admin}
+      INFRACCIONES_DB_HOST: db-infracciones
+      INFRACCIONES_DB_PORT: 5432
+      INFRACCIONES_DB_NAME: infracciones_db
+      INFRACCIONES_DB_USER: ${INFRACCIONES_DB_USER:-admin}
     networks:
       - simcomp_net
     secrets:
@@ -195,10 +195,10 @@ services:
     image: docker.io/deytonro/simcomp-comparendos-service:latest
     environment:
       PORT: 8005
-      DB_HOST: db-comparendos
-      DB_PORT: 5432
-      DB_NAME: comparendos_db
-      DB_USER: ${DB_USER:-admin}
+      COMPARENDOS_DB_HOST: db-comparendos
+      COMPARENDOS_DB_PORT: 5432
+      COMPARENDOS_DB_NAME: comparendos_db
+      COMPARENDOS_DB_USER: ${COMPARENDOS_DB_USER:-admin}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
       AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004

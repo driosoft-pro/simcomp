@@ -292,12 +292,16 @@ services:
   frontend1:
     image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
+    environment:
+      API_URL: http://127.0.0.1:8080/api
     networks:
       - simcomp-net
 
   frontend2:
     image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
+    environment:
+      API_URL: http://127.0.0.1:8080/api
     networks:
       - simcomp-net
 

@@ -7,6 +7,8 @@ import infraccionesRoutes from "./routes/infracciones.routes.js";
 import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
+import { getEnv } from "./utils/env.js";
+
 const app = express();
 
 /* Middlewares globales */
@@ -22,7 +24,7 @@ app.use(morgan("dev"));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: process.env.SERVICE_NAME,
+    service: getEnv("SERVICE_NAME"),
     status: "OK",
   });
 });

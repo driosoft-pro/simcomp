@@ -70,9 +70,18 @@
 
 - name: Copiar código fuente del frontend
   ansible.builtin.shell: >
-    rsync -a --delete --exclude='node_modules' --exclude='dist'
+    rsync -a --delete 
+    --exclude='node_modules' 
+    --exclude='dist'
+    --exclude='.env*'
     /vagrant/frontend/
     /opt/simcomp/frontend/
+  changed_when: true
+
+- name: Eliminar archivos .env existentes para evitar conflictos
+  ansible.builtin.shell: "rm -f .env*"
+  args:
+    chdir: /opt/simcomp/frontend
   changed_when: true
 
 - name: Copiar .env.vagrant como .env para el build del frontend
@@ -92,8 +101,16 @@
   become: false
   become_user: vagrant
 
-- name: Compilar frontend (npm run build)
-  ansible.builtin.command: npm run build
+- name: Compilar frontend con variable de entorno inyectada directamente
+  ansible.builtin.command: >
+    env VITE_API_BASE_URL=http://simcomp.co/api
+    VITE_AUTH_API=""
+    VITE_PERSONAS_API=""
+    VITE_AUTOMOTORES_API=""
+    VITE_INFRACCIONES_API=""
+    VITE_COMPARENDOS_API=""
+    VITE_REPORTES_API=""
+    npm run build
   args:
     chdir: /opt/simcomp/frontend
   become: false

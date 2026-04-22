@@ -153,7 +153,7 @@ SERVICES=(
 
   "simcomp-frontend|./frontend"
   "simcomp-gateway|./provisioning_docker/nginx"
-  "simcomp-haproxy-balance|./haproxy"
+  "simcomp-haproxy-balance|./provisioning_docker/haproxy"
 )
 
 # Filtrar servicios si se especificó uno

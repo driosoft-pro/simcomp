@@ -17,9 +17,9 @@ export function buildAccessToken(user) {
       persona_id: user.persona_id,
       numero_documento: user.numero_documento,
     },
-    getEnv("JWT_SECRET", "secret123"),
+    getEnv("JWT_SECRET"),
     {
-      expiresIn: getEnv("JWT_EXPIRES_IN", "1h"),
+      expiresIn: getEnv("JWT_EXPIRES_IN"),
     }
 
   );
@@ -54,7 +54,7 @@ export async function createRefreshToken(usuarioId) {
 
   const expiresAt = new Date();
   expiresAt.setDate(
-    expiresAt.getDate() + Number(getEnv("JWT_REFRESH_EXPIRES_DAYS", 7))
+    expiresAt.getDate() + Number(getEnv("JWT_REFRESH_EXPIRES_DAYS"))
   );
 
   return RefreshToken.create({
@@ -102,7 +102,7 @@ export async function revokeRefreshToken(refreshTokenValue) {
 
 export async function verifyAccessToken(token) {
   try {
-    const decoded = jwt.verify(token, getEnv("JWT_SECRET", "secret123"));
+    const decoded = jwt.verify(token, getEnv("JWT_SECRET"));
     return decoded;
   } catch (error) {
     throw new Error("Token inválido o expirado");

@@ -4,21 +4,21 @@ import { getEnv } from "../utils/env.js";
 dotenv.config();
 
 export const config = {
-  serviceName: getEnv("SERVICE_NAME", "ms-auth-service"),
-  port: Number(getEnv("PORT", 8001)),
+  serviceName: getEnv("SERVICE_NAME"),
+  port: Number(getEnv("PORT")),
   db: {
-    host: getEnv("DB_HOST", "localhost"),
-    port: Number(getEnv("DB_PORT", 5432)),
-    name: getEnv("DB_NAME", "auth_db"),
-    user: getEnv("DB_USER", "admin"),
-    password: getEnv("DB_PASSWORD", "admin123"),
+    host: getEnv("AUTH_DB_HOST"),
+    port: Number(getEnv("AUTH_DB_PORT")),
+    name: getEnv("AUTH_DB_NAME"),
+    user: getEnv("AUTH_DB_USER"),
+    password: getEnv("AUTH_DB_PASSWORD"),
   },
   jwt: {
-    secret: getEnv("JWT_SECRET", "secret123"),
-    expiresIn: getEnv("JWT_EXPIRES_IN", "1h"),
-    refreshExpiresDays: Number(getEnv("JWT_REFRESH_EXPIRES_DAYS", 7)),
+    secret: getEnv("JWT_SECRET"),
+    expiresIn: getEnv("JWT_EXPIRES_IN"),
+    refreshExpiresDays: Number(getEnv("JWT_REFRESH_EXPIRES_DAYS")),
   },
   services: {
-    personas: getEnv("PERSONAS_SERVICE_URL", "http://localhost:8002/api"),
+    personas: getEnv("PERSONAS_SERVICE_URL"),
   }
 };

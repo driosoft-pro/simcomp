@@ -5,12 +5,12 @@ import { getEnv } from "../utils/env.js";
 dotenv.config();
 
 const sequelize = new Sequelize(
-  getEnv("DB_NAME", "auth_db"),
-  getEnv("DB_USER", "admin"),
-  getEnv("DB_PASSWORD", "admin123"),
+  getEnv("AUTH_DB_NAME"),
+  getEnv("AUTH_DB_USER"),
+  getEnv("AUTH_DB_PASSWORD"),
   {
-    host: getEnv("DB_HOST", "localhost"),
-    port: Number(getEnv("DB_PORT", 5432)),
+    host: getEnv("AUTH_DB_HOST"),
+    port: Number(getEnv("AUTH_DB_PORT")),
     dialect: "postgres",
     logging: false,
   }

@@ -7,8 +7,8 @@ import "./models/licencia.model.js";
 
 dotenv.config();
 
-const PORT = getEnv("PORT", 8002);
-const SERVICE_NAME = getEnv("SERVICE_NAME", "ms-personas");
+const PORT = getEnv("PORT");
+const SERVICE_NAME = getEnv("SERVICE_NAME");
 
 
 async function startServer(retries = 5) {

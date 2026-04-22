@@ -100,7 +100,7 @@ export async function updateUser(id, data, options = {}) {
 
   if (!skipPersonaSync && (emailChanged || docChanged)) {
     try {
-      const personasServiceUrl = getEnv("PERSONAS_SERVICE_URL", "http://localhost:8002/api");
+      const personasServiceUrl = getEnv("PERSONAS_SERVICE_URL");
       let personaId = user.persona_id;
 
       // Si no hay persona_id vinculado, buscar por documento

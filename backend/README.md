@@ -575,7 +575,7 @@ Lógica de transición de estados definida para el ciclo de vida del comparendo:
 - RNF-05: Los errores deben retornar respuestas JSON con código HTTP apropiado.
 - RNF-06: Los servicios deben ejecutarse en contenedores Docker.
 - RNF-07: La infraestructura debe definirse en Vagrant para máquinas virtuales separadas.
-- RNF-08: Las contraseñas y configuraciones sensibles deben manejarse mediante archivos `.env`.
+- RNF-08: Las contraseñas y configuraciones sensibles deben manejarse obligatoriamente mediante variables de entorno o Docker Secrets. **Se han eliminado todos los valores por defecto del código para evitar brechas de seguridad.**
 - RNF-09: Se recomienda usar Sequelize como ORM con migraciones para la creación de tablas.
 
 ---
@@ -595,7 +595,12 @@ services:
       - "8001:8001"
     environment:
       - PORT=8001
-      - DB_PORT=5432
+      - AUTH_DB_HOST=auth_db
+      - AUTH_DB_PORT=5432
+      - AUTH_DB_NAME=auth_db
+      - AUTH_DB_USER=admin
+      - AUTH_DB_PASSWORD=admin123
+      - JWT_SECRET=secret123
 
   ms-personas:
     build: ./ms-personas
@@ -603,7 +608,12 @@ services:
       - "8002:8002"
     environment:
       - PORT=8002
-      - DB_PORT=5433
+      - PERSONAS_DB_HOST=personas_db
+      - PERSONAS_DB_PORT=5433
+      - PERSONAS_DB_NAME=personas_db
+      - PERSONAS_DB_USER=admin
+      - PERSONAS_DB_PASSWORD=admin123
+      - JWT_SECRET=secret123
 
   ms-automotores:
     build: ./ms-automotores
@@ -611,7 +621,12 @@ services:
       - "8003:8003"
     environment:
       - PORT=8003
-      - DB_PORT=5434
+      - AUTOMOTORES_DB_HOST=automotores_db
+      - AUTOMOTORES_DB_PORT=5434
+      - AUTOMOTORES_DB_NAME=vehiculos_db
+      - AUTOMOTORES_DB_USER=admin
+      - AUTOMOTORES_DB_PASSWORD=admin123
+      - JWT_SECRET=secret123
 
   ms-infracciones:
     build: ./ms-infracciones
@@ -619,7 +634,12 @@ services:
       - "8004:8004"
     environment:
       - PORT=8004
-      - DB_PORT=5435
+      - INFRACCIONES_DB_HOST=infracciones_db
+      - INFRACCIONES_DB_PORT=5435
+      - INFRACCIONES_DB_NAME=infracciones_db
+      - INFRACCIONES_DB_USER=admin
+      - INFRACCIONES_DB_PASSWORD=admin123
+      - JWT_SECRET=secret123
 
   ms-comparendos:
     build: ./ms-comparendos
@@ -627,7 +647,12 @@ services:
       - "8005:8005"
     environment:
       - PORT=8005
-      - DB_PORT=5436
+      - COMPARENDOS_DB_HOST=comparendos_db
+      - COMPARENDOS_DB_PORT=5436
+      - COMPARENDOS_DB_NAME=comparendos_db
+      - COMPARENDOS_DB_USER=admin
+      - COMPARENDOS_DB_PASSWORD=admin123
+      - JWT_SECRET=secret123
 
   ms-reportes:
     build: ./ms-reportes
@@ -635,6 +660,11 @@ services:
       - "8006:8006"
     environment:
       - PORT=8006
+      - AUTH_SERVICE_URL=http://ms-auth-service:8001
+      - PERSONAS_SERVICE_URL=http://ms-personas:8002
+      - AUTOMOTORES_SERVICE_URL=http://ms-automotores:8003
+      - INFRACCIONES_SERVICE_URL=http://ms-infracciones:8004
+      - COMPARENDOS_SERVICE_URL=http://ms-comparendos:8005
 ```
 
 > Las variables de entorno, volúmenes, redes y `depends_on` deben ajustarse a la

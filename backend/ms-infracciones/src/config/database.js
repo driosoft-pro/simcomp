@@ -13,12 +13,12 @@ Las variables deben definirse en el .env del servicio.
 */
 
 const sequelize = new Sequelize(
-  getEnv("DB_NAME", "infracciones_db"),
-  getEnv("DB_USER", "admin"),
-  getEnv("DB_PASSWORD", "admin123"),
+  getEnv("INFRACCIONES_DB_NAME"),
+  getEnv("INFRACCIONES_DB_USER"),
+  getEnv("INFRACCIONES_DB_PASSWORD"),
   {
-    host: getEnv("DB_HOST", "localhost"),
-    port: Number(getEnv("DB_PORT", 5435)),
+    host: getEnv("INFRACCIONES_DB_HOST"),
+    port: Number(getEnv("INFRACCIONES_DB_PORT")),
     dialect: "postgres",
     logging: false,
   }

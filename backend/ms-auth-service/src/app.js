@@ -23,7 +23,7 @@ app.use(morgan("dev"));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: getEnv("SERVICE_NAME", "ms-auth-service"),
+    service: getEnv("SERVICE_NAME"),
     status: "OK",
   });
 });

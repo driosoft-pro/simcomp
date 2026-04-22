@@ -12,8 +12,36 @@ Sistema integral de gestión de comparendos de tránsito desplegado en **Docker 
 - Dashboard dark
 ![DashboardDark.png](img/DashboardDark.png)
 
+- Dashboard light
+![DashboardLight.png](img/DashboardLight.png)
+
+- Usuarios
+![Usuarios.png](img/Usuarios.png)
+
+- Personas
+![Personas.png](img/Personas.png)
+
+- Automotores
+![Automotores.png](img/Automotores.png)
+
+- Infracciones
+![Infracciones.png](img/Infracciones.png)
+
+- Comparendos
+![Comparendos.png](img/Comparendos.png)
+
+- Comparendo
+![Comparendo.png](img/Comparendo.png)
+
+- Pagar
+![PagoComparendo.png](img/PagoComparendo.png)
+
+- Recibo
+![ReciboComparendo.png](img/ReciboComparendo.png)
+
 - Reportes
 ![Reportes.png](img/Reportes.png)
+
 
 ---
 
@@ -96,9 +124,9 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 
 ---
 
-## 🔄 Modos de Despliegue y Configuración
+### 🔄 Modos de Despliegue y Configuración
 
-El sistema está preparado para funcionar en 4 escenarios distintos. Cada componente (Frontend y Microservicios) incluye archivos `.env` preconfigurados para cada caso:
+El sistema está preparado para funcionar en 4 escenarios distintos. **Se han eliminado todos los valores por defecto (hardcoded) del código fuente para garantizar la seguridad.** La configuración debe proveerse explícitamente mediante archivos `.env` o Docker Secrets:
 
 | Modo | Archivo | Descripción |
 | :--- | :--- | :--- |
@@ -108,13 +136,22 @@ El sistema está preparado para funcionar en 4 escenarios distintos. Cada compon
 | **Docker Swarm** | `.env.swarm` | Cluster distribuido en Vagrant. **Usa Docker Secrets** para datos sensibles. |
 
 ### 🔐 Gestión de Secretos (Modo Swarm)
-En el despliegue de Swarm, las contraseñas de base de datos y llaves JWT **no se almacenan en archivos .env**. El sistema las lee desde `/run/secrets/` inyectados por el orquestador.
 
-Para que el stack funcione en Swarm, debes crear los secretos manualmente una única vez:
+En el despliegue de Swarm, las credenciales de base de datos y llaves JWT **no se almacenan en archivos .env**. El sistema las lee desde `/run/secrets/` inyectados por el orquestador. 
+
+Debes crear los siguientes secretos manualmente una única vez:
+
 ```bash
-echo "admin123" | docker secret create db_password -
-echo "secret123" | docker secret create jwt_secret -
+# Ejemplo para ms-auth-service
+echo "admin123" | docker secret create auth_db_password -
+# Repetir para cada servicio (personas_db_password, etc.)
+
+# Secreto compartido para JWT
+echo "tu_llave_secreta_super_segura" | docker secret create jwt_secret -
 ```
+
+> [!IMPORTANT]
+> Si falta alguno de estos secretos o variables de entorno, los microservicios no iniciarán. Esto es intencional para evitar el uso de configuraciones inseguras por defecto.
 
 
 

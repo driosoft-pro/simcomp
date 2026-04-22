@@ -6,6 +6,8 @@ import morgan from "morgan";
 import automotoresRoutes from "./routes/automotores.routes.js";
 import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 
+import { getEnv } from "./utils/env.js";
+
 const app = express();
 
 app.use(helmet({
@@ -19,7 +21,7 @@ app.use(morgan("dev"));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: process.env.SERVICE_NAME,
+    service: getEnv("SERVICE_NAME"),
     status: "OK",
   });
 });

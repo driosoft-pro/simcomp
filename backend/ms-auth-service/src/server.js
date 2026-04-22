@@ -5,17 +5,17 @@ import { getEnv } from "./utils/env.js";
 
 dotenv.config();
 
-const PORT = getEnv("PORT", 8001);
+const PORT = getEnv("PORT");
 
 async function start(retries = 5) {
   while (retries > 0) {
     try {
-      console.log(`Connecting to DB at ${getEnv("DB_HOST", "localhost")}:${getEnv("DB_PORT", 5432)} with user ${getEnv("DB_USER", "admin")}...`);
+      console.log(`Connecting to DB at ${getEnv("AUTH_DB_HOST")}:${getEnv("AUTH_DB_PORT")} with user ${getEnv("AUTH_DB_USER")}...`);
       await sequelize.authenticate();
       console.log("Database connection established");
 
       app.listen(PORT, () => {
-        console.log(`[${getEnv("SERVICE_NAME", "ms-auth-service")}] running on port ${PORT}`);
+        console.log(`[${getEnv("SERVICE_NAME")}] running on port ${PORT}`);
       });
       return; // Éxito, salimos de la función
     } catch (error) {

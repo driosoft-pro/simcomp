@@ -114,6 +114,19 @@ Load-EnvFile -Path $EnvFile
 
 if (!$DockerHubUser) { $DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "tu_usuario" } }
 if (!$DockerHubPass) { $DockerHubPass = $env:DOCKERHUB_PASS }
+
+# Solicitar credenciales si faltan o son el valor por defecto
+if ($DockerHubUser -eq "tu_usuario" -or [string]::IsNullOrWhiteSpace($DockerHubUser)) {
+    $DockerHubUser = Read-Host "Ingrese su usuario de Docker Hub"
+}
+
+if ([string]::IsNullOrWhiteSpace($DockerHubPass)) {
+    $DockerHubPass = Read-Host "Ingrese su contraseña/token de Docker Hub" -AsSecureString
+    # Convertir SecureString a texto plano para usar con docker login
+    $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($DockerHubPass)
+    $DockerHubPass = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+}
+
 if (!$Version)       { $Version       = if ($env:VERSION)        { $env:VERSION }        else { "v1.0.0" } }
 if (!$Registry)      { $Registry      = if ($env:REGISTRY)       { $env:REGISTRY }       else { "docker.io" } }
 

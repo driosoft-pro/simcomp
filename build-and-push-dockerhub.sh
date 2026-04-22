@@ -119,6 +119,17 @@ load_env_file "$ENV_FILE"
 
 DOCKERHUB_USER="${DOCKERHUB_USER:-$DEFAULT_DOCKERHUB_USER}"
 DOCKERHUB_PASS="${DOCKERHUB_PASS:-}"
+
+# Solicitar credenciales si faltan o son el valor por defecto
+if [[ "$DOCKERHUB_USER" == "tu_usuario" || -z "$DOCKERHUB_USER" ]]; then
+  read -p "Ingrese su usuario de Docker Hub: " DOCKERHUB_USER
+fi
+
+if [[ -z "$DOCKERHUB_PASS" ]]; then
+  read -sp "Ingrese su contraseña/token de Docker Hub: " DOCKERHUB_PASS
+  echo "" # Nueva línea tras el input oculto
+fi
+
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 REGISTRY="${REGISTRY:-$DEFAULT_REGISTRY}"
 CLI="$(detect_container_cli)"

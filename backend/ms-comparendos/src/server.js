@@ -9,17 +9,24 @@ dotenv.config();
 const PORT = process.env.PORT || 8005;
 const SERVICE_NAME = process.env.SERVICE_NAME || "ms-comparendos";
 
-async function startServer() {
-  try {
-    await sequelize.authenticate();
-    console.log("Database connection established");
+async function startServer(retries = 5) {
+  while (retries > 0) {
+    try {
+      await sequelize.authenticate();
+      console.log("Database connection established");
 
-    app.listen(PORT, () => {
-      console.log(`[${SERVICE_NAME}] running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Unable to connect to database:", error.message);
-    process.exit(1);
+      app.listen(PORT, () => {
+        console.log(`[${SERVICE_NAME}] running on port ${PORT}`);
+      });
+      return;
+    } catch (error) {
+      console.error(`Unable to connect to database: ${error.message}. Retries left: ${retries - 1}`);
+      retries--;
+      if (retries === 0) {
+        process.exit(1);
+      }
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
   }
 }
 

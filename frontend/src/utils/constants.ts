@@ -3,12 +3,12 @@ export const APP_VERSION = '1.0'
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const API_URLS = {
-  auth: import.meta.env.VITE_AUTH_API || `${API_BASE}/auth`,
-  personas: import.meta.env.VITE_PERSONAS_API || `${API_BASE}/personas`,
-  automotores: import.meta.env.VITE_AUTOMOTORES_API || `${API_BASE}/automotores`,
-  infracciones: import.meta.env.VITE_INFRACCIONES_API || `${API_BASE}/infracciones`,
-  comparendos: import.meta.env.VITE_COMPARENDOS_API || `${API_BASE}/comparendos`,
-  reportes: import.meta.env.VITE_REPORTES_API || `${API_BASE}/reportes`,
+  auth: import.meta.env.VITE_AUTH_API || API_BASE,
+  personas: import.meta.env.VITE_PERSONAS_API || API_BASE,
+  automotores: import.meta.env.VITE_AUTOMOTORES_API || API_BASE,
+  infracciones: import.meta.env.VITE_INFRACCIONES_API || API_BASE,
+  comparendos: import.meta.env.VITE_COMPARENDOS_API || API_BASE,
+  reportes: import.meta.env.VITE_REPORTES_API || API_BASE,
 } as const;
 
 

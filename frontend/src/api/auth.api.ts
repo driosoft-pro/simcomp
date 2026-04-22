@@ -13,21 +13,21 @@ export async function loginRequest(
   payload: LoginPayload,
 ): Promise<LoginResponseData> {
   const response = await authApi.post<ApiResponse<LoginResponseData>>(
-    '/login',
+    '/auth/login',
     payload,
   )
   return response.data.data
 }
 
 export async function logoutRequest(refreshToken?: string): Promise<void> {
-  await authApi.post('/logout', { refreshToken })
+  await authApi.post('/auth/logout', { refreshToken })
 }
 
 export async function refreshTokenRequest(
   refreshToken: string,
 ): Promise<LoginResponseData> {
   const response = await authApi.post<ApiResponse<LoginResponseData>>(
-    '/refresh',
+    '/auth/refresh',
     { refreshToken },
   )
   return response.data.data

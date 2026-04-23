@@ -98,9 +98,10 @@ export async function updateUser(id, data, options = {}) {
   // IMPORTANTE: usar oldNumeroDocumento (capturado antes del update) para comparar
   const docChanged = data.numero_documento !== undefined && data.numero_documento !== oldNumeroDocumento;
 
-  if (!skipPersonaSync && (emailChanged || docChanged)) {
+    if (!skipPersonaSync && (emailChanged || docChanged)) {
     try {
-      const personasServiceUrl = getEnv("PERSONAS_SERVICE_URL");
+      const personasBaseUrl = getEnv("PERSONAS_SERVICE_URL") || "http://ms-personas:8002";
+      const personasApiUrl = personasBaseUrl.endsWith("/api") ? personasBaseUrl : `${personasBaseUrl}/api`;
       let personaId = user.persona_id;
 
       // Si no hay persona_id vinculado, buscar por documento
@@ -109,7 +110,7 @@ export async function updateUser(id, data, options = {}) {
         // porque la persona en BD aún tiene ese valor antes de esta sincronización
         const docToSearch = docChanged ? oldNumeroDocumento : (oldNumeroDocumento || oldUsername);
         console.log(`[auth→personas] Buscando persona por documento: ${docToSearch}`);
-        const findResponse = await fetch(`${personasServiceUrl}/personas/documento/${encodeURIComponent(docToSearch)}`);
+        const findResponse = await fetch(`${personasApiUrl}/personas/documento/${encodeURIComponent(docToSearch)}`);
         if (findResponse.ok) {
           const personaResult = await findResponse.json();
           personaId = personaResult.data?.id || personaResult.data?.persona_id || personaResult.id;
@@ -129,7 +130,7 @@ export async function updateUser(id, data, options = {}) {
           // x-internal-sync: true evita que ms-personas intente re-sincronizar de vuelta con ms-auth
           // (previene bucle circular auth → personas → auth)
           // x-user-role: admin permite pasar el authMiddleware y roleMiddleware de ms-personas
-          await fetch(`${personasServiceUrl}/personas/${personaId}`, {
+          await fetch(`${personasApiUrl}/personas/${personaId}`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",

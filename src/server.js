@@ -7,7 +7,7 @@ dotenv.config();
 
 const PORT = getEnv("PORT");
 
-async function start(retries = 5) {
+async function start(retries = 30) {
   while (retries > 0) {
     try {
       console.log(`Connecting to DB at ${getEnv("AUTH_DB_HOST")}:${getEnv("AUTH_DB_PORT")} with user ${getEnv("AUTH_DB_USER")}...`);
@@ -19,14 +19,15 @@ async function start(retries = 5) {
       });
       return; // Éxito, salimos de la función
     } catch (error) {
-      console.error(`Database error: ${error.message}. Retries left: ${retries - 1}`);
+      console.error(`Database error: ${error.message}`);
+      console.error(`Retries left: ${retries - 1}`);
       retries--;
       if (retries === 0) {
         console.error("Could not connect to database after several attempts. Exiting...");
         process.exit(1);
       }
-      // Esperar 3 segundos antes de reintentar
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Esperar 5 segundos antes de reintentar
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 }

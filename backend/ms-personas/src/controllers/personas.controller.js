@@ -21,6 +21,7 @@ export async function crearPersonaController(req, res) {
     }
 
     const persona = await crearPersona(req.body);
+    const requesterRole = req.headers["x-user-role"];
 
     if (requesterRole === "supervisor") {
       try {
@@ -55,9 +56,10 @@ export async function crearPersonaController(req, res) {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
       return res.status(409).json({
         ok: false,
-        message: "Ya existe un registro con estos datos únicos",
+        message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
     return res.status(500).json({
@@ -111,9 +113,10 @@ export async function listarPersonasController(req, res) {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
       return res.status(409).json({
         ok: false,
-        message: "Ya existe un registro con estos datos únicos",
+        message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
     return res.status(500).json({
@@ -180,9 +183,10 @@ export async function obtenerPersonaPorIdController(req, res) {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
       return res.status(409).json({
         ok: false,
-        message: "Ya existe un registro con estos datos únicos",
+        message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
     return res.status(500).json({
@@ -245,9 +249,10 @@ export async function obtenerPersonaPorDocumentoController(req, res) {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
       return res.status(409).json({
         ok: false,
-        message: "Ya existe un registro con estos datos únicos",
+        message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
     return res.status(500).json({
@@ -443,9 +448,10 @@ export async function actualizarPersonaController(req, res) {
       });
     }
     if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
       return res.status(409).json({
         ok: false,
-        message: "Ya existe un registro con estos datos únicos",
+        message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
     return res.status(500).json({

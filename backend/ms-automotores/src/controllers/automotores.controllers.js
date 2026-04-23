@@ -88,7 +88,13 @@ export async function createAutomotorController(req, res) {
     });
 
   } catch (error) {
-
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const status = error.message.includes("existe") ? 409 : 400;
 
     return res.status(status).json({
@@ -110,6 +116,13 @@ export async function updateAutomotorController(req, res) {
     });
 
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
 
     const status = error.message === "Automotor no encontrado" ? 404 : 400;
 

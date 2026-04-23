@@ -13,7 +13,7 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -29,7 +29,7 @@ services:
     volumes:
       - personas_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${PERSONAS_DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${PERSONAS_DB_USER} -d ${PERSONAS_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -45,7 +45,7 @@ services:
     volumes:
       - automotores_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${AUTOMOTORES_DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTOMOTORES_DB_USER} -d ${AUTOMOTORES_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -61,7 +61,7 @@ services:
     volumes:
       - infracciones_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${INFRACCIONES_DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${INFRACCIONES_DB_USER} -d ${INFRACCIONES_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -77,7 +77,7 @@ services:
     volumes:
       - comparendos_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${COMPARENDOS_DB_USER}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${COMPARENDOS_DB_USER} -d ${COMPARENDOS_DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -104,6 +104,9 @@ services:
       AUTH_DB_USER: ${AUTH_DB_USER}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+    volumes:
+      - ./backend/ms-auth-service/src:/app/src
     networks:
       - simcomp-net
 
@@ -113,6 +116,8 @@ services:
     depends_on:
       db-personas:
         condition: service_healthy
+    volumes:
+      - ./backend/ms-personas/src:/app/src
     ports:
       - "8002:8002"
     environment:
@@ -123,6 +128,9 @@ services:
       PERSONAS_DB_USER: ${PERSONAS_DB_USER}
       PERSONAS_DB_PASSWORD: ${PERSONAS_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
     networks:
       - simcomp-net
 
@@ -145,6 +153,8 @@ services:
       AUTOMOTORES_DB_PASSWORD: ${AUTOMOTORES_DB_PASSWORD}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
       JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./backend/ms-automotores/src:/app/src
     networks:
       - simcomp-net
 
@@ -164,6 +174,8 @@ services:
       INFRACCIONES_DB_USER: ${INFRACCIONES_DB_USER}
       INFRACCIONES_DB_PASSWORD: ${INFRACCIONES_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./backend/ms-infracciones/src:/app/src
     networks:
       - simcomp-net
 
@@ -192,6 +204,8 @@ services:
       AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
       JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./backend/ms-comparendos/src:/app/src
     networks:
       - simcomp-net
 
@@ -219,52 +233,8 @@ services:
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
       COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
       JWT_SECRET: ${JWT_SECRET}
-    networks:
-      - simcomp-net
-
-  # =========================
-  # GATEWAY (NGINX)
-  # =========================
-
-  gateway1:
-    image: docker.io/deytonro/simcomp-gateway:latest
-    restart: always
-    depends_on:
-      ms-auth-service:
-        condition: service_started
-      ms-personas:
-        condition: service_started
-      ms-automotores:
-        condition: service_started
-      ms-infracciones:
-        condition: service_started
-      ms-comparendos:
-        condition: service_started
-      ms-reportes:
-        condition: service_started
-    expose:
-      - "80"
-    networks:
-      - simcomp-net
-
-  gateway2:
-    image: docker.io/deytonro/simcomp-gateway:latest
-    restart: always
-    depends_on:
-      ms-auth-service:
-        condition: service_started
-      ms-personas:
-        condition: service_started
-      ms-automotores:
-        condition: service_started
-      ms-infracciones:
-        condition: service_started
-      ms-comparendos:
-        condition: service_started
-      ms-reportes:
-        condition: service_started
-    expose:
-      - "80"
+    volumes:
+      - ./backend/ms-reportes/src:/app/src
     networks:
       - simcomp-net
 
@@ -274,14 +244,20 @@ services:
 
   haproxy:
     image: docker.io/deytonro/simcomp-haproxy-balance:latest
+    volumes:
+      - ./provisioning_docker/haproxy/haproxy.local.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     ports:
       - "8080:8080"
       - "8404:8404"
     depends_on:
-      gateway1:
-        condition: service_started
-      gateway2:
-        condition: service_started
+      - ms-auth-service
+      - ms-personas
+      - ms-automotores
+      - ms-infracciones
+      - ms-comparendos
+      - ms-reportes
+      - frontend1
+      - frontend2
     networks:
       - simcomp-net
 

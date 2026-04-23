@@ -5,12 +5,12 @@ export const APP_VERSION = '1.0'
 const API_BASE = API_URL;
 
 export const API_URLS = {
-  auth: API_BASE,
-  personas: API_BASE,
-  automotores: API_BASE,
-  infracciones: API_BASE,
-  comparendos: API_BASE,
-  reportes: API_BASE,
+  auth: import.meta.env.VITE_AUTH_API || API_BASE,
+  personas: import.meta.env.VITE_PERSONAS_API || API_BASE,
+  automotores: import.meta.env.VITE_AUTOMOTORES_API || API_BASE,
+  infracciones: import.meta.env.VITE_INFRACCIONES_API || API_BASE,
+  comparendos: import.meta.env.VITE_COMPARENDOS_API || API_BASE,
+  reportes: import.meta.env.VITE_REPORTES_API || API_BASE,
 } as const;
 
 

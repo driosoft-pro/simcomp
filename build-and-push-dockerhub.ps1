@@ -1,162 +1,154 @@
-#!/usr/bin/env bash
-
 # =========================================================
 # SIMCOMP - Build & Push to Docker Hub
 # Compatible con Docker y Podman
-# Linux / Bash
+# Windows / PowerShell
 # =========================================================
 
-set -e
+$Action = if ($args[0]) { $args[0] } else { "all" }
+$TargetService = if ($args[1]) { $args[1] } else { "" }
 
-ACTION=${1:-all}
-TARGET_SERVICE=${2:-""}
-
-ENV_FILE=".env.docker-push"
+$EnvFile = ".env.docker-push"
 
 # ---------- Colores ----------
-info()  { echo -e "\e[36m[INFO]\e[0m  $1"; }
-ok()    { echo -e "\e[32m[OK]\e[0m    $1"; }
-warn()  { echo -e "\e[33m[WARN]\e[0m  $1"; }
-fail()  { echo -e "\e[31m[ERROR]\e[0m $1"; exit 1; }
+function Write-Info($msg) { Write-Host "[INFO]  $msg" -ForegroundColor Cyan }
+function Write-Ok($msg) { Write-Host "[OK]    $msg" -ForegroundColor Green }
+function Write-Warn($msg) { Write-Host "[WARN]  $msg" -ForegroundColor Yellow }
+function Write-Fail($msg) { Write-Host "[ERROR] $msg" -ForegroundColor Red; exit 1 }
 
 # ---------- Cargar .env ----------
-load_env() {
-  if [ ! -f "$ENV_FILE" ]; then
-    warn "No se encontró $ENV_FILE, usando valores por defecto"
-    return
-  fi
-
-  info "Cargando variables desde $ENV_FILE"
-  export $(grep -v '^#' "$ENV_FILE" | xargs)
+function Load-Env() {
+    if (Test-Path $EnvFile) {
+        Write-Info "Cargando variables desde $EnvFile"
+        Get-Content $EnvFile | Where-Object { $_ -notmatch "^#" -and $_ -match "=" } | ForEach-Object {
+            $name, $value = $_.Split('=', 2)
+            [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim())
+        }
+    } else {
+        Write-Warn "No se encontró $EnvFile, usando valores por defecto"
+    }
 }
 
 # ---------- Detectar CLI ----------
-get_cli() {
-  if command -v podman >/dev/null 2>&1; then
-    echo "podman"
-  elif command -v docker >/dev/null 2>&1; then
-    echo "docker"
-  else
-    fail "No se encontró docker ni podman"
-  fi
+function Get-Cli() {
+    if (Get-Command podman -ErrorAction SilentlyContinue) {
+        return "podman"
+    } elseif (Get-Command docker -ErrorAction SilentlyContinue) {
+        return "docker"
+    } else {
+        Write-Fail "No se encontró docker ni podman"
+    }
 }
 
 # ---------- Validar Dockerfile ----------
-valid_context() {
-  [ -d "$1" ] && [ -f "$1/Dockerfile" ]
+function Test-ValidContext($path) {
+    return (Test-Path $path) -and (Test-Path "$path/Dockerfile")
 }
 
 # ---------- Config ----------
-load_env
+Load-Env
 
-DOCKERHUB_USER=${DOCKERHUB_USER:-"tu_usuario"}
-VERSION=${VERSION:-"v1.0.0"}
-REGISTRY=${REGISTRY:-"docker.io"}
+$DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "tu_usuario" }
+$Version = if ($env:VERSION) { $env:VERSION } else { "v1.0.0" }
+$Registry = if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" }
+$DockerHubPass = $env:DOCKERHUB_PASS
 
-CLI=$(get_cli)
+$Cli = Get-Cli
 
 # ---------- Servicios ----------
-SERVICES=(
-"simcomp-auth-db|./backend/ms-auth-service/db"
-"simcomp-personas-db|./backend/ms-personas/db"
-"simcomp-automotores-db|./backend/ms-automotores/db"
-"simcomp-infracciones-db|./backend/ms-infracciones/db"
-"simcomp-comparendos-db|./backend/ms-comparendos/db"
-"simcomp-reportes-db|./backend/ms-reportes/db"
+$Services = @(
+    "simcomp-auth-db|./backend/ms-auth-service/db",
+    "simcomp-personas-db|./backend/ms-personas/db",
+    "simcomp-automotores-db|./backend/ms-automotores/db",
+    "simcomp-infracciones-db|./backend/ms-infracciones/db",
+    "simcomp-comparendos-db|./backend/ms-comparendos/db",
+    "simcomp-reportes-db|./backend/ms-reportes/db",
 
-"simcomp-auth-service|./backend/ms-auth-service"
-"simcomp-personas-service|./backend/ms-personas"
-"simcomp-automotores-service|./backend/ms-automotores"
-"simcomp-infracciones-service|./backend/ms-infracciones"
-"simcomp-comparendos-service|./backend/ms-comparendos"
-"simcomp-reportes-service|./backend/ms-reportes"
+    "simcomp-auth-service|./backend/ms-auth-service",
+    "simcomp-personas-service|./backend/ms-personas",
+    "simcomp-automotores-service|./backend/ms-automotores",
+    "simcomp-infracciones-service|./backend/ms-infracciones",
+    "simcomp-comparendos-service|./backend/ms-comparendos",
+    "simcomp-reportes-service|./backend/ms-reportes",
 
-"simcomp-frontend|./frontend"
-"simcomp-gateway|./provisioning_docker/nginx"
-"simcomp-haproxy-balance|./provisioning_docker/haproxy"
+    "simcomp-frontend|./frontend",
+    "simcomp-gateway|./provisioning_docker/nginx",
+    "simcomp-haproxy-balance|./provisioning_docker/haproxy"
 )
 
-BUILT=()
+$Built = @()
 
 # ---------- Filtrar servicio ----------
-if [ -n "$TARGET_SERVICE" ]; then
-  SERVICES=($(printf "%s\n" "${SERVICES[@]}" | grep "^$TARGET_SERVICE|"))
-  [ ${#SERVICES[@]} -eq 0 ] && fail "Servicio no encontrado: $TARGET_SERVICE"
-  info "Filtrado: $TARGET_SERVICE"
-fi
+if ($TargetService) {
+    $Services = $Services | Where-Object { $_ -like "$TargetService|*" }
+    if ($Services.Count -eq 0) { Write-Fail "Servicio no encontrado: $TargetService" }
+    Write-Info "Filtrado: $TargetService"
+}
 
 # ---------- Login ----------
-login_registry() {
-  if [ -z "$DOCKERHUB_PASS" ]; then
-    warn "Sin DOCKERHUB_PASS → usa docker login manual"
-    return
-  fi
+function Login-Registry() {
+    if (-not $DockerHubPass) {
+        Write-Warn "Sin DOCKERHUB_PASS → usa docker login manual"
+        return
+    }
 
-  echo "$DOCKERHUB_PASS" | $CLI login "$REGISTRY" -u "$DOCKERHUB_USER" --password-stdin
+    Write-Info "Autenticando en $Registry..."
+    $DockerHubPass | & $Cli login $Registry -u $DockerHubUser --password-stdin
 }
 
 # ---------- Build ----------
-build_images() {
-  for svc in "${SERVICES[@]}"; do
-    NAME="${svc%%|*}"
-    CONTEXT="${svc##*|}"
+function Build-Images() {
+    foreach ($svc in $Services) {
+        $parts = $svc.Split('|')
+        $Name = $parts[0]
+        $Context = $parts[1]
 
-    VERSION_TAG="$REGISTRY/$DOCKERHUB_USER/$NAME:$VERSION"
-    LATEST_TAG="$REGISTRY/$DOCKERHUB_USER/$NAME:latest"
+        $VersionTag = "$Registry/$DockerHubUser/$Name:$Version"
+        $LatestTag = "$Registry/$DockerHubUser/$Name:latest"
 
-    if ! valid_context "$CONTEXT"; then
-      warn "Saltando $NAME (sin Dockerfile)"
-      continue
-    fi
+        if (-not (Test-ValidContext $Context)) {
+            Write-Warn "Saltando $Name (sin Dockerfile en $Context)"
+            continue
+        }
 
-    info "Construyendo $NAME ..."
-    $CLI build -t "$VERSION_TAG" "$CONTEXT"
-    $CLI tag "$VERSION_TAG" "$LATEST_TAG"
+        Write-Info "Construyendo $Name ..."
+        & $Cli build -t $VersionTag $Context
+        if ($LASTEXITCODE -ne 0) { Write-Fail "Error construyendo $Name" }
+        
+        & $Cli tag $VersionTag $LatestTag
 
-    BUILT+=("$svc")
-    ok "$NAME construido"
-  done
+        $script:Built += $svc
+        Write-Ok "$Name construido"
+    }
 }
 
 # ---------- Push ----------
-push_images() {
-  local LIST=("${BUILT[@]}")
-  [ ${#LIST[@]} -eq 0 ] && LIST=("${SERVICES[@]}")
+function Push-Images() {
+    $list = if ($Built.Count -gt 0) { $Built } else { $Services }
 
-  for svc in "${LIST[@]}"; do
-    NAME="${svc%%|*}"
+    foreach ($svc in $list) {
+        $parts = $svc.Split('|')
+        $Name = $parts[0]
 
-    VERSION_TAG="$REGISTRY/$DOCKERHUB_USER/$NAME:$VERSION"
-    LATEST_TAG="$REGISTRY/$DOCKERHUB_USER/$NAME:latest"
+        $VersionTag = "$Registry/$DockerHubUser/$Name:$Version"
+        $LatestTag = "$Registry/$DockerHubUser/$Name:latest"
 
-    info "Subiendo $NAME ..."
-    $CLI push "$VERSION_TAG"
-    $CLI push "$LATEST_TAG"
+        Write-Info "Subiendo $Name ..."
+        & $Cli push $VersionTag
+        & $Cli push $LatestTag
 
-    ok "$NAME subido"
-  done
+        Write-Ok "$Name subido"
+    }
 }
 
 # ---------- Ejecución ----------
-info "CLI: $CLI | Usuario: $DOCKERHUB_USER | Versión: $VERSION | Acción: $ACTION"
+Write-Info "CLI: $Cli | Usuario: $DockerHubUser | Versión: $Version | Acción: $Action"
 
-case "$ACTION" in
-  build)
-    build_images
-    ;;
-  push)
-    login_registry
-    push_images
-    ;;
-  all)
-    login_registry
-    build_images
-    push_images
-    ;;
-  *)
-    fail "Acción inválida: build | push | all"
-    ;;
-esac
+switch ($Action) {
+    "build" { Build-Images }
+    "push" { Login-Registry; Push-Images }
+    "all" { Login-Registry; Build-Images; Push-Images }
+    Default { Write-Fail "Acción inválida: build | push | all" }
+}
 
-echo ""
-ok "Proceso finalizado"
+Write-Host ""
+Write-Ok "Proceso finalizado"

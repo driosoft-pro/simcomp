@@ -104,7 +104,7 @@ export async function crearComparendo(data, { userRole } = {}) {
         if (suspender) {
           try {
             await axios.patch(
-              `${process.env.PERSONAS_SERVICE_URL}/Licencias/suspender/${data.ciudadano_documento}`
+              `${process.env.PERSONAS_SERVICE_URL}/licencias/suspender/${data.ciudadano_documento}`
             );
             console.log(`[comparendos] Licencias suspendidas para documento ${data.ciudadano_documento} por infracción ${infraction.codigo}`);
           } catch (err) {
@@ -337,7 +337,7 @@ async function applySideEffects(codigo, placa, documento) {
 
     if (suspender) {
       try {
-        await axios.patch(`${process.env.PERSONAS_SERVICE_URL}/Licencias/suspender/${documento}`);
+        await axios.patch(`${process.env.PERSONAS_SERVICE_URL}/licencias/suspender/${documento}`);
       } catch (err) { console.error(`Error suspendiendo: ${err.message}`); }
     }
   } catch (err) {
@@ -409,7 +409,7 @@ export async function pagarComparendo(comparendoId, { userRole, username } = {})
     if (reactivarLicencia) {
       try {
         await axios.patch(
-          `${process.env.PERSONAS_SERVICE_URL}/Licencias/reactivar/${comparendoPagado.ciudadano_documento}`
+          `${process.env.PERSONAS_SERVICE_URL}/licencias/reactivar/${comparendoPagado.ciudadano_documento}`
         );
         console.log(`[comparendos] Licencias reactivadas para ${comparendoPagado.ciudadano_documento} tras pago del comparendo ${comparendoId}`);
       } catch (err) {

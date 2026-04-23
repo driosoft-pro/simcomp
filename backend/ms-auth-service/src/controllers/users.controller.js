@@ -168,6 +168,13 @@ export async function createUserController(req, res) {
       },
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const isConflict = error.message.includes("existe") || error.message.includes("registrado");
     const status = isConflict ? 409 : 400;
 
@@ -245,6 +252,13 @@ export async function updateUserController(req, res) {
       },
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     return res.status(400).json({
       success: false,
       message: error.message,

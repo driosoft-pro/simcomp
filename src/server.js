@@ -11,7 +11,7 @@ const PORT = getEnv("PORT");
 const SERVICE_NAME = getEnv("SERVICE_NAME");
 
 
-async function startServer(retries = 5) {
+async function startServer(retries = 30) {
   while (retries > 0) {
     try {
       await sequelize.authenticate();
@@ -22,12 +22,13 @@ async function startServer(retries = 5) {
       });
       return;
     } catch (error) {
-      console.error(`Unable to connect to the database: ${error.message}. Retries left: ${retries - 1}`);
+      console.error(`Unable to connect to the database: ${error.message}`);
+      console.error(`Retries left: ${retries - 1}`);
       retries--;
       if (retries === 0) {
         process.exit(1);
       }
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 }

@@ -142,7 +142,6 @@ SERVICES=(
   "simcomp-automotores-db|./backend/ms-automotores/db"
   "simcomp-infracciones-db|./backend/ms-infracciones/db"
   "simcomp-comparendos-db|./backend/ms-comparendos/db"
-  "simcomp-reportes-db|./backend/ms-reportes/db"
 
   "simcomp-auth-service|./backend/ms-auth-service"
   "simcomp-personas-service|./backend/ms-personas"

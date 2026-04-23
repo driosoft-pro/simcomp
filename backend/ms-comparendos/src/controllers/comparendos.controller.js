@@ -44,6 +44,13 @@ export async function crearComparendoController(req, res) {
       data: comparendo,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        ok: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const status = error.message.includes("permiso") ? 403 : 400;
     return res.status(status).json({
       message: error.message,
@@ -177,6 +184,13 @@ export async function actualizarComparendoController(req, res) {
       data,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        ok: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const status = error.message.includes("permiso") ? 403 : 400;
     return res.status(status).json({
       message: error.message,

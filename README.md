@@ -204,21 +204,31 @@ Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant,
 
 1. **Iniciar el ecosistema**:
    ```bash
-   docker compose up --build -d
+   docker compose -f docker-compose.local.yml up --build -d
    ```
-
+   ```bash
+   podman compose -f docker-compose.local.yml up --build -d
+   ```
 2. **Servicios disponibles**:
-   - **Frontend**: [http://localhost](http://localhost)
-   - **Gateway (Puertos 3001-3005)**: Simulan la red de producción.
+   - **Frontend**: [http://localhost:8080](http://localhost:8080) (vía HAProxy)
+   - **Gateway/Balanceador**: Puerto `8080` (Balanceo entre frontend1 y frontend2)
+   - **API Gateway**: Puerto `8080/api` (Enrutamiento a microservicios)
+   - **Microservicios Directos (Dev)**: Puertos `8001-8006`
 
 3. **Ver logs**:
    ```bash
-   docker compose logs -f
+   docker compose -f docker-compose.local.yml logs -f
+   ```
+   ```bash
+   podman compose -f docker-compose.local.yml logs -f
    ```
 
 4. **Detener**:
    ```bash
-   docker compose down
+   docker compose -f docker-compose.local.yml down
+   ```
+   ```bash
+   podman compose -f docker-compose.local.yml down
    ```
 
 ---

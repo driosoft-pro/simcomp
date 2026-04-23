@@ -97,18 +97,7 @@ export async function actualizarPersona(id, data, options = {}) {
   const oldDocumento = persona.numero_documento;
   const oldNombreCompleto = `${persona.nombres} ${persona.apellidos}`.trim();
 
-  await persona.update({
-    tipo_documento: data.tipo_documento,
-    numero_documento: data.numero_documento,
-    nombres: data.nombres,
-    apellidos: data.apellidos,
-    fecha_nacimiento: data.fecha_nacimiento,
-    genero: data.genero,
-    direccion: data.direccion,
-    telefono: data.telefono,
-    email: data.email,
-    estado: data.estado,
-  });
+  await persona.update(data);
 
   // Variables de detección de cambios
   const emailChanged = data.email && data.email !== oldEmail;

@@ -83,6 +83,13 @@ export async function createInfraccionController(req, res) {
       data: infraccion,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const status = error.message.includes("existe") ? 409 : 400;
 
     return res.status(status).json({
@@ -101,6 +108,13 @@ export async function updateInfraccionController(req, res) {
       data: infraccion,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
+      return res.status(409).json({
+        success: false,
+        message: `Ya existe un registro con estos datos únicos (${details})`,
+      });
+    }
     const status = error.message === "Infracción no encontrada" ? 404 : 400;
 
     return res.status(status).json({

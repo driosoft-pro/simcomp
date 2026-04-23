@@ -25,8 +25,9 @@ export async function createAutomotor(data) {
 
   // Verificar que el propietario existe en ms-personas
   try {
-    const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002/api";
-    const response = await fetch(`${personasServiceUrl}/Personas/documento/${data.propietario_documento}`);
+    const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002";
+    const personasApiUrl = personasServiceUrl.endsWith("/api") ? personasServiceUrl : `${personasServiceUrl}/api`;
+    const response = await fetch(`${personasApiUrl}/personas/documento/${data.propietario_documento}`);
     if (!response.ok) {
       throw new Error("El propietario no está registrado en el sistema de personas");
     }
@@ -104,10 +105,11 @@ export async function updateAutomotor(id, data) {
   const docChanged = data.propietario_documento !== undefined && data.propietario_documento !== oldPropietarioDocumento;
   if (docChanged) {
     try {
-      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://localhost:8002/api";
+      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002";
+      const personasApiUrl = personasServiceUrl.endsWith("/api") ? personasServiceUrl : `${personasServiceUrl}/api`;
       
       // Buscar la persona por el documento ANTERIOR
-      const findResponse = await fetch(`${personasServiceUrl}/personas/documento/${encodeURIComponent(oldPropietarioDocumento)}`);
+      const findResponse = await fetch(`${personasApiUrl}/personas/documento/${encodeURIComponent(oldPropietarioDocumento)}`);
       if (findResponse.ok) {
         const result = await findResponse.json();
         const persona = result.data;
@@ -115,7 +117,7 @@ export async function updateAutomotor(id, data) {
           console.log(`[automotores] Sincronizando cambio de propietario con ms-personas: ${oldPropietarioDocumento} → ${data.propietario_documento}`);
           // x-internal-sync:true evita que ms-personas intente re-sincronizar de vuelta a ms-automotores
           // (ya actualizamos el automotor, si personas llama sync-propietario no hará nada pues oldDocumento ya no existe)
-          await fetch(`${personasServiceUrl}/personas/${persona.id}`, {
+          await fetch(`${personasApiUrl}/personas/${persona.id}`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",

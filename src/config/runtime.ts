@@ -7,4 +7,4 @@ declare global {
 }
 
 export const API_URL =
-  window.__ENV__?.API_URL || "http://localhost:8080";
+  window.__ENV__?.API_URL || "http://localhost:8080/api";

@@ -7,4 +7,6 @@ declare global {
 }
 
 export const API_URL =
-  window.__ENV__?.API_URL || "http://localhost:8080/api";
+  window.__ENV__?.API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "/api";

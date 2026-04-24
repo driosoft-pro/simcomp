@@ -1,9 +1,298 @@
-networks:
-  simcomp-public:
-    driver: overlay
-    attachable: true
+services:
+  # =========================
+  # Bases de datos
+  # =========================
+  db-auth:
+    image: docker.io/deytonro/simcomp-auth-db:latest
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER:-admin}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: auth_db
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
-  simcomp-backend:
+  db-personas:
+    image: docker.io/deytonro/simcomp-personas-db:latest
+    environment:
+      POSTGRES_USER: ${PERSONAS_DB_USER:-admin}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: personas_db
+    volumes:
+      - personas_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  db-automotores:
+    image: docker.io/deytonro/simcomp-automotores-db:latest
+    environment:
+      POSTGRES_USER: ${AUTOMOTORES_DB_USER:-admin}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: automotores_db
+    volumes:
+      - automotores_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  db-infracciones:
+    image: docker.io/deytonro/simcomp-infracciones-db:latest
+    environment:
+      POSTGRES_USER: ${INFRACCIONES_DB_USER:-admin}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: infracciones_db
+    volumes:
+      - infracciones_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  db-comparendos:
+    image: docker.io/deytonro/simcomp-comparendos-db:latest
+    environment:
+      POSTGRES_USER: ${COMPARENDOS_DB_USER:-admin}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: comparendos_db
+    volumes:
+      - comparendos_db_data:/var/lib/postgresql/data
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  # =========================
+  # Microservicios
+  # =========================
+  ms-auth-service:
+    image: docker.io/deytonro/simcomp-auth-service:latest
+    environment:
+      PORT: 8001
+      AUTH_DB_HOST: db-auth
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: auth_db
+      AUTH_DB_USER: ${AUTH_DB_USER:-admin}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS:-7}
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+      - jwt_secret
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  ms-personas:
+    image: docker.io/deytonro/simcomp-personas-service:latest
+    environment:
+      PORT: 8002
+      PERSONAS_DB_HOST: db-personas
+      PERSONAS_DB_PORT: 5432
+      PERSONAS_DB_NAME: personas_db
+      PERSONAS_DB_USER: ${PERSONAS_DB_USER:-admin}
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+      - jwt_secret
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  ms-automotores:
+    image: docker.io/deytonro/simcomp-automotores-service:latest
+    environment:
+      PORT: 8003
+      AUTOMOTORES_DB_HOST: db-automotores
+      AUTOMOTORES_DB_PORT: 5432
+      AUTOMOTORES_DB_NAME: automotores_db
+      AUTOMOTORES_DB_USER: ${AUTOMOTORES_DB_USER:-admin}
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  ms-infracciones:
+    image: docker.io/deytonro/simcomp-infracciones-service:latest
+    environment:
+      PORT: 8004
+      INFRACCIONES_DB_HOST: db-infracciones
+      INFRACCIONES_DB_PORT: 5432
+      INFRACCIONES_DB_NAME: infracciones_db
+      INFRACCIONES_DB_USER: ${INFRACCIONES_DB_USER:-admin}
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  ms-comparendos:
+    image: docker.io/deytonro/simcomp-comparendos-service:latest
+    environment:
+      PORT: 8005
+      COMPARENDOS_DB_HOST: db-comparendos
+      COMPARENDOS_DB_PORT: 5432
+      COMPARENDOS_DB_NAME: comparendos_db
+      COMPARENDOS_DB_USER: ${COMPARENDOS_DB_USER:-admin}
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+    networks:
+      - simcomp_net
+    secrets:
+      - db_password
+      - jwt_secret
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  ms-reportes:
+    image: docker.io/deytonro/simcomp-reportes-service:latest
+    environment:
+      PORT: 8006
+      AUTH_SERVICE_URL: http://ms-auth-service:8001
+      PERSONAS_SERVICE_URL: http://ms-personas:8002
+      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+      COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
+    networks:
+      - simcomp_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  # =========================
+  # Gateway
+  # =========================
+  gateway:
+    image: docker.io/deytonro/simcomp-gateway:latest
+    networks:
+      - simcomp_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  # =========================
+  # Frontend
+  # =========================
+  frontend:
+    image: docker.io/deytonro/simcomp-frontend:latest
+    networks:
+      - simcomp_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+  # =========================
+  # HAProxy
+  # =========================
+  haproxy:
+    image: docker.io/deytonro/simcomp-haproxy-balance:latest
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+      - target: 8404
+        published: 8404
+        protocol: tcp
+        mode: ingress
+    networks:
+      - simcomp_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        order: start-first
+
+networks:
+  simcomp_net:
     driver: overlay
     attachable: true
 
@@ -14,235 +303,9 @@ volumes:
   infracciones_db_data:
   comparendos_db_data:
 
-configs:
-  haproxy_cfg:
-    file: ./haproxy/haproxy.cfg
+secrets:
+  db_password:
+    external: true
+  jwt_secret:
+    external: true
 
-services:
-  haproxy:
-    image: docker.io/deytonro/simcomp-haproxy-balance:v1.0.0
-    ports:
-      - "80:80"
-      - "8404:8404"
-    networks:
-      - simcomp-public
-      - simcomp-backend
-    configs:
-      - source: haproxy_cfg
-        target: /usr/local/etc/haproxy/haproxy.cfg
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: on-failure
-
-  frontend:
-    image: docker.io/deytonro/simcomp-frontend:v1.0.0
-    networks:
-      - simcomp-public
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.role == worker
-
-  ms-auth-service:
-    image: docker.io/deytonro/simcomp-auth-service:v1.0.0
-    environment:
-      PORT: 8001
-      DB_HOST: db-auth
-      DB_PORT: 5432
-      DB_NAME: auth_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      JWT_SECRET: supersecret_simcomp_2026
-      JWT_EXPIRES_IN: 15m
-      JWT_REFRESH_EXPIRES_DAYS: 7
-      PERSONAS_SERVICE_URL: http://ms-personas:8002
-      NODE_ENV: production
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  ms-personas:
-    image: docker.io/deytonro/simcomp-personas-service:v1.0.0
-    environment:
-      PORT: 8002
-      DB_HOST: db-personas
-      DB_PORT: 5432
-      DB_NAME: personas_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      AUTH_SERVICE_URL: http://ms-auth-service:8001
-      NODE_ENV: production
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  ms-automotores:
-    image: docker.io/deytonro/simcomp-automotores-service:v1.0.0
-    environment:
-      PORT: 8003
-      DB_HOST: db-automotores
-      DB_PORT: 5432
-      DB_NAME: automotores_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      PERSONAS_SERVICE_URL: http://ms-personas:8002
-      NODE_ENV: production
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  ms-infracciones:
-    image: docker.io/deytonro/simcomp-infracciones-service:v1.0.0
-    environment:
-      PORT: 8004
-      DB_HOST: db-infracciones
-      DB_PORT: 5432
-      DB_NAME: infracciones_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      NODE_ENV: production
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  ms-comparendos:
-    image: docker.io/deytonro/simcomp-comparendos-service:v1.0.0
-    environment:
-      PORT: 8005
-      DB_HOST: db-comparendos
-      DB_PORT: 5432
-      DB_NAME: comparendos_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      PERSONAS_SERVICE_URL: http://ms-personas:8002
-      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
-      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
-      NODE_ENV: production
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 3
-      restart_policy:
-        condition: on-failure
-
-  ms-reportes:
-    image: docker.io/deytonro/simcomp-reportes-service:v1.0.0
-    environment:
-      PORT: 8006
-      NODE_ENV: production
-      AUTH_SERVICE_URL: http://ms-auth-service:8001
-      PERSONAS_SERVICE_URL: http://ms-personas:8002
-      AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
-      INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
-      COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  db-auth:
-    image: docker.io/library/postgres:16
-    environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - auth_db_data:/var/lib/postgresql/data
-      - /vagrant/provisioning_docker/db-init/ms-auth-service_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.hostname == workerDocker1
-
-  db-personas:
-    image: docker.io/library/postgres:16
-    environment:
-      POSTGRES_DB: personas_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - personas_db_data:/var/lib/postgresql/data
-      - /vagrant/provisioning_docker/db-init/ms-personas_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.hostname == workerDocker1
-
-  db-automotores:
-    image: docker.io/library/postgres:16
-    environment:
-      POSTGRES_DB: automotores_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - automotores_db_data:/var/lib/postgresql/data
-      - /vagrant/provisioning_docker/db-init/ms-automotores_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.hostname == workerDocker1
-
-  db-infracciones:
-    image: docker.io/library/postgres:16
-    environment:
-      POSTGRES_DB: infracciones_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - infracciones_db_data:/var/lib/postgresql/data
-      - /vagrant/provisioning_docker/db-init/ms-infracciones_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.hostname == workerDocker1
-
-  db-comparendos:
-    image: docker.io/library/postgres:16
-    environment:
-      POSTGRES_DB: comparendos_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - comparendos_db_data:/var/lib/postgresql/data
-      - /vagrant/provisioning_docker/db-init/ms-comparendos_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - simcomp-backend
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.hostname == workerDocker1

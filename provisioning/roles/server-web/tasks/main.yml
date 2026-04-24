@@ -101,15 +101,14 @@
   become: false
   become_user: vagrant
 
-- name: Compilar frontend con variable de entorno inyectada directamente
+- name: Limpiar build anterior para forzar recompilación
+  ansible.builtin.file:
+    path: /opt/simcomp/frontend/dist
+    state: absent
+
+- name: Compilar frontend
   ansible.builtin.command: >
-    env VITE_API_BASE_URL=http://simcomp.co/api
-    VITE_AUTH_API=""
-    VITE_PERSONAS_API=""
-    VITE_AUTOMOTORES_API=""
-    VITE_INFRACCIONES_API=""
-    VITE_COMPARENDOS_API=""
-    VITE_REPORTES_API=""
+    env VITE_API_BASE_URL=/api
     npm run build
   args:
     chdir: /opt/simcomp/frontend
@@ -162,6 +161,17 @@
     owner: www-data
     group: www-data
     recurse: true
+
+- name: Generar env.js para configuración en tiempo de ejecución
+  ansible.builtin.copy:
+    dest: /var/www/simcomp/env.js
+    owner: www-data
+    group: www-data
+    mode: "0644"
+    content: |
+      window.__ENV__ = {
+        API_URL: "/api"
+      };
 
 # ── 4. Configurar Nginx ───────────────────────────────────────────────────────
 - name: Eliminar configuración default de Nginx
@@ -326,7 +336,7 @@
 
           # ── Rutas reportes ─────────────────────────────────────────
           location /api/reportes {
-              proxy_pass         http://reportes_backend/api/reportes;
+              proxy_pass         http://reportes_backend;
               proxy_http_version 1.1;
               proxy_set_header   Host            $host;
               proxy_set_header   X-Real-IP       $remote_addr;
@@ -354,10 +364,10 @@
               try_files $uri $uri/ /index.html;
           }
 
-          # ── Cache de assets estáticos ──────────────────────────────
+          # ── Cache de assets estáticos (Deshabilitado temporalmente para debugging) ──
           location ~* \.(js|css|png|jpg|ico|svg|woff|woff2)$ {
-              expires 30d;
-              add_header Cache-Control "public, no-transform";
+              expires off;
+              add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
               try_files $uri =404;
           }
 

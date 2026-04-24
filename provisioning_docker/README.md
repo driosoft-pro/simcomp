@@ -88,24 +88,28 @@ docker node ls
 ```
 
 ### 4. Desplegar el Stack
-Dentro del manager:
+Puedes usar el script automatizado o el comando directo desde la carpeta `/vagrant/provisioning_docker` en el manager:
+
+**Opción A: Comando Directo**
 ```bash
-cd /vagrant/provisioning_docker
 docker stack deploy -c stack.yml simcomp
 ```
 
-### 5. Verificación del Despliegue
-Coomandos útiles para validar el estado:
+**Opción B: Script Automatizado (Recomendado)**
 ```bash
-docker stack ls
-docker service ls
+./scripts/deploy-stack.sh
+```
+
+### 5. Verificación del Despliegue
+Comandos útiles para validar el estado:
+```bash
+# Ver estado general del stack
 docker stack services simcomp
 
-# Ver tareas y errores si algo falla:
-docker service ps simcomp_haproxy
-docker service ps simcomp_frontend
+# Ver dónde están corriendo las tareas
+docker stack ps simcomp
 
-# Ver logs en tiempo real:
+# Ver logs de un servicio específico
 docker service logs -f simcomp_ms-auth-service
 ```
 
@@ -129,16 +133,52 @@ echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
 
 ---
 
-## 🛠️ Comandos de Gestión (Manager)
+## 🛠️ Comandos de Gestión y Mantenimiento
 
-- **Escalar un servicio:**
-  ```bash
-  docker service scale simcomp_frontend=3
-  docker service scale simcomp_ms-comparendos=4
-  ```
-- **Eliminar el stack:**
-  ```bash
-  docker stack rm simcomp
-  ```
+### 📈 Escalamiento (Scaling)
+Aumenta la disponibilidad de tus servicios según la carga:
+```bash
+# Escalar manualmente
+docker service scale simcomp_frontend=5
 
+# Usando el script de utilidad
+./scripts/scale-service.sh simcomp_ms-auth-service 10
+```
 
+### 🔍 Monitoreo y Recursos
+```bash
+# Ver consumo de CPU/Memoria en tiempo real
+docker stats
+
+# Listar procesos del sistema en los nodos
+docker node ps managerDocker
+docker node ps workerDocker1
+```
+
+### 🛑 Detención y Limpieza
+```bash
+# Detener y eliminar todos los servicios
+docker stack rm simcomp
+
+# Forzar el reinicio de un servicio (sin cambiar config)
+docker service update --force simcomp_ms-reportes
+
+# Limpieza de recursos no usados
+docker system prune -a
+```
+
+---
+
+## 📜 Scripts de Automatización (`/scripts`)
+
+El directorio `scripts/` contiene utilidades para facilitar la administración:
+
+- **`deploy-stack.sh`**: Despliega o actualiza el stack completo.
+- **`remove-stack.sh`**: Elimina el stack y limpia configuraciones.
+- **`scale-service.sh`**: Escala un servicio y muestra su estado.
+- **`test-services.sh`**: Realiza pruebas de conectividad (curl) a todos los microservicios.
+- **`init-swarm-manager.sh`**: Configura el firewall e inicializa el Swarm (usado por Vagrant).
+
+---
+
+*SIMCOMP Swarm Provisioning — v1.1.0*

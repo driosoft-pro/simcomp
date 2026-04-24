@@ -34,7 +34,7 @@ $ErrorActionPreference = "Stop"
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-$BaseDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
+$BaseDir    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = $BaseDir
 
 $DbContainers = @(
@@ -63,14 +63,14 @@ $Microservices = @(
 
 # ─── Logging helpers ──────────────────────────────────────────────────────────
 
-function Write-Log  { param([string]$Msg) Write-Host "`n[INFO]  $Msg" -ForegroundColor Cyan    }
-function Write-Ok   { param([string]$Msg) Write-Host "[OK]    $Msg" -ForegroundColor Green   }
-function Write-Warn { param([string]$Msg) Write-Host "[WARN]  $Msg" -ForegroundColor Yellow  }
-function Write-Err  { param([string]$Msg) Write-Host "[ERROR] $Msg" -ForegroundColor Red     }
+function Write-Log  { param([string]$Msg) Write-Host "`n[INFO]  $Msg" -ForegroundColor Cyan }
+function Write-Ok   { param([string]$Msg) Write-Host "[OK]    $Msg" -ForegroundColor Green }
+function Write-Warn { param([string]$Msg) Write-Host "[WARN]  $Msg" -ForegroundColor Yellow }
+function Write-Err  { param([string]$Msg) Write-Host "[ERROR] $Msg" -ForegroundColor Red }
 
 # ─── Engine detection ─────────────────────────────────────────────────────────
 
-$ContainerEngine = ""   # "podman" | "docker"
+$ContainerEngine = ""
 $UseDockerComposePlugin = $false
 
 function Detect-Engine {
@@ -79,6 +79,7 @@ function Detect-Engine {
             Write-Err "El motor especificado '$Engine' no está disponible en PATH."
             exit 1
         }
+
         $script:ContainerEngine = $Engine
     }
     elseif (Get-Command "podman" -ErrorAction SilentlyContinue) {
@@ -92,10 +93,21 @@ function Detect-Engine {
         exit 1
     }
 
-    # Detect docker compose plugin vs standalone docker-compose
     if ($script:ContainerEngine -eq "docker") {
-        $pluginCheck = & docker compose version 2>&1
-        $script:UseDockerComposePlugin = ($LASTEXITCODE -eq 0)
+        try {
+            & docker compose version 1>$null 2>$null
+            $script:UseDockerComposePlugin = ($LASTEXITCODE -eq 0)
+        }
+        catch {
+            $script:UseDockerComposePlugin = $false
+        }
+
+        if (-not $script:UseDockerComposePlugin) {
+            if (-not (Get-Command "docker-compose" -ErrorAction SilentlyContinue)) {
+                Write-Err "No se encontró 'docker compose' ni 'docker-compose'."
+                exit 1
+            }
+        }
     }
 
     Write-Ok "Motor de contenedores detectado: $($script:ContainerEngine)"
@@ -109,6 +121,7 @@ function Invoke-Compose {
     )
 
     Push-Location $WorkDir
+
     try {
         if ($ContainerEngine -eq "podman") {
             & podman compose -f $ComposeFile @ExtraArgs
@@ -133,28 +146,46 @@ function Invoke-Compose {
 
 function Test-ContainerExists {
     param([string]$Name)
-    & $ContainerEngine container inspect $Name 2>&1 | Out-Null
-    return ($LASTEXITCODE -eq 0)
+
+    try {
+        & $ContainerEngine container inspect $Name 1>$null 2>$null
+        return ($LASTEXITCODE -eq 0)
+    }
+    catch {
+        return $false
+    }
 }
 
 function Test-VolumeExists {
     param([string]$Name)
-    & $ContainerEngine volume inspect $Name 2>&1 | Out-Null
-    return ($LASTEXITCODE -eq 0)
+
+    try {
+        & $ContainerEngine volume inspect $Name 1>$null 2>$null
+        return ($LASTEXITCODE -eq 0)
+    }
+    catch {
+        return $false
+    }
 }
 
 function Find-ComposeFile {
     param([string]$ServiceDir)
+
     $candidates = @(
         "docker-compose.yml",
         "docker-compose.yaml",
         "compose.yml",
         "compose.yaml"
     )
+
     foreach ($f in $candidates) {
         $full = Join-Path $ServiceDir $f
-        if (Test-Path $full) { return $f }
+
+        if (Test-Path $full) {
+            return $f
+        }
     }
+
     return $null
 }
 
@@ -162,10 +193,16 @@ function Find-ComposeFile {
 
 function Stop-And-Remove-DbContainers {
     Write-Log "Deteniendo contenedores de bases de datos..."
+
     foreach ($c in $DbContainers) {
         if (Test-ContainerExists $c) {
-            & $ContainerEngine stop $c 2>&1 | Out-Null
-            Write-Ok "Contenedor detenido: $c"
+            try {
+                & $ContainerEngine stop $c 1>$null 2>$null
+                Write-Ok "Contenedor detenido: $c"
+            }
+            catch {
+                Write-Warn "No se pudo detener el contenedor: $c"
+            }
         }
         else {
             Write-Warn "No existe el contenedor: $c"
@@ -173,10 +210,16 @@ function Stop-And-Remove-DbContainers {
     }
 
     Write-Log "Eliminando contenedores de bases de datos..."
+
     foreach ($c in $DbContainers) {
         if (Test-ContainerExists $c) {
-            & $ContainerEngine rm -f $c 2>&1 | Out-Null
-            Write-Ok "Contenedor eliminado: $c"
+            try {
+                & $ContainerEngine rm -f $c 1>$null 2>$null
+                Write-Ok "Contenedor eliminado: $c"
+            }
+            catch {
+                Write-Warn "No se pudo eliminar el contenedor: $c"
+            }
         }
         else {
             Write-Warn "Ya no existe el contenedor: $c"
@@ -186,10 +229,16 @@ function Stop-And-Remove-DbContainers {
 
 function Remove-DbVolumes {
     Write-Log "Eliminando volúmenes de PostgreSQL..."
+
     foreach ($v in $DbVolumes) {
         if (Test-VolumeExists $v) {
-            & $ContainerEngine volume rm -f $v 2>&1 | Out-Null
-            Write-Ok "Volumen eliminado: $v"
+            try {
+                & $ContainerEngine volume rm -f $v 1>$null 2>$null
+                Write-Ok "Volumen eliminado: $v"
+            }
+            catch {
+                Write-Warn "No se pudo eliminar el volumen: $v"
+            }
         }
         else {
             Write-Warn "No existe el volumen: $v"
@@ -208,14 +257,19 @@ function Rebuild-Microservice {
     }
 
     $composeFile = Find-ComposeFile $serviceDir
+
     if (-not $composeFile) {
         Write-Warn "No se encontró archivo compose en $serviceDir, se omite."
         return
     }
 
     Write-Log "Recreando $Service desde $serviceDir..."
-    Invoke-Compose -WorkDir $serviceDir -ComposeFile $composeFile `
-                   -ExtraArgs @("up", "-d", "--build", "--force-recreate")
+
+    Invoke-Compose `
+        -WorkDir $serviceDir `
+        -ComposeFile $composeFile `
+        -ExtraArgs @("up", "-d", "--build", "--force-recreate")
+
     Write-Ok "$Service levantado."
 }
 
@@ -243,6 +297,6 @@ function Reset-All {
 Detect-Engine
 
 switch ($Action) {
-    "reset"  { Reset-All   }
+    "reset"  { Reset-All }
     "status" { Show-Status }
 }

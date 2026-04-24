@@ -78,12 +78,23 @@ Una vez finalizado el `vagrant up`, puedes verificar que los nodos estén unidos
 vagrant ssh managerDocker -c "docker node ls"
 ```
 
-### 3. Desplegar Aplicación
-Desde el **managerDocker**:
+### 3. Desplegar Aplicación (Stack)
+Desde tu máquina host (Linux/Windows), puedes desplegar todo el ecosistema con un solo comando:
+```bash
+vagrant provision managerDocker --provision-with deploy-stack
+```
+
+O si prefieres hacerlo manualmente entrando al **managerDocker**:
 ```bash
 vagrant ssh managerDocker
 cd /vagrant/provisioning_docker
 docker stack deploy -c stack.yml simcomp
+```
+
+### 4. Monitoreo Inicial
+Verifica que todos los servicios estén subiendo (puede tomar 1-2 minutos la primera vez):
+```bash
+vagrant ssh managerDocker -c "docker stack services simcomp"
 ```
 
 ### 4. Acceso al Sistema
@@ -115,12 +126,58 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 ---
 
 
-## 🛠️ Operaciones y Gestión del Stack
+## 🛠️ Operaciones y Gestión del Stack (Docker Swarm)
 
-- **Escalar frontend**: `docker service scale simcomp_frontend=3`
-- **Ver logs**: `docker service logs -f simcomp_ms-auth-service`
-- **Estado nodos**: `docker node ls`
-- **Servicios**: `docker service ls`
+### 📊 Monitoreo y Estado
+| Acción | Comando (desde el Manager) |
+| :--- | :--- |
+| **Ver servicios del stack** | `docker stack services simcomp` |
+| **Ver tareas de un servicio** | `docker service ps simcomp_frontend` |
+| **Estado de los nodos** | `docker node ls` |
+| **Uso de recursos (stats)** | `docker stats` |
+
+### 📈 Escalamiento (Scaling)
+Puedes aumentar o disminuir las réplicas de cualquier microservicio en caliente:
+```bash
+# Escalar el frontend a 5 réplicas
+docker service scale simcomp_frontend=5
+
+# O usando el script de utilidad:
+./provisioning_docker/scripts/scale-service.sh simcomp_ms-auth-service 10
+```
+
+### 📜 Gestión de Logs
+```bash
+# Ver logs en tiempo real de un servicio
+docker service logs -f simcomp_ms-auth-service
+
+# Ver logs de HAProxy
+docker service logs -f simcomp_haproxy
+```
+
+### 🛑 Detener y Reiniciar
+| Acción | Comando |
+| :--- | :--- |
+| **Eliminar el stack** | `docker stack rm simcomp` |
+| **Reiniciar un servicio** | `docker service update --force simcomp_ms-reportes` |
+| **Limpiar volúmenes** | `docker volume prune` (Cuidado: borra bases de datos) |
+
+---
+
+## 🖥️ Acceso a los Nodos del Cluster
+
+Para realizar tareas de administración o depuración interna:
+
+```bash
+# Entrar al Manager (Donde está HAProxy y el despliegue)
+vagrant ssh managerDocker
+
+# Entrar al Worker 1 (Donde corren la mayoría de microservicios)
+vagrant ssh workerDocker1
+
+# Entrar al Worker 2 (Donde están las bases de datos)
+vagrant ssh workerDocker2
+```
 
 ---
 
@@ -168,18 +225,20 @@ echo "tu_llave_secreta_super_segura" | docker secret create jwt_secret -
 
 | Endpoint                                 | Auth    | Descripción                      |
 |------------------------------------------|---------|----------------------------------|
-| http://api.simcomp.co:8001/api/auth/login| —       | Login de usuario                 |
-| http://api.simcomp.co:8002/api/personas  | JWT     | Personas via Gateway             |
-| http://api.simcomp.co:8003/api/vehiculos | JWT     | Automotores via Gateway          |
-| http://api.simcomp.co:8004/api/infracciones| JWT     | Infracciones via Gateway         |
-| http://api.simcomp.co:8005/api/comparendos| JWT     | Comparendos via Gateway          |
-| http://api.simcomp.co:8006/api/reportes  | JWT     | Reportes via Gateway             |
+| Endpoint                                 | Auth    | Descripción                      |
+|------------------------------------------|---------|----------------------------------|
+| http://simcomp.co/api/auth/login         | —       | Login de usuario                 |
+| http://simcomp.co/api/personas           | JWT     | Personas via HAProxy             |
+| http://simcomp.co/api/automotores        | JWT     | Automotores via HAProxy          |
+| http://simcomp.co/api/infracciones       | JWT     | Infracciones via HAProxy         |
+| http://simcomp.co/api/comparendos       | JWT     | Comparendos via HAProxy          |
+| http://simcomp.co/api/reportes/estadisticas| JWT   | Reportes via HAProxy             |
 | http://192.168.100.3:8001/api/docs       | —       | Swagger auth-service             |
 | http://192.168.100.3:8002/api/docs       | —       | Swagger personas-service         |
 | http://192.168.100.3:8003/api/docs       | —       | Swagger automotores-service      |
 | http://192.168.100.3:8004/api/docs       | —       | Swagger infracciones-service     |
 | http://192.168.100.3:8005/api/docs       | —       | Swagger comparendos-service      |
-| http://192.168.100.3:8006/api/reportes/docs| —     | Swagger reportes-service         |
+| http://192.168.100.3:8006/api/docs       | —       | Swagger reportes-service         |
 
 ---
 

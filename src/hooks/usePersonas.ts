@@ -13,7 +13,7 @@ import {
 } from '../api/personas.api'
 import type { LicenciaConduccion, Persona, UUID, CreatePersonaPayload, UpdatePersonaPayload, CreateLicenciaPayload, UpdateLicenciaPayload } from '../types'
 
-export function usePersonas(params?: { page?: number; limit?: number; search?: string }) {
+export function usePersonas(params?: { page?: number; limit?: number; search?: string; order?: string }) {
   return useQuery<PaginatedResponse<Persona>>({
     queryKey: ['personas', params],
     queryFn: () => getPersonas(params),

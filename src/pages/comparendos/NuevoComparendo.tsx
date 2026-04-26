@@ -127,7 +127,7 @@ function NuevoComparendo() {
       setVehiculoWarning(null)
     }
     if (name === 'infraccion_codigo') {
-      const selected = infracciones?.find(i => i.codigo === value)
+      const selected = infracciones?.data?.find(i => i.codigo === value)
       if (selected) {
         setFormData(prev => ({
           ...prev,
@@ -611,7 +611,7 @@ function NuevoComparendo() {
                     className={inputClass}
                   >
                     <option value="">Seleccione una infracción</option>
-                    {infracciones?.map((inf) => (
+                    {infracciones?.data?.map((inf) => (
                       <option key={inf.id} value={inf.codigo}>
                         {inf.codigo}
                       </option>
@@ -694,7 +694,7 @@ function NuevoComparendo() {
                 </div>
             )}
             {formData.infraccion_codigo && (() => {
-              const sel = infracciones?.find(i => i.codigo === formData.infraccion_codigo)
+              const sel = infracciones?.data?.find(i => i.codigo === formData.infraccion_codigo)
               const tipo = sel?.tipo_sancion ?? ''
               const inmoviliza = tipo === 'INMOVILIZACION' || tipo === 'MIXTA'
               const suspende   = tipo === 'SUSPENSION_LICENCIA' || tipo === 'MIXTA'

@@ -11,7 +11,7 @@ import {
 } from '../api/automotores.api'
 import type { Automotor, UUID } from '../types'
 
-export function useAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string }) {
+export function useAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string; order?: string }) {
   return useQuery<PaginatedResponse<Automotor>>({
     queryKey: ['automotores', params],
     queryFn: () => getAutomotores(params),

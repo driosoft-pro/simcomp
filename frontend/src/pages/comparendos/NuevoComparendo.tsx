@@ -10,6 +10,7 @@ import VehiculoForm from '../../components/forms/VehiculoForm'
 
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../context/ToastContext'
+import { ErrorMessage } from '../../components/ui/ErrorMessage'
 
 interface SelectedInfraction {
   codigo: string
@@ -97,6 +98,7 @@ function NuevoComparendo() {
   }, [siguienteNumero, formData.numero_comparendo])
   
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Validation State
@@ -306,7 +308,6 @@ function NuevoComparendo() {
       
       addToast('Comparendo(s) creado(s) correctamente', 'success')
       
-      // If multiple were created, response might be an array
       if (Array.isArray(response)) {
         navigate(`/comparendos`)
       } else {
@@ -314,7 +315,10 @@ function NuevoComparendo() {
       }
     } catch (error: any) {
       console.error('Error al crear comparendo:', error)
-      setSubmitError(error.message || 'Error desconocido al crear comparendo')
+      setFieldErrors(error.fieldErrors || {})
+      const msg = error.message || 'Error desconocido al crear comparendo'
+      setSubmitError(msg)
+      addToast(msg, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -402,6 +406,7 @@ function NuevoComparendo() {
               required
               className={inputClass}
             />
+            <ErrorMessage message={fieldErrors.fecha_comparendo} />
           </div>
 
           {/* Documento Persona with Validation */}
@@ -423,6 +428,7 @@ function NuevoComparendo() {
                       placeholder="Ej: 123456789"
                       className={`${inputClass} ${personaValida === true ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : personaValida === false ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
                     />
+                    <ErrorMessage message={fieldErrors.ciudadano_documento} />
                     {personaValida && (
                       <CheckCircle2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
                     )}
@@ -500,6 +506,7 @@ function NuevoComparendo() {
                       placeholder="Ej: ABC123"
                       className={`${inputClass} ${vehiculoValido === true ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : vehiculoValido === false ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
                     />
+                    <ErrorMessage message={fieldErrors.placa_vehiculo} />
                     {vehiculoValido && (
                       <CheckCircle2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
                     )}
@@ -733,6 +740,7 @@ function NuevoComparendo() {
                 placeholder="Ej: Av. 3N con Calle 44"
                 className={inputClass}
               />
+              <ErrorMessage message={fieldErrors.lugar} />
             </div>
             <div>
               <label htmlFor="ciudad" className={labelClass}>
@@ -748,6 +756,7 @@ function NuevoComparendo() {
                 placeholder="Ej: Cali"
                 className={inputClass}
               />
+              <ErrorMessage message={fieldErrors.ciudad} />
             </div>
           </div>
 

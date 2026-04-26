@@ -13,7 +13,12 @@ const app = express();
 
 // ── Seguridad ─────────────────────────────────────────────────────────────────
 app.use(helmet({ hsts: false, contentSecurityPolicy: false }));
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-User-Id", "X-User-Role", "X-User-Username", "X-User-Email"],
+  credentials: true
+}));
 
 // ── Logging (dev: completo / prod: solo errores) ──────────────────────────────
 if (process.env.NODE_ENV !== "production") {

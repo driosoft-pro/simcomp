@@ -22,12 +22,13 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, getEnv("JWT_SECRET"));
-    
+
     // Inyectamos los headers esperados por los controladores
     req.headers["x-user-id"] = decoded.sub;
     req.headers["x-user-role"] = decoded.rol;
     req.headers["x-user-username"] = decoded.username || "";
     req.headers["x-user-email"] = decoded.email || "";
+    req.headers["x-user-documento"] = decoded.numero_documento || "";
 
     next();
   } catch (error) {

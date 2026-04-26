@@ -46,7 +46,7 @@ async function applySideEffects(codigo, placa, documento) {
   if (!tipo) return;
 
   const inmovilizar = tipo === "INMOVILIZACION" || tipo === "MIXTA";
-  const suspender   = tipo === "SUSPENSION_LICENCIA" || tipo === "MIXTA";
+  const suspender = tipo === "SUSPENSION_LICENCIA" || tipo === "MIXTA";
 
   // Ejecutar en paralelo — no hay dependencia entre inmovilizar y suspender
   const tasks = [];
@@ -112,10 +112,10 @@ export async function crearComparendo(data, { userRole } = {}) {
   const infractions = Array.isArray(data.infracciones) && data.infracciones.length > 0
     ? data.infracciones
     : [{
-        codigo: data.infraccion_codigo,
-        descripcion: data.infraccion_descripcion,
-        valor_multa: data.valor_multa,
-      }];
+      codigo: data.infraccion_codigo,
+      descripcion: data.infraccion_descripcion,
+      valor_multa: data.valor_multa,
+    }];
 
   const transaction = await sequelize.transaction();
 
@@ -189,7 +189,7 @@ export async function crearComparendo(data, { userRole } = {}) {
  * Lista comparendos con filtros de rol empujados a la DB y paginación.
  * Antes: findAll() sin límite → traía TODOS los registros a memoria.
  */
-export async function listarComparendos({ userRole, username, email, page = 1, limit = 50, search = '' } = {}) {
+export async function listarComparendos({ userRole, username, email, page = 1, limit = 50, search = '', order = 'DESC', documento = '', estado = '', ciudad = '' } = {}) {
   const where = {};
   const role = String(userRole || "").toLowerCase().trim();
 
@@ -198,9 +198,9 @@ export async function listarComparendos({ userRole, username, email, page = 1, l
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
   if (role === "ciudadano") {
-    const documento = String(username || "").replace("cc.", "").trim();
-    if (documento) where.ciudadano_documento = documento;
-    else return { data: [], pagination: { page, limit: safeLimit } };
+    const finalDoc = String(documento || username || "").replace("cc.", "").trim();
+    if (finalDoc) where.ciudadano_documento = finalDoc;
+    else return { data: [], total: 0 };
 
   } else if (role === "agente") {
     // Prioridad 1: username numérico = documento del agente (evita llamada HTTP)
@@ -230,6 +230,9 @@ export async function listarComparendos({ userRole, username, email, page = 1, l
   }
   // admin/supervisor: sin filtro restrictivo
 
+  if (estado) where.estado = estado;
+  if (ciudad) where.municipio = { [Op.iLike]: `%${ciudad}%` };
+
   if (search) {
     const searchLower = search.toLowerCase();
     where[Op.or] = [
@@ -242,15 +245,15 @@ export async function listarComparendos({ userRole, username, email, page = 1, l
 
   const result = await Comparendo.findAndCountAll({
     where,
-    order: [["fecha_comparendo", "DESC"]],
+    order: [["fecha_comparendo", order === 'ASC' ? 'ASC' : 'DESC']],
     limit: safeLimit,
     offset,
   });
 
-  return { 
-    data: result.rows, 
+  return {
+    data: result.rows,
     total: result.count,
-    pagination: { page, limit: safeLimit } 
+    pagination: { page, limit: safeLimit }
   };
 }
 
@@ -546,7 +549,7 @@ export async function sincronizarDatosPersona(oldDocumento, newDocumento, newNom
   // Ejecutar ambas actualizaciones en paralelo
   const [resCiudadano, resAgente] = await Promise.all([
     Comparendo.update(ciudadanoPayload, { where: { ciudadano_documento: oldDocumento } }),
-    Comparendo.update(agentePayload,   { where: { agente_documento: oldDocumento } }),
+    Comparendo.update(agentePayload, { where: { agente_documento: oldDocumento } }),
   ]);
 
   return (resCiudadano[0] ?? 0) + (resAgente[0] ?? 0);

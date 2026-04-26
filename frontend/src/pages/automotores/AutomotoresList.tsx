@@ -19,6 +19,7 @@ import DataFilters from '../../components/ui/DataFilters'
 import type { FilterOption } from '../../components/ui/DataFilters'
 import { getPersonaByDocumento } from '../../api/personas.api'
 import PersonaForm from '../../components/forms/PersonaForm'
+import { ErrorMessage } from '../../components/ui/ErrorMessage'
 
 const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
   { 
@@ -185,6 +186,7 @@ function AutomotoresList() {
   })
 
   const [submitError, setSubmitError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (editingAutomotor) {
@@ -314,7 +316,8 @@ function AutomotoresList() {
       handleCloseModal()
     } catch (err: any) {
       console.error('Error saving automotor:', err)
-      const msg = err.response?.data?.message || err.message || 'Ocurrió un error al guardar.'
+      setFieldErrors(err.fieldErrors || {})
+      const msg = err.message || 'Ocurrió un error al guardar.'
       setSubmitError(msg)
       addToast(msg, 'error')
     }
@@ -522,6 +525,7 @@ function AutomotoresList() {
                       className={inputClass}
                       placeholder="Ej. ABC123"
                     />
+                    <ErrorMessage message={fieldErrors.placa} />
                   </div>
                   <div>
                     <label className={labelClass}>Clase</label>
@@ -585,6 +589,7 @@ function AutomotoresList() {
                       className={inputClass}
                       placeholder="Número de VIN completo"
                     />
+                    <ErrorMessage message={fieldErrors.vin} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -689,6 +694,7 @@ function AutomotoresList() {
                           }`}
                           placeholder="Ej. 1010001001"
                         />
+                        <ErrorMessage message={fieldErrors.propietario_documento} />
                         {ownerVerified === true && (
                           <CheckCircle2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
                         )}

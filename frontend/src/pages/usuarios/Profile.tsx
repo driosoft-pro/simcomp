@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Save, User, Mail, MapPin, Phone, Lock, Hash, Shield } from 'lucide-react'
+import { Save, User, Mail, MapPin, Phone, Lock, Hash, Shield, Info } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useUpdateUsuario } from '../../hooks/useUsuarios'
 import { usePersonaByEmail, useUpdatePersona } from '../../hooks/usePersonas'
@@ -18,7 +18,11 @@ function Perfil() {
   const { user } = useAuth()
 
   // Solo necesitamos cargar la persona; el usuario ya lo tenemos en el contexto
-  const { data: persona, isLoading: loadingPersona } = usePersonaByEmail(user?.email || '')
+  const {
+    data: persona,
+    isLoading: loadingPersona,
+    isError: personaError,
+  } = usePersonaByEmail(user?.email || '')
 
   const updateUsuarioMutation = useUpdateUsuario(user?.id || '')
   const updatePersonaMutation = useUpdatePersona()
@@ -55,8 +59,16 @@ function Perfil() {
         telefono: persona.telefono,
         email: persona.email,
       })
+    } else if (user) {
+      // Fallback: usar datos del usuario para el documento si la persona no existe
+      setFormPersona(prev => ({
+        ...prev,
+        numero_documento: user.username,
+        email: user.email,
+        tipo_documento: 'CC' // Valor por defecto seguro
+      }))
     }
-  }, [persona])
+  }, [persona, user])
 
   const rol = user?.rol || 'ciudadano'
   const isAdmin = rol === 'admin'
@@ -110,12 +122,11 @@ function Perfil() {
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Mi Perfil</h1>
           <p className="text-slate-500 dark:text-slate-400">Gestiona tu información personal y de cuenta</p>
         </div>
-        <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-          isAdmin ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
-          isSupervisor ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-          isAgente ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-          'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-        }`}>
+        <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${isAdmin ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+            isSupervisor ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+              isAgente ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+          }`}>
           {rol}
         </div>
       </div>
@@ -152,7 +163,7 @@ function Perfil() {
                     type="text"
                     disabled={!canEditUsername}
                     value={formUsuario.username || ''}
-                    onChange={(e) => setFormUsuario({...formUsuario, username: e.target.value})}
+                    onChange={(e) => setFormUsuario({ ...formUsuario, username: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -167,8 +178,8 @@ function Perfil() {
                     disabled={!canEditEmail}
                     value={formPersona.email || formUsuario.email || ''}
                     onChange={(e) => {
-                      setFormPersona({...formPersona, email: e.target.value})
-                      setFormUsuario({...formUsuario, email: e.target.value})
+                      setFormPersona({ ...formPersona, email: e.target.value })
+                      setFormUsuario({ ...formUsuario, email: e.target.value })
                     }}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
@@ -185,6 +196,12 @@ function Perfil() {
               {loadingPersona && (
                 <div className="ml-auto animate-spin rounded-full h-4 w-4 border-2 border-violet-300 border-t-violet-600" />
               )}
+              {personaError && (
+                <div className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full dark:bg-amber-900/20 dark:text-amber-400">
+                  <Info size={10} />
+                  NO VINCULADA
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -195,7 +212,7 @@ function Perfil() {
                     type="text"
                     disabled={!canEditNames || loadingPersona}
                     value={formPersona.nombres || ''}
-                    onChange={(e) => setFormPersona({...formPersona, nombres: e.target.value})}
+                    onChange={(e) => setFormPersona({ ...formPersona, nombres: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -205,7 +222,7 @@ function Perfil() {
                     type="text"
                     disabled={!canEditNames || loadingPersona}
                     value={formPersona.apellidos || ''}
-                    onChange={(e) => setFormPersona({...formPersona, apellidos: e.target.value})}
+                    onChange={(e) => setFormPersona({ ...formPersona, apellidos: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -219,7 +236,7 @@ function Perfil() {
                     type="text"
                     disabled={!canEditAddress || loadingPersona}
                     value={formPersona.direccion || ''}
-                    onChange={(e) => setFormPersona({...formPersona, direccion: e.target.value})}
+                    onChange={(e) => setFormPersona({ ...formPersona, direccion: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -233,7 +250,7 @@ function Perfil() {
                     type="text"
                     disabled={loadingPersona}
                     value={formPersona.telefono || ''}
-                    onChange={(e) => setFormPersona({...formPersona, telefono: e.target.value})}
+                    onChange={(e) => setFormPersona({ ...formPersona, telefono: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -296,7 +313,7 @@ function Perfil() {
                   <select
                     disabled={!canEditDocument || loadingPersona}
                     value={formPersona.tipo_documento || ''}
-                    onChange={(e) => setFormPersona({...formPersona, tipo_documento: e.target.value as any})}
+                    onChange={(e) => setFormPersona({ ...formPersona, tipo_documento: e.target.value as any })}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   >
                     <option value="CC">Cédula de Ciudadanía</option>
@@ -311,7 +328,7 @@ function Perfil() {
                     type="text"
                     disabled={!canEditDocument || loadingPersona}
                     value={formPersona.numero_documento || ''}
-                    onChange={(e) => setFormPersona({...formPersona, numero_documento: e.target.value})}
+                    onChange={(e) => setFormPersona({ ...formPersona, numero_documento: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
                   />
                 </div>
@@ -320,6 +337,15 @@ function Perfil() {
                 * El cambio de documento requiere autorización administrativa y afecta el nombre de usuario y licencia.
               </p>
             </div>
+            {personaError && (
+              <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30">
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                  <span className="font-bold uppercase block mb-0.5">Aviso de Vinculación</span>
+                  Tu cuenta de usuario ({user?.email}) no tiene datos personales asociados en el sistema de tránsito.
+                  Contacta a un administrador para vincular tu registro.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

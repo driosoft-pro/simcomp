@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useCreatePersona, useCreateLicencia, useUpdatePersona, useLicenciasByPersona, useUpdateLicencia } from '../../hooks/usePersonas'
 import { createUsuario } from '../../api/usuarios.api'
 import { Save, Loader2, AlertCircle, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react'
+import { useToast } from '../../context/ToastContext'
+import { ErrorMessage } from '../ui/ErrorMessage'
 import type { Persona } from '../../types'
 
 interface PersonaFormProps {
@@ -26,7 +28,9 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
 
   const [showLicenseForm, setShowLicenseForm] = useState(requireLicense || (isEdit && !!firstLicencia))
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const { addToast } = useToast()
 
   // Sync documento with licencia logic
   const [docNumber, setDocNumber] = useState(persona?.numero_documento || defaultDocumento || '')
@@ -130,8 +134,13 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
       }
       
       onSuccess?.(resultPersona)
+      addToast(isEdit ? 'Persona actualizada con éxito' : 'Persona registrada con éxito', 'success')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Error al procesar persona')
+      console.error('Error al procesar persona:', err)
+      setFieldErrors(err.fieldErrors || {})
+      const msg = err.message || 'Error al procesar persona'
+      setError(msg)
+      addToast(msg, 'error')
       setIsCreatingUser(false)
     }
   }
@@ -172,6 +181,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Número <span className="text-red-500">*</span></label>
             <input required type="text" name="numero_documento" value={docNumber} onChange={handleDocChange} readOnly={!!defaultDocumento} className={`w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-200 ${defaultDocumento ? 'bg-slate-100 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`} />
+            <ErrorMessage message={fieldErrors.numero_documento} />
           </div>
         </div>
 
@@ -179,6 +189,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Nombres <span className="text-red-500">*</span></label>
             <input required type="text" name="nombres" defaultValue={persona?.nombres} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+            <ErrorMessage message={fieldErrors.nombres} />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Apellidos <span className="text-red-500">*</span></label>
@@ -209,6 +220,7 @@ function PersonaForm({ onSuccess, onCancel, defaultDocumento, persona, requireLi
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email <span className="text-red-500">*</span></label>
             <input required type="email" name="email" defaultValue={persona?.email} className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+            <ErrorMessage message={fieldErrors.email} />
           </div>
         </div>
 

@@ -56,7 +56,7 @@ export function DashboardCharts() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h3 className="mb-6 text-lg font-bold text-slate-800 dark:text-white">Comparendos por Hora</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
               <BarChart data={charts.comparendosPorHora}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
@@ -97,7 +97,7 @@ export function DashboardCharts() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h3 className="mb-6 text-lg font-bold text-slate-800 dark:text-white">Estado de Comparendos</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
               <PieChart>
                 <Pie
                   data={charts.comparendosPorEstado}

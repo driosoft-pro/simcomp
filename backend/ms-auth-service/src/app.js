@@ -17,7 +17,12 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
   crossOriginResourcePolicy: false,
 }));
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-User-Id", "X-User-Role", "X-User-Username", "X-User-Email"],
+  credentials: true
+}));
 
 // ── Parsing ──────────────────────────────────────────────────────────────────
 // Limitar tamaño del body para evitar ataques de payload gigante

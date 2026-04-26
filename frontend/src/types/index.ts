@@ -60,6 +60,13 @@ export interface ApiResponse<T> {
   data: T
 }
 
+export interface PaginatedResponse<T> {
+  ok?: boolean
+  success?: boolean
+  data: T[]
+  total: number
+}
+
 export interface Persona {
   id: UUID
   persona_id: UUID

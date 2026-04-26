@@ -11,9 +11,9 @@ import {
 
 export async function getInfraccionesController(req, res) {
   try {
-    const { limit, page, estado, vigente, tipo_sancion } = req.query;
-    const infracciones = await getAllInfracciones({ limit, page, estado, vigente, tipo_sancion });
-    return res.status(200).json({ success: true, data: infracciones });
+    const { limit, page, estado, vigente, tipo_sancion, search } = req.query;
+    const { rows, total } = await getAllInfracciones({ limit, page, estado, vigente, tipo_sancion, search });
+    return res.status(200).json({ success: true, data: rows, total });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error al listar infracciones" });
   }

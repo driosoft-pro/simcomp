@@ -24,14 +24,31 @@ export async function crearPersona(data) {
   return Persona.create(data);
 }
 
-export async function listarPersonas({ page = 1, limit = 50 } = {}) {
+export async function listarPersonas({ page = 1, limit = 50, search = '' } = {}) {
   const offset = (Math.max(1, page) - 1) * limit;
-  return Persona.findAll({
+  const where = {};
+
+  if (search) {
+    const searchLower = search.toLowerCase();
+    where[Op.or] = [
+      { nombres: { [Op.iLike]: `%${searchLower}%` } },
+      { apellidos: { [Op.iLike]: `%${searchLower}%` } },
+      { numero_documento: { [Op.iLike]: `%${searchLower}%` } },
+      { email: { [Op.iLike]: `%${searchLower}%` } },
+    ];
+  }
+
+  const result = await Persona.findAndCountAll({
+    where,
     limit: Number(limit),
     offset: Number(offset),
     order: [["created_at", "DESC"]],
     include: [{ model: Licencia, as: "licencias" }],
   });
+  return {
+    rows: result.rows,
+    total: result.count
+  };
 }
 
 export async function obtenerPersonaPorId(id) {

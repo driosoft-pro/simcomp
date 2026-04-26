@@ -13,10 +13,10 @@ import {
 
 export async function getAutomotores(req, res) {
   try {
-    const { page, limit, propietario, estado } = req.query;
-    const result = await getAllAutomotores({ page, limit, propietario, estado });
+    const { page, limit, propietario, estado, search } = req.query;
+    const { rows, total } = await getAllAutomotores({ page, limit, propietario, estado, search });
 
-    return res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: rows, total });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error listando automotores" });
   }

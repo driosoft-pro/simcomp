@@ -2,11 +2,15 @@ import { apiClient } from './axios.config'
 import type { ApiResponse, Comparendo, UUID, CreateComparendoPayload } from '../types'
 import { API_URLS } from '../utils/constants'
 
-export async function getComparendos(): Promise<Comparendo[]> {
-  const response = await apiClient.get<ApiResponse<Comparendo[]>>(
+export async function getComparendos(params?: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Comparendo>> {
+  const response = await apiClient.get<PaginatedResponse<Comparendo>>(
     `${API_URLS.comparendos}/comparendos`,
+    { params }
   )
-  return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  return {
+    ...response.data,
+    data: response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  }
 }
 
 export async function getComparendoById(id: UUID): Promise<Comparendo> {

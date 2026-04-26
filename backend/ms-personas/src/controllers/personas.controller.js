@@ -86,14 +86,13 @@ export async function crearPersonaController(req, res) {
 
 export async function listarPersonasController(req, res) {
   try {
+    const { page, limit, search } = req.query;
     const userRole = req.headers["x-user-role"];
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 50;
 
     // Admin/ciudadano: listado directo con paginación
     if (userRole !== "supervisor" && userRole !== "agente") {
-      const personas = await listarPersonas({ page, limit });
-      return res.json({ ok: true, data: personas });
+      const { rows, total } = await listarPersonas({ page, limit, search });
+      return res.json({ ok: true, data: rows, total });
     }
 
     // Supervisor/Agente: filtrar por emails permitidos desde ms-auth

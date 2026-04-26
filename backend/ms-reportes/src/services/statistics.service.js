@@ -36,7 +36,7 @@ export async function buildGeneralStatistics(token) {
   if (cached) return cached;
 
   // Fetch en paralelo — los 5 microservicios responden simultáneamente
-  const [usuarios, personas, automotores, infracciones, comparendos] = await Promise.all([
+  const [usuariosRes, personasRes, automotoresRes, infraccionesRes, comparendosRes] = await Promise.all([
     fetchModuleData("usuarios", token, { limit: 5000 }),
     fetchModuleData("personas", token, { limit: 5000 }),
     fetchModuleData("automotores", token, { limit: 5000 }),
@@ -44,11 +44,41 @@ export async function buildGeneralStatistics(token) {
     fetchModuleData("comparendos", token, { limit: 5000 }),
   ]);
 
+  // Extraer data y total real
+  const usuarios = Array.isArray(usuariosRes) ? usuariosRes : (usuariosRes.data || []);
+  const totalUsuarios = usuariosRes.total || usuarios.length;
+
+  const personas = Array.isArray(personasRes) ? personasRes : (personasRes.data || []);
+  const totalPersonas = personasRes.total || personas.length;
+
+  const automotores = Array.isArray(automotoresRes) ? automotoresRes : (automotoresRes.data || []);
+  const totalAutomotores = automotoresRes.total || automotores.length;
+
+  const infracciones = Array.isArray(infraccionesRes) ? infraccionesRes : (infraccionesRes.data || []);
+  const totalInfracciones = infraccionesRes.total || infracciones.length;
+
+  const comparendos = Array.isArray(comparendosRes) ? comparendosRes : (comparendosRes.data || []);
+  const totalComparendos = comparendosRes.total || comparendos.length;
+
   // Agrupaciones en una sola pasada por array (evitar múltiples reduce)
   const comparendosPorEstado = {};
+  const comparendosPorHora = Array.from({ length: 24 }, (_, i) => ({ hora: `${i}:00`, cantidad: 0 }));
+
   for (const item of comparendos) {
+    // Por estado
     const estado = item.estado || "SIN_ESTADO";
     comparendosPorEstado[estado] = (comparendosPorEstado[estado] || 0) + 1;
+
+    // Por hora (distribución de la muestra de 5000)
+    try {
+      if (item.fecha_comparendo) {
+        const date = new Date(item.fecha_comparendo);
+        const hour = date.getHours();
+        if (hour >= 0 && hour < 24) {
+          comparendosPorHora[hour].cantidad++;
+        }
+      }
+    } catch (e) {}
   }
 
   const usuariosPorRol = {};
@@ -59,15 +89,15 @@ export async function buildGeneralStatistics(token) {
 
   const result = {
     resumen: {
-      totalUsuarios: usuarios.length,
-      totalPersonas: personas.length,
-      totalAutomotores: automotores.length,
-      totalInfracciones: infracciones.length,
-      totalComparendos: comparendos.length,
+      totalUsuarios,
+      totalPersonas,
+      totalAutomotores,
+      totalInfracciones,
+      totalComparendos,
     },
     usuariosPorRol,
     comparendosPorEstado,
-    // Exponer tiempo de generación para monitoreo
+    comparendosPorHora,
     generatedAt: new Date().toISOString(),
   };
 

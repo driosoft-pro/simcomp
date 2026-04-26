@@ -1,0 +1,46 @@
+import jwt from "jsonwebtoken";
+import { getEnv } from "../utils/env.js";
+
+/**
+ * Middleware para asegurar que los headers de usuario estén presentes.
+ * Si no vienen del gateway (X-User-*), intenta extraerlos del token JWT (Authorization: Bearer ...).
+ */
+export const authMiddleware = (req, res, next) => {
+  // 1. Si ya tenemos el rol (inyectado por NGINX/Gateway), simplemente continuamos
+  if (req.headers["x-user-role"]) {
+    return next();
+  }
+
+  // 2. Si no, buscamos el header Authorization
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Token requerido",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const secret = getEnv("JWT_SECRET");
+    const decoded = jwt.verify(token, secret);
+    
+    // Inyectamos los headers esperados por los controladores
+    req.headers["x-user-id"] = decoded.sub;
+    req.headers["x-user-role"] = decoded.rol;
+    req.headers["x-user-username"] = decoded.username || "";
+    req.headers["x-user-email"] = decoded.email || "";
+    req.headers["x-user-documento"] = decoded.numero_documento || "";
+
+    next();
+  } catch (error) {
+    console.error(`[Auth] Error de validación: ${error.message}`);
+    return res.status(401).json({
+      success: false,
+      message: "Token inválido o expirado",
+    });
+  }
+};
+
+export default authMiddleware;

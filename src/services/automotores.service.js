@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Automotor from "../models/automotores.models.js";
 
 // ── HTTP con timeout para sincronizaciones inter-servicio ─────────────────────
@@ -26,13 +27,29 @@ function buildPersonasApiUrl() {
  * Lista automotores con paginación y filtros opcionales empujados a la DB.
  * Antes: findAll() sin límite → traía TODOS los vehículos a memoria.
  */
-export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado, search = '' } = {}) {
+export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado, search = '', order = 'DESC', userRole = '', username = '', documento = '', clase = '', servicio = '', condicion = '' } = {}) {
   const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
   const where = {};
-  if (propietario) where.propietario_documento = propietario;
+  const normalizedRole = String(userRole || '').toLowerCase();
+
+  // Restricción por rol: El ciudadano solo ve sus propios vehículos
+  if (normalizedRole === 'ciudadano') {
+    const finalDoc = String(documento || username || '').replace('cc.', '').trim();
+    if (finalDoc) {
+      where.propietario_documento = finalDoc;
+    } else {
+      return { rows: [], total: 0 };
+    }
+  } else if (propietario) {
+    where.propietario_documento = propietario;
+  }
+
   if (estado) where.estado = estado;
+  if (clase) where.clase = clase;
+  if (servicio) where.servicio = servicio;
+  if (condicion) where.condicion = condicion;
 
   if (search) {
     const searchUpper = search.toUpperCase();
@@ -48,7 +65,7 @@ export async function getAllAutomotores({ limit = 50, page = 1, propietario, est
   // paranoid: true ya excluye deleted_at IS NOT NULL automáticamente
   const result = await Automotor.findAndCountAll({
     where,
-    order: [["created_at", "DESC"]],
+    order: [["created_at", order === 'ASC' ? 'ASC' : 'DESC']],
     limit: safeLimit,
     offset,
   });

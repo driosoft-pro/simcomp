@@ -2,11 +2,15 @@ import { apiClient } from './axios.config'
 import type { ApiResponse, Automotor, UUID } from '../types'
 import { API_URLS } from '../utils/constants'
 
-export async function getAutomotores(): Promise<Automotor[]> {
-  const response = await apiClient.get<ApiResponse<Automotor[]>>(
+export async function getAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string }): Promise<PaginatedResponse<Automotor>> {
+  const response = await apiClient.get<PaginatedResponse<Automotor>>(
     `${API_URLS.automotores}/automotores`,
+    { params }
   )
-  return response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
+  return {
+    ...response.data,
+    data: response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
+  }
 }
 
 export async function getAutomotorById(id: UUID): Promise<Automotor> {

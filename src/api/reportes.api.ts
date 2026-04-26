@@ -12,6 +12,7 @@ export interface SystemStatistics {
   }
   usuariosPorRol: Record<string, number>
   comparendosPorEstado: Record<string, number>
+  comparendosPorHora: { hora: string; cantidad: number }[]
 }
 
 export interface ImportResult {

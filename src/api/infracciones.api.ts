@@ -2,11 +2,12 @@ import { apiClient } from './axios.config'
 import type { ApiResponse, Infraccion, UUID } from '../types'
 import { API_URLS } from '../utils/constants'
 
-export async function getInfracciones(): Promise<Infraccion[]> {
-  const response = await apiClient.get<ApiResponse<Infraccion[]>>(
+export async function getInfracciones(params?: { page?: number; limit?: number; search?: string; estado?: string; vigente?: boolean }): Promise<PaginatedResponse<Infraccion>> {
+  const response = await apiClient.get<PaginatedResponse<Infraccion>>(
     `${API_URLS.infracciones}/infracciones`,
+    { params }
   )
-  return response.data.data
+  return response.data
 }
 
 export async function getInfraccionById(id: UUID): Promise<Infraccion> {

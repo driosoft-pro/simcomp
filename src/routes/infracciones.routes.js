@@ -1,8 +1,8 @@
 import { Router } from "express";
 
 import {
-  listInfracciones,
-  getInfraccion,
+  getInfraccionesController,
+  getInfraccionByIdController,
   getInfraccionByCodigoController,
   createInfraccionController,
   updateInfraccionController,
@@ -44,7 +44,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/infracciones", listInfracciones);
+router.get("/infracciones", getInfraccionesController);
 
 /**
  * @swagger
@@ -83,7 +83,7 @@ router.get(
   "/infracciones/:id",
   idParamValidator,
   validateRequest,
-  getInfraccion
+  getInfraccionByIdController
 );
 
 /**

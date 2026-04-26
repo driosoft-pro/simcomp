@@ -6,6 +6,9 @@ set -Eeuo pipefail
 # Compatible con Docker y Podman
 # =========================================================
 
+# Moverse a la raíz del proyecto
+cd "$(dirname "$0")/.." || exit 1
+
 # ---------- Configuración por defecto ----------
 DEFAULT_DOCKERHUB_USER="deytonro"
 DEFAULT_VERSION="v1.0.0"

@@ -6,63 +6,77 @@ import { buildExcelDataset } from "./excel.service.js";
 import { buildPdfReport } from "./pdf.service.js";
 import { buildGeneralStatistics } from "./statistics.service.js";
 
+/**
+ * Construye el dataset completo del sistema.
+ * Todos los módulos se solicitan en paralelo (Promise.all).
+ * Si se pasa limit, se aplica a la query HTTP, no en memoria.
+ */
 export async function buildFullDataset(token, limit) {
+  const fetchOpts = (limit && limit !== "all" && !isNaN(parseInt(limit)))
+    ? { limit: parseInt(limit) }
+    : {};
+
+  // Fetch en paralelo de los 5 módulos
   const [usuarios, personas, automotores, infracciones, comparendos] = await Promise.all([
-    fetchModuleData("usuarios", token),
-    fetchModuleData("personas", token),
-    fetchModuleData("automotores", token),
-    fetchModuleData("infracciones", token),
-    fetchModuleData("comparendos", token)
+    fetchModuleData("usuarios",    token, fetchOpts),
+    fetchModuleData("personas",    token, fetchOpts),
+    fetchModuleData("automotores", token, fetchOpts),
+    fetchModuleData("infracciones",token, fetchOpts),
+    fetchModuleData("comparendos", token, fetchOpts),
   ]);
 
-  const dataset = {
-    usuarios,
-    personas,
-    automotores,
-    infracciones,
-    comparendos
-  };
-
-  if (limit && limit !== "all" && !isNaN(parseInt(limit))) {
-    const l = parseInt(limit);
-    for (const key in dataset) {
-      dataset[key] = dataset[key].slice(0, l);
-    }
-  }
-
-  return dataset;
+  return { usuarios, personas, automotores, infracciones, comparendos };
 }
 
+/**
+ * Construye el ZIP con CSV + Excel + PDF del dataset completo.
+ * Optimizaciones:
+ * - buildFullDataset y buildGeneralStatistics comparten el fetch si las stats
+ *   están en cache (evita la segunda ronda de 5 llamadas HTTP).
+ * - Generación de Excel y PDF en paralelo con Promise.all.
+ * - Compresión zlib level 6 en lugar de 9 (point sweet: velocidad vs tamaño).
+ */
 export async function buildDatasetZipBuffer(token, limit) {
-  const dataset = await buildFullDataset(token, limit);
-  const stats = await buildGeneralStatistics(token);
+  // Lanzar dataset y stats en paralelo.
+  // Si stats está en cache, el segundo Promise.all retorna de inmediato.
+  const [dataset, stats] = await Promise.all([
+    buildFullDataset(token, limit),
+    buildGeneralStatistics(token),
+  ]);
 
-  const excelBuffer = await buildExcelDataset(dataset);
-
-  const pdfBuffer = await buildPdfReport("Reporte general SIMCOMP", [
-    {
-      title: "Resumen general",
-      lines: Object.entries(stats.resumen).map(([k, v]) => `${k}: ${v}`)
-    },
-    {
-      title: "Usuarios por rol",
-      lines: Object.entries(stats.usuariosPorRol).map(([k, v]) => `${k}: ${v}`)
-    },
-    {
-      title: "Comparendos por estado",
-      lines: Object.entries(stats.comparendosPorEstado).map(([k, v]) => `${k}: ${v}`)
-    }
+  // Generar Excel y PDF en paralelo (operaciones CPU-bound independientes)
+  const [excelBuffer, pdfBuffer] = await Promise.all([
+    buildExcelDataset(dataset),
+    buildPdfReport("Reporte general SIMCOMP", [
+      {
+        title: "Resumen general",
+        lines: Object.entries(stats.resumen).map(([k, v]) => `${k}: ${v}`),
+      },
+      {
+        title: "Usuarios por rol",
+        lines: Object.entries(stats.usuariosPorRol).map(([k, v]) => `${k}: ${v}`),
+      },
+      {
+        title: "Comparendos por estado",
+        lines: Object.entries(stats.comparendosPorEstado).map(([k, v]) => `${k}: ${v}`),
+      },
+      {
+        title: "Generado en",
+        lines: [stats.generatedAt || new Date().toISOString()],
+      },
+    ]),
   ]);
 
   return new Promise((resolve, reject) => {
     const stream = new PassThrough();
     const chunks = [];
-    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    // Level 6: punto óptimo velocidad/compresión (level 9 es 2-3x más lento por ~5% menos tamaño)
+    const archive = archiver("zip", { zlib: { level: 6 } });
 
     stream.on("data", (chunk) => chunks.push(chunk));
     stream.on("end", () => resolve(Buffer.concat(chunks)));
     stream.on("error", reject);
-
     archive.on("error", reject);
     archive.pipe(stream);
 
@@ -71,7 +85,7 @@ export async function buildDatasetZipBuffer(token, limit) {
     }
 
     archive.append(excelBuffer, { name: "dataset_completo.xlsx" });
-    archive.append(pdfBuffer, { name: "reporte_general.pdf" });
+    archive.append(pdfBuffer,   { name: "reporte_general.pdf" });
 
     archive.finalize();
   });

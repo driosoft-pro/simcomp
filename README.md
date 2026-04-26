@@ -316,6 +316,30 @@ Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant,
 
 ---
 
+## 🔧 Generación Automática de Entornos (.env)
+
+Para facilitar la configuración del proyecto académico en diferentes ambientes, se han creado scripts que generan automáticamente todos los archivos `.env`, `.env.local`, `.env.vagrant` y `.env.swarm` para cada microservicio y el frontend a partir de sus respectivas plantillas (`.env.example`).
+
+### Uso en Linux
+```bash
+# 1. Dar permisos de ejecución (si no los tiene)
+chmod +x scripts/build-envs.sh
+
+# 2. Ejecutar generador
+./scripts/build-envs.sh
+```
+
+### Uso en Windows (PowerShell)
+```powershell
+# Ejecutar generador
+.\scripts\build-envs.ps1
+```
+
+> [!TIP]
+> Ejecuta este script cada vez que clones el repositorio o cuando haya cambios en las plantillas `.env.example` de los microservicios.
+
+---
+
 ## 📦 Gestión de Imágenes en Docker Hub
 
 El proyecto incluye herramientas de automatización para la construcción y distribución de imágenes de microservicios y frontend.
@@ -329,12 +353,12 @@ El proyecto incluye herramientas de automatización para la construcción y dist
 
 ```bash
 # 1. Dar permisos de ejecución
-chmod +x build-and-push-dockerhub.sh
+chmod +x scripts/build-and-push-dockerhub.sh
 
 # 2. Configurar variables y ejecutar
 export DOCKERHUB_USER="tu_usuario"
 export VERSION="v1.0.0"
-./build-and-push-dockerhub.sh
+./scripts/build-and-push-dockerhub.sh
 ```
 
 ### Uso en Windows (PowerShell)
@@ -348,7 +372,7 @@ $env:VERSION="v1.0.0"
 $env:DOCKERHUB_TOKEN="tu_token_aqui"
 
 # 3. Ejecutar script
-.\build-and-push-dockerhub.ps1
+.\scripts\build-and-push-dockerhub.ps1
 ```
 
 > [!TIP]
@@ -358,8 +382,8 @@ $env:DOCKERHUB_TOKEN="tu_token_aqui"
 ### Construcción Individual
 Si deseas construir solo un servicio específico, puedes pasar el nombre de la carpeta como argumento:
 
-- **Linux**: `./build-and-push-dockerhub.sh ms-auth-service`
-- **Windows**: `.\build-and-push-dockerhub.ps1 -Only ms-auth-service`
+- **Linux**: `./scripts/build-and-push-dockerhub.sh ms-auth-service`
+- **Windows**: `.\scripts\build-and-push-dockerhub.ps1 -Only ms-auth-service`
 
 ### Recomendación Importante sobre el Contexto
 Cada `Dockerfile` debe respetar su propio contexto. Asegúrate de que:
@@ -369,9 +393,15 @@ Cada `Dockerfile` debe respetar su propio contexto. Asegúrate de que:
 
 ---
 
+## Comandos Vagrant (Gestor Automatizado)
+> [!TIP]
+> Se recomienda usar el gestor interactivo para inicializar de forma limpia el entorno de Vagrant seleccionado (Nativo, Swarm, o Swarm+Spark).
+> **Linux**: `./scripts/vagrant-manager.sh`
+> **Windows**: `.\scripts\vagrant-manager.ps1`
+
 ## Comandos Vagrant (Versión Nativa / Ansible)
 > [!NOTE]
-> Estos comandos aplican solo si usas `Vagrantfile_native`.
+> Estos comandos aplican solo si usas el `Vagrantfile_native`.
 
 ```bash
 vagrant status

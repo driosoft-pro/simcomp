@@ -53,6 +53,12 @@ const ComparendoEstadoHistorial = sequelize.define(
     updatedAt: "updated_at",
     deletedAt: "deleted_at",
     paranoid: true,
+    indexes: [
+      // FK más consultada: historial de un comparendo específico
+      { fields: ["comparendo_id"] },
+      // Ordenamiento por fecha de evento
+      { fields: ["fecha_evento"] },
+    ],
   }
 );
 

@@ -1,51 +1,84 @@
 import Automotor from "../models/automotores.models.js";
 
-export async function getAllAutomotores() {
-  return await Automotor.findAll({
-    where: {
-      deleted_at: null
-    }
+// ── HTTP con timeout para sincronizaciones inter-servicio ─────────────────────
+const SYNC_TIMEOUT_MS = 5000;
+
+async function syncFetch(url, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SYNC_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch {
+    // best-effort — nunca bloquear la operación principal por una sincronización
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function buildPersonasApiUrl() {
+  const base = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002";
+  return base.endsWith("/api") ? base : `${base}/api`;
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Lista automotores con paginación y filtros opcionales empujados a la DB.
+ * Antes: findAll() sin límite → traía TODOS los vehículos a memoria.
+ */
+export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado } = {}) {
+  const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
+  const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
+
+  const where = {};
+  if (propietario) where.propietario_documento = propietario;
+  if (estado) where.estado = estado;
+
+  // paranoid: true ya excluye deleted_at IS NOT NULL automáticamente
+  return Automotor.findAll({
+    where,
+    order: [["created_at", "DESC"]],
+    limit: safeLimit,
+    offset,
   });
 }
 
 export async function getAutomotorById(id) {
-  return await Automotor.findByPk(id);
+  return Automotor.findByPk(id);
 }
 
+/**
+ * Crea un automotor.
+ * Optimizaciones:
+ * - Eliminada la query previa de unicidad por placa — el UNIQUE constraint
+ *   de la DB ya lo garantiza y es más eficiente (atómico, sin race condition).
+ * - Validación de propietario en ms-personas con timeout y fire-and-forget
+ *   para no bloquear el create si el servicio está lento.
+ */
 export async function createAutomotor(data) {
-  const existingAutomotor = await Automotor.findOne({
-    where: {
-      placa: data.placa
-    }
-  });
-
-  if (existingAutomotor) {
-    throw new Error("El automotor ya existe");
-  }
-
-  // Verificar que el propietario existe en ms-personas
+  // Validar propietario con timeout corto — no bloquear si ms-personas tarda
   try {
-    const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002";
-    const personasApiUrl = personasServiceUrl.endsWith("/api") ? personasServiceUrl : `${personasServiceUrl}/api`;
-    const response = await fetch(`${personasApiUrl}/personas/documento/${data.propietario_documento}`);
-    if (!response.ok) {
+    const res = await syncFetch(
+      `${buildPersonasApiUrl()}/personas/documento/${encodeURIComponent(data.propietario_documento)}`
+    );
+    if (res && res.status === 404) {
       throw new Error("El propietario no está registrado en el sistema de personas");
     }
   } catch (error) {
-    if (error.message.includes("personas")) {
-      throw error;
-    }
-    console.error("Error validando propietario:", error.message);
-    // No bloqueamos si el servicio de personas está caído, pero registramos el error
+    // Solo relanzar si es error de negocio (propietario no existe)
+    if (error.message.includes("personas")) throw error;
+    // Si es error de red/timeout, loguear y continuar (no bloquear el registro)
+    console.error("[automotores] Aviso: no se pudo validar propietario en ms-personas:", error.message);
   }
 
-  let estadoDefecto = data.estado || "activo";
-  if (data.condicion === "REPORTADO_ROBO" && estadoDefecto === "activo") {
-    estadoDefecto = "inmovilizado";
-  }
+  const estadoDefecto = (data.condicion === "REPORTADO_ROBO" && (!data.estado || data.estado === "activo"))
+    ? "inmovilizado"
+    : (data.estado || "activo");
 
-  const automotor = await Automotor.create({
-    placa: data.placa,
+  // Confiar en UNIQUE constraints para placa/vin/numero_motor/numero_chasis
+  // El controller captura SequelizeUniqueConstraintError → 409
+  return Automotor.create({
+    placa: data.placa?.toUpperCase(),
     vin: data.vin,
     numero_motor: data.numero_motor,
     numero_chasis: data.numero_chasis,
@@ -58,117 +91,90 @@ export async function createAutomotor(data) {
     propietario_documento: data.propietario_documento,
     propietario_nombre: data.propietario_nombre,
     estado: estadoDefecto,
-    condicion: data.condicion || "LEGAL"
+    condicion: data.condicion || "LEGAL",
   });
-
-  return automotor;
 }
 
 export async function updateAutomotor(id, data) {
   const automotor = await Automotor.findByPk(id);
+  if (!automotor) throw new Error("Automotor no encontrado");
 
-  if (!automotor) {
-    throw new Error("Automotor no encontrado");
-  }
-
-  // Capturar valores anteriores ANTES de mutar para detectar cambios
   const oldPropietarioDocumento = automotor.propietario_documento;
   const oldPropietarioNombre = automotor.propietario_nombre;
 
-  if (data.placa !== undefined) automotor.placa = data.placa;
-  if (data.vin !== undefined) automotor.vin = data.vin;
-  if (data.numero_motor !== undefined) automotor.numero_motor = data.numero_motor;
-  if (data.numero_chasis !== undefined) automotor.numero_chasis = data.numero_chasis;
-  if (data.marca !== undefined) automotor.marca = data.marca;
-  if (data.linea !== undefined) automotor.linea = data.linea;
-  if (data.modelo !== undefined) automotor.modelo = data.modelo;
-  if (data.color !== undefined) automotor.color = data.color;
-  if (data.clase !== undefined) automotor.clase = data.clase;
-  if (data.servicio !== undefined) automotor.servicio = data.servicio;
-  if (data.propietario_documento !== undefined) automotor.propietario_documento = data.propietario_documento;
-  if (data.propietario_nombre !== undefined) automotor.propietario_nombre = data.propietario_nombre;
-  if (data.estado !== undefined) {
-    automotor.estado = data.estado;
-  }
-  if (data.condicion !== undefined) {
-    automotor.condicion = data.condicion;
-    if (data.condicion === "REPORTADO_ROBO" && automotor.estado === "activo") {
-      automotor.estado = "inmovilizado";
-    }
+  const camposEditables = [
+    "placa", "vin", "numero_motor", "numero_chasis", "marca", "linea",
+    "modelo", "color", "clase", "servicio",
+    "propietario_documento", "propietario_nombre", "estado", "condicion",
+  ];
+
+  camposEditables.forEach(campo => {
+    if (data[campo] !== undefined) automotor[campo] = data[campo];
+  });
+
+  // Normalizar placa
+  if (data.placa) automotor.placa = data.placa.toUpperCase();
+
+  // Auto-inmovilizar si pasa a REPORTADO_ROBO
+  if (data.condicion === "REPORTADO_ROBO" && automotor.estado === "activo") {
+    automotor.estado = "inmovilizado";
   }
 
   automotor.updated_at = new Date();
-
   await automotor.save();
 
-  // Sincronización inversa: si cambió el propietario_documento, notificar a ms-personas
-  const docChanged = data.propietario_documento !== undefined && data.propietario_documento !== oldPropietarioDocumento;
+  // Sincronización inversa con ms-personas — fire-and-forget (no bloquea la respuesta)
+  const docChanged = data.propietario_documento !== undefined
+    && data.propietario_documento !== oldPropietarioDocumento;
+
   if (docChanged) {
-    try {
-      const personasServiceUrl = process.env.PERSONAS_SERVICE_URL || "http://ms-personas:8002";
-      const personasApiUrl = personasServiceUrl.endsWith("/api") ? personasServiceUrl : `${personasServiceUrl}/api`;
-      
-      // Buscar la persona por el documento ANTERIOR
-      const findResponse = await fetch(`${personasApiUrl}/personas/documento/${encodeURIComponent(oldPropietarioDocumento)}`);
-      if (findResponse.ok) {
-        const result = await findResponse.json();
+    Promise.resolve().then(async () => {
+      try {
+        const personasApiUrl = buildPersonasApiUrl();
+        const findRes = await syncFetch(
+          `${personasApiUrl}/personas/documento/${encodeURIComponent(oldPropietarioDocumento)}`
+        );
+        if (!findRes || !findRes.ok) return;
+
+        const result = await findRes.json();
         const persona = result.data;
-        if (persona && persona.id) {
-          console.log(`[automotores] Sincronizando cambio de propietario con ms-personas: ${oldPropietarioDocumento} → ${data.propietario_documento}`);
-          // x-internal-sync:true evita que ms-personas intente re-sincronizar de vuelta a ms-automotores
-          // (ya actualizamos el automotor, si personas llama sync-propietario no hará nada pues oldDocumento ya no existe)
-          await fetch(`${personasApiUrl}/personas/${persona.id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "x-user-role": "admin",
-              "x-user-id": "internal-sync"
-            },
-            body: JSON.stringify({
-              numero_documento: data.propietario_documento,
-              // Si también cambió el nombre, sincronizarlo
-              ...(data.propietario_nombre && data.propietario_nombre !== oldPropietarioNombre
-                ? { nombres: data.propietario_nombre }
-                : {})
-            }),
-          });
-        } else {
-          console.warn(`[automotores] No se encontró persona con documento ${oldPropietarioDocumento} en ms-personas para sincronizar.`);
+        if (!persona?.id) return;
+
+        const updatePayload = { numero_documento: data.propietario_documento };
+        if (data.propietario_nombre && data.propietario_nombre !== oldPropietarioNombre) {
+          updatePayload.nombres = data.propietario_nombre;
         }
-      } else if (findResponse.status === 404) {
-        console.warn(`[automotores] La persona con documento ${oldPropietarioDocumento} no existe en ms-personas (puede ser un cambio de propietario legítimo).`);
-      } else {
-        console.error(`[automotores] Error consultando ms-personas: ${findResponse.status}`);
+
+        await syncFetch(`${personasApiUrl}/personas/${persona.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": "admin",
+            "x-user-id": "internal-sync",
+          },
+          body: JSON.stringify(updatePayload),
+        });
+      } catch (err) {
+        console.error("[automotores→personas] Error en sincronización:", err.message);
       }
-    } catch (err) {
-      console.error("[automotores] Error en sincronización inversa con ms-personas:", err.message);
-    }
+    });
   }
 
   return automotor;
 }
 
 export async function changeAutomotorStatus(id, estado) {
-  const automotor = await Automotor.findOne({
-    where: {
-      id: id,
-      deleted_at: null
-    }
-  });
+  // paranoid: true — findByPk excluye deleted_at automáticamente
+  const automotor = await Automotor.findByPk(id);
+  if (!automotor) throw new Error("Automotor no encontrado");
 
-  if (!automotor) {
-    throw new Error("Automotor no encontrado");
-  }
-
-  estado = estado.toLowerCase();
-  
-  if (!["activo", "inactivo", "inmovilizado"].includes(estado)) {
+  const estadoNorm = estado.toLowerCase();
+  if (!["activo", "inactivo", "inmovilizado"].includes(estadoNorm)) {
     throw new Error("Estado inválido");
   }
 
-  automotor.estado = estado;
+  automotor.estado = estadoNorm;
   automotor.updated_at = new Date();
-
   await automotor.save();
 
   return automotor;
@@ -176,51 +182,33 @@ export async function changeAutomotorStatus(id, estado) {
 
 export async function deleteAutomotor(id) {
   const automotor = await Automotor.findByPk(id);
-
-  if (!automotor) {
-    throw new Error("Automotor no encontrado");
-  }
+  if (!automotor) throw new Error("Automotor no encontrado");
 
   automotor.estado = "inactivo";
-  automotor.deleted_at = new Date();
-
-  await automotor.save();
+  // paranoid: true — destroy() pone deleted_at automáticamente
+  await automotor.destroy();
 }
 
 export async function getAutomotorByPlaca(placa) {
-
-  const placaNormalizada = placa.toUpperCase();
-
-  return await Automotor.findOne({
-    where: {
-      placa: placaNormalizada,
-      deleted_at: null
-    }
+  return Automotor.findOne({
+    where: { placa: placa.toUpperCase() },
+    // paranoid: true excluye deleted_at automáticamente
   });
 }
 
 export async function getAutomotoresByPropietario(documento) {
-  return await Automotor.findAll({
-    where: {
-      propietario_documento: documento,
-      deleted_at: null
-    }
+  return Automotor.findAll({
+    where: { propietario_documento: documento },
+    order: [["created_at", "DESC"]],
   });
 }
 
 export async function inmovilizarAutomotorPorPlaca(placa) {
-  const placaNormalizada = placa.toUpperCase();
-
   const automotor = await Automotor.findOne({
-    where: {
-      placa: placaNormalizada,
-      deleted_at: null
-    }
+    where: { placa: placa.toUpperCase() },
   });
 
-  if (!automotor) {
-    throw new Error(`Automotor con placa ${placa} no encontrado`);
-  }
+  if (!automotor) throw new Error(`Automotor con placa ${placa} no encontrado`);
 
   automotor.estado = "inmovilizado";
   automotor.updated_at = new Date();
@@ -229,6 +217,10 @@ export async function inmovilizarAutomotorPorPlaca(placa) {
   return automotor;
 }
 
+/**
+ * Sincronización masiva de datos de propietario (llamado desde ms-personas).
+ * Ya era eficiente (1 UPDATE bulk) — se mantiene igual.
+ */
 export async function actualizarDatosPropietarioMasivo(oldDocumento, newDocumento, newNombre) {
   if (!oldDocumento) throw new Error("Documento original requerido para la sincronización");
 
@@ -239,9 +231,7 @@ export async function actualizarDatosPropietarioMasivo(oldDocumento, newDocument
   if (Object.keys(updateFields).length === 0) return 0;
 
   const [affectedRows] = await Automotor.update(updateFields, {
-    where: {
-      propietario_documento: oldDocumento
-    }
+    where: { propietario_documento: oldDocumento },
   });
 
   return affectedRows;

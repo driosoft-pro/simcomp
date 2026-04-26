@@ -2,7 +2,7 @@ import { apiClient } from './axios.config'
 import type { ApiResponse, Automotor, UUID } from '../types'
 import { API_URLS } from '../utils/constants'
 
-export async function getAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string }): Promise<PaginatedResponse<Automotor>> {
+export async function getAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string; order?: string }): Promise<PaginatedResponse<Automotor>> {
   const response = await apiClient.get<PaginatedResponse<Automotor>>(
     `${API_URLS.automotores}/automotores`,
     { params }

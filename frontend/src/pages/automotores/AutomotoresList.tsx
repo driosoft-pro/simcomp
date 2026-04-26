@@ -30,7 +30,7 @@ const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
       { label: '🚙 Camioneta', value: 'CAMIONETA' },
       { label: '🚜 Campero', value: 'CAMPERO' },
       { label: '🚌 Bus', value: 'BUS' },
-      { label: '🚛 Camión', value: 'CAMIÓN' },
+      { label: '🚛 Camión', value: 'CAMION' },
     ] 
   },
   { 
@@ -62,6 +62,15 @@ const AUTOMOTOR_FILTER_OPTIONS: FilterOption[] = [
       { label: 'Activo', value: 'activo' },
       { label: 'Inactivo', value: 'inactivo' },
       { label: 'Inmovilizado', value: 'inmovilizado' },
+    ] 
+  },
+  { 
+    label: 'Orden', 
+    key: 'order', 
+    type: 'select', 
+    options: [
+      { label: '📅 Más recientes primero', value: 'DESC' },
+      { label: '⏳ Más antiguos primero', value: 'ASC' },
     ] 
   },
 ]

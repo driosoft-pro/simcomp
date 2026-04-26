@@ -13,8 +13,25 @@ import {
 
 export async function getAutomotores(req, res) {
   try {
-    const { page, limit, propietario, estado, search } = req.query;
-    const { rows, total } = await getAllAutomotores({ page, limit, propietario, estado, search });
+    const { page, limit, propietario, estado, search, order, clase, servicio, condicion } = req.query;
+    const userRole = req.headers["x-user-role"];
+    const username = req.headers["x-user-username"];
+    const documento = req.headers["x-user-documento"];
+
+    const { rows, total } = await getAllAutomotores({
+      page,
+      limit,
+      propietario,
+      estado,
+      search,
+      order,
+      userRole,
+      username,
+      documento,
+      clase,
+      servicio,
+      condicion
+    });
 
     return res.status(200).json({ success: true, data: rows, total });
   } catch (error) {

@@ -1,6 +1,7 @@
 import express from "express";
 import { param } from "express-validator";
 import { validateRequest } from "../middlewares/validation.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 import {
   createAutomotorController,
@@ -55,7 +56,7 @@ router.post("/", createAutomotorController);
  *       500:
  *         description: Error del servidor
  */
-router.get("/", getAutomotores);
+router.get("/", authMiddleware, getAutomotores);
 
 /**
  * @swagger

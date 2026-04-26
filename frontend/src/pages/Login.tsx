@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { LockKeyhole, UserCircle2, ShieldCheck } from 'lucide-react'
+import { LockKeyhole, UserCircle2, ShieldCheck, Eye, EyeOff, HelpCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { APP_VERSION } from '../utils/constants'
+import { useToast } from '../context/ToastContext'
 
 function Login() {
   const { login, isAuthenticated } = useAuth()
+  const { addToast } = useToast()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -27,6 +30,10 @@ function Login() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleForgotPassword = () => {
+    addToast('Funcionalidad de recuperación enviada a tu correo institucional.', 'info')
   }
 
   return (
@@ -77,19 +84,35 @@ function Login() {
 
           {/* Campo contraseña */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Contraseña
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-medium text-slate-300">
+                Contraseña
+              </label>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
             <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 transition focus-within:border-blue-500/60 focus-within:bg-white/10">
               <LockKeyhole size={18} className="shrink-0 text-slate-400" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 outline-none"
                 placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-slate-400 hover:text-slate-200 transition"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -120,9 +143,15 @@ function Login() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} SIMCOMP v{APP_VERSION} · Sistema de Comparendos de Tránsito
-        </p>
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2 text-[10px] text-slate-500">
+            <HelpCircle size={12} />
+            <span>¿Necesitas ayuda? Contacta a soporte técnico</span>
+          </div>
+          <p className="text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} SIMCOMP v{APP_VERSION} · Sistema de Comparendos de Tránsito
+          </p>
+        </div>
       </div>
     </div>
   )

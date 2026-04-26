@@ -32,6 +32,15 @@ const PERSONA_FILTER_OPTIONS: FilterOption[] = [
       { label: 'Otro', value: 'O' },
     ] 
   },
+  { 
+    label: 'Orden', 
+    key: 'order', 
+    type: 'select', 
+    options: [
+      { label: '📅 Más recientes primero', value: 'DESC' },
+      { label: '⏳ Más antiguos primero', value: 'ASC' },
+    ] 
+  },
 ]
 
 const tipoDocBadge: Record<string, string> = {

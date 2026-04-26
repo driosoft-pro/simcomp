@@ -131,6 +131,45 @@ echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
   - **Usuario:** `admin`
   - **Clave:** `Admin123*`
 
+### 📊 Acceso y Uso de Analytics Spark
+
+El servicio de análisis masivo de datos (PySpark) corre dedicado en un worker. Ofrece un panel visual propio y la consola oficial de Spark.
+
+**Enlaces en Navegador:**
+- **Dashboard:** [http://192.168.100.2:8010](http://192.168.100.2:8010) (o [http://127.0.0.1:8010](http://127.0.0.1:8010) si usas docker local)
+- **Spark UI:** [http://192.168.100.2:4040](http://192.168.100.2:4040) (o [http://127.0.0.1:4040](http://127.0.0.1:4040) si usas docker local)
+
+**Uso Interactivo en Consola (PySpark):**
+Puedes conectarte en vivo al contenedor del servicio para ejecutar código Python de análisis de datos:
+
+1. **Ubicar el contenedor** (desde el `managerDocker`):
+   ```bash
+   docker service ps simcomp_ms-analytics-spark
+   ```
+   *Revisa en qué worker se encuentra asignado (generalmente `workerDocker1`).*
+
+2. **Entrar al nodo correspondiente** (desde tu máquina anfitriona):
+   ```bash
+   vagrant ssh workerDocker1
+   ```
+
+3. **Obtener el ID del contenedor y acceder:**
+   ```bash
+   CONTAINER_ID=$(docker ps -qf "name=simcomp_ms-analytics-spark")
+   docker exec -it $CONTAINER_ID bash
+   ```
+
+4. **Lanzar la consola de PySpark:**
+   Una vez dentro de la terminal del contenedor, escribe:
+   ```bash
+   pyspark
+   ```
+   *¡Listo! Ahora tienes un entorno interactivo conectado. Puedes probar cargar un dataset:*
+   ```python
+   df = spark.read.option("header", True).csv("/app/data/uploads/dataset_simcomp.csv")
+   df.show(5)
+   ```
+
 ---
 
 ## 🛠️ Comandos de Gestión y Mantenimiento

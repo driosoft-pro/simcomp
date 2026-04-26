@@ -254,3 +254,23 @@ services:
           - node.hostname == workerDocker2
       restart_policy:
         condition: on-failure
+
+  ms-analytics-spark:
+    image: deytonro/simcomp-analytics-spark:latest
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8010
+      SPARK_MASTER_URL: local[*]
+      SPARK_LOCAL_IP: 0.0.0.0
+    ports:
+      - "8010:8010"
+      - "4040:4040"
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == workerDocker1
+      restart_policy:
+        condition: on-failure

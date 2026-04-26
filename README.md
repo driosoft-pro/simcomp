@@ -59,8 +59,31 @@ El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resil
 1. **HAProxy**: Balanceador de carga de entrada (Puerto 80) y panel de estadísticas (Puerto 8404).
 2. **Nginx API Gateway**: Proxy inverso con validación de JWT para proteger microservicios.
 3. **Frontend**: Aplicación React (Vite) servida por Nginx.
-4. **6 Microservicios**: Auth, Personas, Automotores, Infracciones, Comparendos y Reportes.
+4. **7 Microservicios**: Auth, Personas, Automotores, Infracciones, Comparendos, Reportes y Analytics Spark.
 5. **PostgreSQL 16**: 5 bases de datos independientes con persistencia en volúmenes.
+
+---
+
+## 📂 Estructura del Repositorio y Servicios
+
+Para facilitar la navegación a los nuevos integrantes del equipo, aquí están los enlaces directos a cada componente del ecosistema:
+
+### 🖥️ Frontend
+- [Frontend (React + Vite)](./frontend)
+
+### ⚙️ Backend (Node.js + Express)
+- [Auth Service](./backend/ms-auth-service)
+- [Personas Service](./backend/ms-personas)
+- [Automotores Service](./backend/ms-automotores)
+- [Infracciones Service](./backend/ms-infracciones)
+- [Comparendos Service](./backend/ms-comparendos)
+- [Reportes Service](./backend/ms-reportes)
+
+### 📊 Analytics & Big Data
+- [Analytics Spark Service (PySpark + Flask)](./analytics-spark-service)
+
+### 🐳 Infraestructura
+- [Provisioning Docker (Swarm, HAProxy, Nginx)](./provisioning_docker)
 
 ---
 
@@ -239,6 +262,7 @@ echo "tu_llave_secreta_super_segura" | docker secret create jwt_secret -
 | http://192.168.100.3:8004/api/docs       | —       | Swagger infracciones-service     |
 | http://192.168.100.3:8005/api/docs       | —       | Swagger comparendos-service      |
 | http://192.168.100.3:8006/api/docs       | —       | Swagger reportes-service         |
+| http://192.168.100.3:8010/               | —       | Dashboard de Analytics Spark     |
 
 ---
 

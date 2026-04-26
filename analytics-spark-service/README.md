@@ -43,6 +43,95 @@ El servicio carga dinámicamente un dataset de comparendos en formato CSV usando
 4. **Visualización**: El dashboard (`/`) consume la API y renderiza las gráficas utilizando Chart.js para presentar información accionable.
 5. **Modificación de Registros**: La aplicación permite la edición de los datos a través de peticiones PUT. Al modificar un registro, el archivo CSV se actualiza en el disco y las visualizaciones se refrescan.
 
+## 🏗️ Diseño Propuesto
+
+### 1. Pipeline, Componentes y Algoritmos
+
+El sistema usa un pipeline de procesamiento de datos basado en Apache Spark + PySpark, donde se carga un dataset CSV, se procesa, se analiza y se expone mediante una API web.
+
+**Pipeline general:**
+```text
+Dataset CSV
+   ↓
+API Flask
+   ↓
+Apache Spark / PySpark
+   ↓
+Procesamiento y consultas SQL
+   ↓
+Resultados en JSON / CSV
+   ↓
+Dashboard Web
+```
+
+**Flujo de trabajo:**
+1. El usuario ingresa al dashboard web.
+2. El dashboard consume la API Analytics.
+3. La API recibe peticiones como:
+   - Cargar dataset
+   - Contar registros
+   - Consultar columnas
+   - Filtrar categorías
+   - Exportar resultados
+4. La API ejecuta operaciones usando PySpark.
+5. Spark procesa el dataset de comparendos.
+6. Los resultados se devuelven al frontend en formato JSON o se exportan como CSV.
+
+**Algoritmos / Procesos usados:**
+
+Se utilizan operaciones de análisis descriptivo:
+`Lectura de datos → Limpieza básica → Exploración → Filtros → Agrupaciones → Consultas SQL → Exportación`
+
+Ejemplos de operaciones:
+```python
+df.count()
+df.printSchema()
+df.select("ciudad").distinct()
+df.filter(df.ciudad == "Cali")
+df.createOrReplaceTempView("comparendos")
+spark.sql("SELECT ciudad, COUNT(*) FROM comparendos GROUP BY ciudad")
+```
+
+**Descripción de componentes:**
+| Componente | Función | Datos que maneja |
+| :--- | :--- | :--- |
+| **Dashboard Web** | Interfaz para visualizar resultados | Respuestas JSON de la API |
+| **API Analytics** | Expone endpoints para procesar datos | Peticiones HTTP, dataset, resultados |
+| **Apache Spark** | Motor de procesamiento distribuido | DataFrames, consultas SQL |
+| **PySpark** | Librería para controlar Spark desde Python | Transformaciones y acciones |
+| **Dataset CSV** | Fuente principal de datos | Comparendos de tránsito |
+| **Exportador CSV** | Guarda resultados procesados | Archivos `.csv` |
+
+### 2. Diagrama de Despliegue
+
+```text
+┌──────────────────────────────┐
+│        Máquina Host          │
+│    Navegador del usuario     │
+└───────────────┬──────────────┘
+                │
+                │ HTTP :8010
+                ▼
+┌──────────────────────────────┐
+│     Contenedor Docker        │
+│   simcomp-analytics-spark    │
+│                              │
+│  ┌────────────────────────┐  │
+│  │     API Analytics      │  │
+│  │        Flask           │  │
+│  └───────────┬────────────┘  │
+│              │               │
+│  ┌───────────▼────────────┐  │
+│  │    Apache Spark        │  │
+│  │    PySpark Engine      │  │
+│  └───────────┬────────────┘  │
+│              │               │
+│  ┌───────────▼────────────┐  │
+│  │ Dataset CSV / Outputs  │  │
+│  └────────────────────────┘  │
+└──────────────────────────────┘
+```
+
 ## 📂 Estructura del Proyecto
 
 ```bash
@@ -124,6 +213,21 @@ mv data/comparendos.csv data/dataset_simcomp.csv
    ```
 3. **Abrir en el navegador**:
    Navega a http://localhost:8010
+
+---
+
+### 4. Despliegue en Docker Swarm (Cluster SIMCOMP)
+
+El servicio está integrado en el stack principal (`stack.yml`). Para desplegarlo en la infraestructura con Vagrant:
+
+1. **Desplegar el stack** desde la máquina host:
+   ```bash
+   vagrant provision managerDocker --provision-with deploy-stack
+   ```
+   *(O directamente dentro del manager con `docker stack deploy -c stack.yml simcomp`)*
+2. **Ubicación**: Se despliega automáticamente en el nodo **workerDocker1** (1 réplica) para optimizar recursos.
+3. **Acceso al Dashboard**:
+   Navega a http://192.168.100.2:8010 (o la IP de cualquier nodo del cluster gracias al _routing mesh_).
 
 ---
 

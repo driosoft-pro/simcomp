@@ -52,10 +52,6 @@ const Infraccion = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
-    deleted_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
   },
   {
     tableName: "infracciones",
@@ -64,6 +60,19 @@ const Infraccion = sequelize.define(
     updatedAt: "updated_at",
     deletedAt: "deleted_at",
     paranoid: true,
+    freezeTableName: true,
+    // ── Índices críticos para optimización de consultas ───────────────────────
+    indexes: [
+      // codigo: usado para validación y lookups rápidos en ms-comparendos
+      { fields: ["codigo"] },
+      // tipo_sancion: usado para filtros y estadísticas en ms-reportes
+      { fields: ["tipo_sancion"] },
+      // estado/vigente: filtros comunes en listados del frontend
+      { fields: ["estado"] },
+      { fields: ["vigente"] },
+      // Compuesto: listado de infracciones vigentes y activas
+      { fields: ["estado", "vigente"] },
+    ],
   }
 );
 

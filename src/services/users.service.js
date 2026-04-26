@@ -1,58 +1,76 @@
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 import User from "../models/user.model.js";
 import { getEnv } from "../utils/env.js";
 
+// Atributos base: nunca exponer password_hash ni deleted_at
+const PUBLIC_ATTRS = { exclude: ["password_hash", "deleted_at"] };
 
-export async function getAllUsers() {
-  return await User.findAll({
-    attributes: { exclude: ["password_hash"] },
-  });
+/**
+ * Lista usuarios con filtros opcionales empujados a la DB.
+ * Evita traer todos los registros a memoria para filtrar en JS.
+ * Soporta paginación con limit/offset.
+ *
+ * @param {object} opts
+ * @param {string[]} [opts.roles]        - Filtrar solo estos roles (WHERE rol IN (...))
+ * @param {string[]} [opts.excludeRoles] - Excluir estos roles
+ * @param {number}   [opts.limit]        - Máximo de resultados
+ * @param {number}   [opts.offset]       - Desplazamiento para paginación
+ */
+export async function getAllUsers({ roles, excludeRoles, limit, offset } = {}) {
+  const where = {};
+
+  if (roles && roles.length) {
+    where.rol = { [Op.in]: roles };
+  } else if (excludeRoles && excludeRoles.length) {
+    where.rol = { [Op.notIn]: excludeRoles };
+  }
+
+  const queryOpts = {
+    attributes: PUBLIC_ATTRS,
+    where,
+    order: [["created_at", "DESC"]],
+  };
+
+  if (limit) queryOpts.limit = limit;
+  if (offset) queryOpts.offset = offset;
+
+  return await User.findAll(queryOpts);
 }
 
 export async function getUserById(id) {
   return await User.findByPk(id, {
-    attributes: { exclude: ["password_hash"] },
+    attributes: PUBLIC_ATTRS,
   });
 }
 
 export async function getUserByEmail(email) {
   return await User.findOne({
     where: { email },
-    attributes: { exclude: ["password_hash"] },
+    attributes: PUBLIC_ATTRS,
   });
 }
 
 export async function getUserByUsername(username) {
   return await User.findOne({
     where: { username },
-    attributes: { exclude: ["password_hash"] },
+    attributes: PUBLIC_ATTRS,
   });
 }
 
 export async function getUserByDocumento(numeroDocumento) {
   return await User.findOne({
     where: { numero_documento: numeroDocumento },
-    attributes: { exclude: ["password_hash"] },
+    attributes: PUBLIC_ATTRS,
   });
 }
 
+/**
+ * Crea un usuario. NO hace queries previas de unicidad: confiamos en los
+ * UNIQUE constraints de Postgres (más eficiente y libre de race conditions).
+ * El controller captura SequelizeUniqueConstraintError y devuelve 409.
+ */
 export async function createUser(data) {
-  const existingByEmail = await User.findOne({
-    where: { email: data.email },
-  });
-
-  if (existingByEmail) {
-    throw new Error("El email ya está registrado");
-  }
-
-  const existingByUsername = await User.findOne({
-    where: { username: data.username },
-  });
-
-  if (existingByUsername) {
-    throw new Error("El nombre de usuario ya existe");
-  }
-
   const password_hash = await bcrypt.hash(data.password, 10);
 
   const user = await User.create({
@@ -98,7 +116,7 @@ export async function updateUser(id, data, options = {}) {
   // IMPORTANTE: usar oldNumeroDocumento (capturado antes del update) para comparar
   const docChanged = data.numero_documento !== undefined && data.numero_documento !== oldNumeroDocumento;
 
-    if (!skipPersonaSync && (emailChanged || docChanged)) {
+  if (!skipPersonaSync && (emailChanged || docChanged)) {
     try {
       const personasBaseUrl = getEnv("PERSONAS_SERVICE_URL") || "http://ms-personas:8002";
       const personasApiUrl = personasBaseUrl.endsWith("/api") ? personasBaseUrl : `${personasBaseUrl}/api`;
@@ -127,16 +145,15 @@ export async function updateUser(id, data, options = {}) {
 
         if (Object.keys(updatePayload).length > 0) {
           console.log(`Sincronizando cambios con ms-personas para persona ${personaId}:`, updatePayload);
-          // x-internal-sync: true evita que ms-personas intente re-sincronizar de vuelta con ms-auth
+          // x-internal-sync: true evita que ms-personas intente re-sincronizar de vuelta
           // (previene bucle circular auth → personas → auth)
-          // x-user-role: admin permite pasar el authMiddleware y roleMiddleware de ms-personas
           await fetch(`${personasApiUrl}/personas/${personaId}`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
               "x-internal-sync": "true",
               "x-user-role": "admin",
-              "x-user-id": "internal-sync"
+              "x-user-id": "internal-sync",
             },
             body: JSON.stringify(updatePayload),
           });

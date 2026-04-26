@@ -58,6 +58,14 @@ const User = sequelize.define(
     updatedAt: "updated_at",
     deletedAt: "deleted_at",
     paranoid: true,
+    // Índices para acelerar filtros frecuentes por rol, estado y búsqueda por documento
+    indexes: [
+      { fields: ["rol"] },
+      { fields: ["estado"] },
+      { fields: ["numero_documento"] },
+      // Índice compuesto para listados filtrados por rol+estado (query más común)
+      { fields: ["rol", "estado"] },
+    ],
   }
 );
 

@@ -11,35 +11,52 @@ import {
 
 export async function listUsers(req, res) {
   try {
-    let users = await getAllUsers();
+    const userRole = req.user?.rol || req.headers["x-user-role"];
+    const userId = req.user?.sub || req.headers["x-user-id"];
 
-    // Si es ciudadano, solo puede ver su propio perfil en la lista
-    const userRole = req.user.rol || req.headers["x-user-role"];
-    const userId = req.user.sub || req.headers["x-user-id"];
+    // Paginación desde query params (?page=1&limit=50)
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    // Filtros empujados a la DB según el rol (evita traer todo a memoria)
+    let filterOpts = { limit, offset };
 
     if (userRole === "ciudadano") {
-      console.log("Filtrando lista de usuarios para ciudadano. Sub:", userId);
-      users = users.filter((u) => String(u.id) === String(userId));
-      console.log("Usuarios encontrados tras filtro:", users.length);
+      // Ciudadano solo se ve a sí mismo — query directa por PK
+      const user = await getUserById(userId);
+      return res.status(200).json({
+        success: true,
+        data: user ? [user] : [],
+        pagination: { page, limit, total: user ? 1 : 0 },
+      });
     }
 
-    // Si es supervisor, solo puede ver agentes y ciudadanos
     if (userRole === "supervisor") {
-      console.log("Filtrando lista de usuarios para supervisor.");
-      users = users.filter((u) => ["agente", "ciudadano"].includes(u.rol));
-      console.log("Usuarios encontrados tras filtro:", users.length);
+      filterOpts.roles = ["agente", "ciudadano"];
+    } else if (userRole === "agente") {
+      // Agente: ciudadanos + sí mismo
+      // Buscamos ciudadanos y luego agregamos al agente si no está en la lista
+      filterOpts.roles = ["ciudadano"];
+      const [citizens, self] = await Promise.all([
+        getAllUsers(filterOpts),
+        getUserById(userId),
+      ]);
+      const users = self ? [...citizens.filter(u => String(u.id) !== String(userId)), self] : citizens;
+      return res.status(200).json({
+        success: true,
+        data: users,
+        pagination: { page, limit },
+      });
     }
+    // admin: sin filtro de rol
 
-    // Si es agente, solo puede ver ciudadanos y su propio usuario
-    if (userRole === "agente") {
-      console.log("Filtrando lista de usuarios para agente. Sub:", userId);
-      users = users.filter((u) => u.rol === "ciudadano" || String(u.id) === String(userId));
-      console.log("Usuarios encontrados tras filtro:", users.length);
-    }
+    const users = await getAllUsers(filterOpts);
 
     return res.status(200).json({
       success: true,
       data: users,
+      pagination: { page, limit },
     });
   } catch (error) {
     return res.status(500).json({

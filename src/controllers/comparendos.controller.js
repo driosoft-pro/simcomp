@@ -60,14 +60,13 @@ export async function crearComparendoController(req, res) {
 
 export async function listarComparendosController(req, res) {
   try {
+    const { page, limit, search } = req.query;
     const userRole = req.headers["x-user-role"];
     const username = req.headers["x-user-username"];
     const email = req.headers["x-user-email"];
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 50;
 
-    const result = await listarComparendos({ userRole, username, email, page, limit });
-    return res.json(result);
+    const result = await listarComparendos({ userRole, username, email, page, limit, search });
+    return res.json({ ok: true, ...result });
   } catch (error) {
     return res.status(500).json({
       message: error.message,

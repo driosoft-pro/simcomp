@@ -10,8 +10,6 @@ import {
 } from '../../hooks/useInfracciones'
 import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency, formatDateShort } from '../../utils/formatters'
-import { useSearch } from '../../hooks/useSearch'
-import { usePagination } from '../../hooks/usePagination'
 import { useToast } from '../../context/ToastContext'
 import SearchInput from '../../components/ui/SearchInput'
 import DataFilters from '../../components/ui/DataFilters'
@@ -64,43 +62,51 @@ const labelClass = 'mb-1.5 block text-sm font-semibold text-slate-700 dark:text-
 
 function InfraccionesList() {
   const { user } = useAuth()
-  const { data, isLoading, isError, error } = useInfracciones()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState<Record<string, any>>({})
+
+  const { data: paginatedData, isLoading, isError, error } = useInfracciones({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    ...filters
+  })
+  
   const createInfraccion = useCreateInfraccion()
   const updateInfraccion = useUpdateInfraccion()
   const deleteInfraccion = useDeleteInfraccion()
   const activateInfraccion = useActivateInfraccion()
   const { addToast } = useToast()
 
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filters, setFilters] = useState<Record<string, any>>({})
+  const items = paginatedData?.data || []
+  const totalItems = paginatedData?.total || 0
+  const totalPages = Math.ceil(totalItems / pageSize)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val)
+    setCurrentPage(1)
+  }
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [confirmActivateId, setConfirmActivateId] = useState<string | null>(null)
   const [editingInfraccion, setEditingInfraccion] = useState<Infraccion | null>(null)
 
-  let roleFilteredData = data
-
-  // Apply Field Filters
-  if (roleFilteredData && Object.keys(filters).length > 0) {
-    roleFilteredData = roleFilteredData.filter((item: any) => {
-      return Object.entries(filters).every(([key, value]) => {
-        if (value === undefined || value === '') return true
-        return String(item[key]) === String(value)
-      })
-    })
+  const handleFilterChange = (f: Record<string, any>) => {
+    setFilters(f)
+    setCurrentPage(1)
   }
-
-  const searchedData = useSearch(roleFilteredData, searchTerm, ['codigo', 'descripcion', 'articulo_codigo'])
-
-  const {
-    currentPage,
-    pageSize,
-    totalItems,
-    totalPages,
-    paginatedItems,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination(searchedData)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -237,11 +243,11 @@ function InfraccionesList() {
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por código, descripción, artículo..." />
+        <SearchInput value={searchTerm} onChange={handleSearchChange} placeholder="Buscar por código, descripción, artículo..." />
         <DataFilters 
           options={INFRACCION_FILTER_OPTIONS} 
-          onFilter={(f) => setFilters(f)} 
-          onClear={() => setFilters({})} 
+          onFilter={handleFilterChange} 
+          onClear={() => handleFilterChange({})} 
         />
       </div>
 
@@ -285,7 +291,7 @@ function InfraccionesList() {
                   </tr>
                 ))}
 
-              {paginatedItems?.map((infraccion) => (
+              {items?.map((infraccion) => (
                 <tr
                   key={infraccion.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -382,7 +388,7 @@ function InfraccionesList() {
             </tbody>
           </table>
 
-          {!isLoading && paginatedItems?.length === 0 && (
+          {!isLoading && items?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 No hay infracciones registradas.

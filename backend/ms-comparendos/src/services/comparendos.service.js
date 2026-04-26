@@ -189,7 +189,7 @@ export async function crearComparendo(data, { userRole } = {}) {
  * Lista comparendos con filtros de rol empujados a la DB y paginación.
  * Antes: findAll() sin límite → traía TODOS los registros a memoria.
  */
-export async function listarComparendos({ userRole, username, email, page = 1, limit = 50 } = {}) {
+export async function listarComparendos({ userRole, username, email, page = 1, limit = 50, search = '' } = {}) {
   const where = {};
   const role = String(userRole || "").toLowerCase().trim();
 
@@ -230,14 +230,28 @@ export async function listarComparendos({ userRole, username, email, page = 1, l
   }
   // admin/supervisor: sin filtro restrictivo
 
-  const rows = await Comparendo.findAll({
+  if (search) {
+    const searchLower = search.toLowerCase();
+    where[Op.or] = [
+      { numero_comparendo: { [Op.iLike]: `%${searchLower}%` } },
+      { ciudadano_documento: { [Op.iLike]: `%${searchLower}%` } },
+      { ciudadano_nombre: { [Op.iLike]: `%${searchLower}%` } },
+      { placa_vehiculo: { [Op.iLike]: `%${searchLower}%` } },
+    ];
+  }
+
+  const result = await Comparendo.findAndCountAll({
     where,
     order: [["fecha_comparendo", "DESC"]],
     limit: safeLimit,
     offset,
   });
 
-  return { data: rows, pagination: { page, limit: safeLimit } };
+  return { 
+    data: result.rows, 
+    total: result.count,
+    pagination: { page, limit: safeLimit } 
+  };
 }
 
 /**

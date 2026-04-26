@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { usePersonas } from '../../hooks/usePersonas'
 import { useAuth } from '../../hooks/useAuth'
-import { useSearch } from '../../hooks/useSearch'
-import { usePagination } from '../../hooks/usePagination'
 import SearchInput from '../../components/ui/SearchInput'
 import DataFilters from '../../components/ui/DataFilters'
 import type { FilterOption } from '../../components/ui/DataFilters'
@@ -44,38 +42,44 @@ const tipoDocBadge: Record<string, string> = {
 }
 
 function PersonasList() {
-  const { data, isLoading, isError, error } = usePersonas()
-  const { user } = useAuth()
-  const [showForm, setShowForm] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState<Record<string, any>>({})
 
-  const isCiudadano = user?.rol === 'ciudadano'
-  let roleFilteredData = isCiudadano
-    ? data?.filter((p) => p.numero_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
-    : data
+  const { data: paginatedData, isLoading, isError, error } = usePersonas({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    ...filters
+  })
+  
+  const { user } = useAuth()
+  const [showForm, setShowForm] = useState(false)
 
-  // Apply Field Filters
-  if (roleFilteredData && Object.keys(filters).length > 0) {
-    roleFilteredData = roleFilteredData.filter((item: any) => {
-      return Object.entries(filters).every(([key, value]) => {
-        if (value === undefined || value === '') return true
-        return String(item[key]) === String(value)
-      })
-    })
+  const items = paginatedData?.data || []
+  const totalItems = paginatedData?.total || 0
+  const totalPages = Math.ceil(totalItems / pageSize)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
-  const searchedData = useSearch(roleFilteredData, searchTerm, ['nombres', 'apellidos', 'numero_documento', 'email', 'telefono'])
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setCurrentPage(1)
+  }
 
-  const {
-    currentPage,
-    pageSize,
-    totalItems,
-    totalPages,
-    paginatedItems,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination(searchedData)
+  // Si el usuario cambia el término de búsqueda o filtros, volvemos a la página 1
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val)
+    setCurrentPage(1)
+  }
+
+  const handleFilterChange = (f: Record<string, any>) => {
+    setFilters(f)
+    setCurrentPage(1)
+  }
 
   return (
     <div className="space-y-6">
@@ -113,11 +117,11 @@ function PersonasList() {
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por nombre, documento, email..." />
+        <SearchInput value={searchTerm} onChange={handleSearchChange} placeholder="Buscar por nombre, documento, email..." />
         <DataFilters 
           options={PERSONA_FILTER_OPTIONS} 
-          onFilter={(f) => setFilters(f)} 
-          onClear={() => setFilters({})} 
+          onFilter={handleFilterChange} 
+          onClear={() => handleFilterChange({})} 
         />
       </div>
 
@@ -158,7 +162,7 @@ function PersonasList() {
                   </tr>
                 ))}
 
-              {paginatedItems?.map((persona) => (
+              {items?.map((persona) => (
                 <tr
                   key={persona.persona_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -197,7 +201,7 @@ function PersonasList() {
             </tbody>
           </table>
 
-          {!isLoading && paginatedItems?.length === 0 && (
+          {!isLoading && items?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 No hay personas registradas.

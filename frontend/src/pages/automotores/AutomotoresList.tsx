@@ -8,8 +8,6 @@ import {
   useDeleteAutomotor,
 } from '../../hooks/useAutomotores'
 import { useAuth } from '../../hooks/useAuth'
-import { useSearch } from '../../hooks/useSearch'
-import { usePagination } from '../../hooks/usePagination'
 import { useToast } from '../../context/ToastContext'
 import SearchInput from '../../components/ui/SearchInput'
 import Pagination from '../../components/ui/Pagination'
@@ -115,45 +113,43 @@ function LoadingRow() {
 
 function AutomotoresList() {
   const { user } = useAuth()
-  const { data, isLoading, isError, error } = useAutomotores()
-  const isCiudadano = user?.rol === 'ciudadano'
-
+  const [pgCurrentPage, setPgCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState<Record<string, any>>({})
+
+  const { data: paginatedData, isLoading, isError, error } = useAutomotores({
+    page: pgCurrentPage,
+    limit: pageSize,
+    search: searchTerm,
+    ...filters
+  })
+  
+  const isCiudadano = user?.rol === 'ciudadano'
   const { addToast } = useToast()
 
-  let roleFilteredData = isCiudadano
-    ? data?.filter((v) => v.propietario_documento?.replace('cc.', '') === user?.username?.replace('cc.', ''))
-    : data
+  const items = paginatedData?.data || []
+  const totalItems = paginatedData?.total || 0
+  const totalPages = Math.ceil(totalItems / pageSize)
 
-  // Apply Field Filters
-  if (roleFilteredData && Object.keys(filters).length > 0) {
-    roleFilteredData = roleFilteredData.filter((item: any) => {
-      return Object.entries(filters).every(([key, value]) => {
-        if (value === undefined || value === '') return true
-        return String(item[key]) === String(value)
-      })
-    })
+  const handlePageChange = (page: number) => {
+    setPgCurrentPage(page)
   }
 
-  const searchedData = useSearch(roleFilteredData, searchTerm, [
-    'placa',
-    'propietario_nombre',
-    'propietario_documento',
-    'marca',
-    'linea',
-    'modelo',
-  ])
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setPgCurrentPage(1)
+  }
 
-  const {
-    currentPage: pgCurrentPage,
-    pageSize,
-    totalItems,
-    totalPages,
-    paginatedItems,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination(searchedData)
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val)
+    setPgCurrentPage(1)
+  }
+
+  const handleFilterChange = (f: Record<string, any>) => {
+    setFilters(f)
+    setPgCurrentPage(1)
+  }
 
   const createAutomotor = useCreateAutomotor()
   const updateAutomotor = useUpdateAutomotor()
@@ -372,11 +368,11 @@ function AutomotoresList() {
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <SearchInput value={searchTerm} onChange={(val) => setSearchTerm(val)} placeholder="Buscar por placa, marca, propietario..." />
+        <SearchInput value={searchTerm} onChange={handleSearchChange} placeholder="Buscar por placa, marca, propietario..." />
         <DataFilters 
           options={AUTOMOTOR_FILTER_OPTIONS} 
-          onFilter={(f) => setFilters(f)} 
-          onClear={() => setFilters({})} 
+          onFilter={handleFilterChange} 
+          onClear={() => handleFilterChange({})} 
         />
       </div>
 
@@ -410,7 +406,7 @@ function AutomotoresList() {
             </thead>
             <tbody>
               {isLoading && Array.from({ length: 4 }).map((_, i) => <LoadingRow key={i} />)}
-              {paginatedItems?.map((automotor) => (
+              {items?.map((automotor) => (
                 <tr
                   key={automotor.id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -476,7 +472,7 @@ function AutomotoresList() {
             </tbody>
           </table>
 
-          {!isLoading && paginatedItems?.length === 0 && (
+          {!isLoading && items?.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">No hay automotores registrados.</p>
             </div>

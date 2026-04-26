@@ -11,10 +11,10 @@ import {
 } from '../api/infracciones.api'
 import type { Infraccion, UUID } from '../types'
 
-export function useInfracciones() {
-  return useQuery<Infraccion[]>({
-    queryKey: ['infracciones'],
-    queryFn: getInfracciones,
+export function useInfracciones(params?: { page?: number; limit?: number; search?: string; estado?: string; vigente?: boolean }) {
+  return useQuery<PaginatedResponse<Infraccion>>({
+    queryKey: ['infracciones', params],
+    queryFn: () => getInfracciones(params),
   })
 }
 

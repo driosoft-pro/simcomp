@@ -11,10 +11,10 @@ import {
 } from '../api/automotores.api'
 import type { Automotor, UUID } from '../types'
 
-export function useAutomotores() {
-  return useQuery<Automotor[]>({
-    queryKey: ['automotores'],
-    queryFn: getAutomotores,
+export function useAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string }) {
+  return useQuery<PaginatedResponse<Automotor>>({
+    queryKey: ['automotores', params],
+    queryFn: () => getAutomotores(params),
   })
 }
 

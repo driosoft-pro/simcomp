@@ -26,7 +26,7 @@ function buildPersonasApiUrl() {
  * Lista automotores con paginación y filtros opcionales empujados a la DB.
  * Antes: findAll() sin límite → traía TODOS los vehículos a memoria.
  */
-export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado } = {}) {
+export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado, search = '' } = {}) {
   const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
@@ -34,13 +34,29 @@ export async function getAllAutomotores({ limit = 50, page = 1, propietario, est
   if (propietario) where.propietario_documento = propietario;
   if (estado) where.estado = estado;
 
+  if (search) {
+    const searchUpper = search.toUpperCase();
+    where[Op.or] = [
+      { placa: { [Op.iLike]: `%${searchUpper}%` } },
+      { vin: { [Op.iLike]: `%${searchUpper}%` } },
+      { marca: { [Op.iLike]: `%${searchUpper}%` } },
+      { linea: { [Op.iLike]: `%${searchUpper}%` } },
+      { modelo: { [Op.iLike]: `%${searchUpper}%` } },
+    ];
+  }
+
   // paranoid: true ya excluye deleted_at IS NOT NULL automáticamente
-  return Automotor.findAll({
+  const result = await Automotor.findAndCountAll({
     where,
     order: [["created_at", "DESC"]],
     limit: safeLimit,
     offset,
   });
+
+  return {
+    rows: result.rows,
+    total: result.count
+  };
 }
 
 export async function getAutomotorById(id) {

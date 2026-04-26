@@ -24,10 +24,10 @@ export function useComparendosByPlaca(placa: string) {
   })
 }
 
-export function useComparendos() {
-  return useQuery<Comparendo[]>({
-    queryKey: ['comparendos'],
-    queryFn: getComparendos,
+export function useComparendos(params?: { page?: number; limit?: number; search?: string }) {
+  return useQuery<PaginatedResponse<Comparendo>>({
+    queryKey: ['comparendos', params],
+    queryFn: () => getComparendos(params),
   })
 }
 

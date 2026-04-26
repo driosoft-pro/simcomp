@@ -281,6 +281,20 @@ services:
     networks:
       - simcomp-net
 
+  ms-analytics-spark:
+    image: docker.io/deytonro/simcomp-analytics-spark-service:latest
+    restart: always
+    ports:
+      - "8010:8010"
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8010
+      SPARK_MASTER_URL: local[*]
+    volumes:
+      - ./analytics-spark-service/data:/app/data
+    networks:
+      - simcomp-net
+
 networks:
   simcomp-net:
     driver: bridge

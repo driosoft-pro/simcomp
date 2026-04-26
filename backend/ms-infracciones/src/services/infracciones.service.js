@@ -1,36 +1,42 @@
 import Infraccion from "../models/infracciones.model.js";
 
-export async function getAllInfracciones() {
-  return await Infraccion.findAll();
+/**
+ * Lista infracciones con soporte para paginación y filtros por estado/vigencia.
+ * Evita traer todo el dataset a memoria.
+ */
+export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente, tipo_sancion } = {}) {
+  const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
+  const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
+
+  const where = {};
+  if (estado) where.estado = estado;
+  if (vigente !== undefined) where.vigente = vigente === "true" || vigente === true;
+  if (tipo_sancion) where.tipo_sancion = tipo_sancion;
+
+  return Infraccion.findAll({
+    where,
+    order: [["codigo", "ASC"]],
+    limit: safeLimit,
+    offset,
+  });
 }
 
 export async function getInfraccionById(id) {
-  return await Infraccion.findOne({
-    where: {
-      id,
-    },
-  });
+  return Infraccion.findByPk(id);
 }
 
 export async function getInfraccionByCodigo(codigo) {
-  return await Infraccion.findOne({
-    where: {
-      codigo,
-    },
+  return Infraccion.findOne({
+    where: { codigo },
   });
 }
 
+/**
+ * Crea una infracción confiando en los constraints de la base de datos.
+ */
 export async function createInfraccion(data) {
-  const existing = await Infraccion.findOne({
-    where: { codigo: data.codigo },
-  });
-
-  if (existing) {
-    throw new Error("La infracción ya existe");
-  }
-
-  const infraccion = await Infraccion.create({
-    codigo: data.codigo,
+  return Infraccion.create({
+    codigo: data.codigo?.toUpperCase(),
     descripcion: data.descripcion,
     articulo_codigo: data.articulo_codigo,
     tipo_sancion: data.tipo_sancion,
@@ -38,33 +44,35 @@ export async function createInfraccion(data) {
     dias_suspension: data.dias_suspension || null,
     aplica_descuento: data.aplica_descuento || false,
     vigente: data.vigente ?? true,
+    estado: "activo"
   });
-
-  return infraccion;
 }
 
 export async function updateInfraccion(id, data) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deleted_at) {
+  if (!infraccion) {
     throw new Error("Infracción no encontrada");
   }
 
-  if (data.codigo !== undefined) infraccion.codigo = data.codigo;
-  if (data.descripcion !== undefined) infraccion.descripcion = data.descripcion;
-  if (data.articulo_codigo !== undefined) infraccion.articulo_codigo = data.articulo_codigo;
-  if (data.tipo_sancion !== undefined) infraccion.tipo_sancion = data.tipo_sancion;
-  if (data.valor_multa !== undefined) infraccion.valor_multa = data.valor_multa;
-  if (data.dias_suspension !== undefined) infraccion.dias_suspension = data.dias_suspension;
-  if (data.aplica_descuento !== undefined) infraccion.aplica_descuento = data.aplica_descuento;
-  if (data.vigente !== undefined) infraccion.vigente = data.vigente;
+  const updatableFields = [
+    "codigo", "descripcion", "articulo_codigo", "tipo_sancion",
+    "valor_multa", "dias_suspension", "aplica_descuento", "vigente", "estado"
+  ];
 
-  infraccion.updated_at = new Date();
+  updatableFields.forEach(field => {
+    if (data[field] !== undefined) {
+      infraccion[field] = field === "codigo" ? data[field].toUpperCase() : data[field];
+    }
+  });
 
   await infraccion.save();
   return infraccion;
 }
 
+/**
+ * Realiza un soft delete real (paranoid: true) y actualiza estados lógicos.
+ */
 export async function deleteInfraccion(id) {
   const infraccion = await Infraccion.findByPk(id);
 
@@ -72,26 +80,31 @@ export async function deleteInfraccion(id) {
     throw new Error("Infracción no encontrada");
   }
 
+  // Actualizamos estados lógicos antes del soft-delete
   infraccion.estado = "inactivo";
   infraccion.vigente = false;
-  infraccion.updated_at = new Date();
-  
   await infraccion.save();
+
+  // Soft-delete de Sequelize
+  await infraccion.destroy();
 
   return infraccion;
 }
 
 export async function activateInfraccion(id) {
-  const infraccion = await Infraccion.findByPk(id);
+  // restore() si estaba soft-deleted
+  const infraccion = await Infraccion.findByPk(id, { paranoid: false });
 
   if (!infraccion) {
     throw new Error("Infracción no encontrada");
   }
 
+  if (infraccion.deleted_at) {
+    await infraccion.restore();
+  }
+
   infraccion.estado = "activo";
   infraccion.vigente = true;
-  infraccion.updated_at = new Date();
-
   await infraccion.save();
 
   return infraccion;
@@ -100,13 +113,11 @@ export async function activateInfraccion(id) {
 export async function changeInfraccionStatus(id, vigente) {
   const infraccion = await Infraccion.findByPk(id);
 
-  if (!infraccion || infraccion.deleted_at) {
+  if (!infraccion) {
     throw new Error("Infracción no encontrada");
   }
 
-  infraccion.vigente = vigente;
-  infraccion.updated_at = new Date();
-
+  infraccion.vigente = vigente === "true" || vigente === true;
   await infraccion.save();
 
   return infraccion;

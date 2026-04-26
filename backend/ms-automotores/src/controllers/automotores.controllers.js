@@ -8,85 +8,50 @@ import {
   updateAutomotor,
   deleteAutomotor,
   changeAutomotorStatus,
-  actualizarDatosPropietarioMasivo
+  actualizarDatosPropietarioMasivo,
 } from "../services/automotores.service.js";
 
 export async function getAutomotores(req, res) {
   try {
-    const automotores = await getAllAutomotores();
+    const { page, limit, propietario, estado } = req.query;
+    const result = await getAllAutomotores({ page, limit, propietario, estado });
 
-    return res.status(200).json({
-      success: true,
-      data: automotores
-    });
-
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Error listando automotores"
-    });
-
+    return res.status(500).json({ success: false, message: "Error listando automotores" });
   }
 }
 
 export async function getAutomotorByIdController(req, res) {
   try {
-
     const automotor = await getAutomotorById(req.params.id);
 
     if (!automotor) {
-      return res.status(404).json({
-        success: false,
-        message: "Automotor no encontrado"
-      });
+      return res.status(404).json({ success: false, message: "Automotor no encontrado" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: automotor
-    });
-
+    return res.status(200).json({ success: true, data: automotor });
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Error consultando automotor"
-    });
-
+    return res.status(500).json({ success: false, message: "Error consultando automotor" });
   }
 }
 
 export async function getAutomotoresByPropietarioController(req, res) {
   try {
     const automotores = await getAutomotoresByPropietario(req.params.documento);
-    return res.status(200).json({
-      success: true,
-      data: automotores
-    });
+    return res.status(200).json({ success: true, data: automotores });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Error consultando automotores del propietario"
+      message: "Error consultando automotores del propietario",
     });
   }
 }
 
 export async function createAutomotorController(req, res) {
   try {
-
     const automotor = await createAutomotor(req.body);
-
-    return res.status(201).json({
-      success: true,
-      data: automotor
-    });
-
+    return res.status(201).json({ success: true, data: automotor });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
@@ -95,26 +60,15 @@ export async function createAutomotorController(req, res) {
         message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
-    const status = error.message.includes("existe") ? 409 : 400;
-
-    return res.status(status).json({
-      success: false,
-      message: error.message
-    });
-
+    const status = error.message.includes("existe") || error.message.includes("propietario") ? 409 : 400;
+    return res.status(status).json({ success: false, message: error.message });
   }
 }
 
 export async function updateAutomotorController(req, res) {
   try {
-
     const automotor = await updateAutomotor(req.params.id, req.body);
-
-    return res.status(200).json({
-      success: true,
-      data: automotor
-    });
-
+    return res.status(200).json({ success: true, data: automotor });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
@@ -123,109 +77,57 @@ export async function updateAutomotorController(req, res) {
         message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
-
     const status = error.message === "Automotor no encontrado" ? 404 : 400;
-
-    return res.status(status).json({
-      success: false,
-      message: error.message
-    });
-
+    return res.status(status).json({ success: false, message: error.message });
   }
 }
 
 export async function deleteAutomotorController(req, res) {
   try {
-
     await deleteAutomotor(req.params.id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Automotor eliminado correctamente"
-    });
-
+    return res.status(200).json({ success: true, message: "Automotor eliminado correctamente" });
   } catch (error) {
-
     const status = error.message === "Automotor no encontrado" ? 404 : 400;
-
-    return res.status(status).json({
-      success: false,
-      message: error.message
-    });
-
+    return res.status(status).json({ success: false, message: error.message });
   }
 }
 
 export async function getAutomotorByPlacaController(req, res) {
   try {
-
     const automotor = await getAutomotorByPlaca(req.params.placa);
 
     if (!automotor) {
-      return res.status(404).json({
-        success: false,
-        message: "Automotor no encontrado"
-      });
+      return res.status(404).json({ success: false, message: "Automotor no encontrado" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: automotor
-    });
-
+    return res.status(200).json({ success: true, data: automotor });
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Error consultando automotor por placa"
-    });
-
+    return res.status(500).json({ success: false, message: "Error consultando automotor por placa" });
   }
 }
 
 export async function changeAutomotorStatusController(req, res) {
   try {
-
     const { estado } = req.body;
-
     const automotor = await changeAutomotorStatus(req.params.id, estado);
-
-    return res.status(200).json({
-      success: true,
-      data: automotor
-    });
-
+    return res.status(200).json({ success: true, data: automotor });
   } catch (error) {
-
-    const status =
-      error.message === "Automotor no encontrado" ? 404 : 400;
-
-    return res.status(status).json({
-      success: false,
-      message: error.message
-    });
-
+    const status = error.message === "Automotor no encontrado" ? 404 : 400;
+    return res.status(status).json({ success: false, message: error.message });
   }
 }
 
 export async function inmovilizarPorPlacaController(req, res) {
   try {
     const automotor = await inmovilizarAutomotorPorPlaca(req.params.placa);
-
     return res.status(200).json({
       success: true,
       message: "Vehículo inmovilizado correctamente",
-      data: automotor
+      data: automotor,
     });
   } catch (error) {
     const status = error.message.includes("no encontrado") ? 404 : 400;
-
-    return res.status(status).json({
-      success: false,
-      message: error.message
-    });
+    return res.status(status).json({ success: false, message: error.message });
   }
 }
 
@@ -236,7 +138,7 @@ export async function syncPropietarioController(req, res) {
     if (!oldDocumento) {
       return res.status(400).json({
         success: false,
-        message: "El campo oldDocumento es requerido"
+        message: "El campo oldDocumento es requerido",
       });
     }
 
@@ -245,13 +147,12 @@ export async function syncPropietarioController(req, res) {
     return res.status(200).json({
       success: true,
       message: `Sincronización completada. ${affectedRows} vehículos actualizados.`,
-      affectedRows
+      affectedRows,
     });
   } catch (error) {
-    console.error("Error sincronizando propietario:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Error al sincronizar datos del propietario masivamente"
+      message: "Error al sincronizar datos del propietario masivamente",
     });
   }
 }

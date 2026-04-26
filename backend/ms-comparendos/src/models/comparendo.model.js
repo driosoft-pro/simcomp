@@ -90,6 +90,24 @@ const Comparendo = sequelize.define(
     updatedAt: "updated_at",
     deletedAt: "deleted_at",
     paranoid: true,
+    // ── Índices críticos ─────────────────────────────────────────────────────
+    // Sin estos, cada filtro por documento/placa/estado hace full table scan.
+    indexes: [
+      // Filtros más frecuentes: ciudadano ve sus propios comparendos
+      { fields: ["ciudadano_documento"] },
+      // Agente ve los comparendos que emitió
+      { fields: ["agente_documento"] },
+      // Búsqueda por placa (listado de vehículo)
+      { fields: ["placa_vehiculo"] },
+      // Filtro por estado (PENDIENTE/PAGADO/ANULADO)
+      { fields: ["estado"] },
+      // Ordenamiento por fecha (ORDER BY fecha_comparendo DESC es la query más común)
+      { fields: ["fecha_comparendo"] },
+      // Índice compuesto para el patrón LIKE 'COMP-YYYY-DDD-%' de obtenerSiguienteNumero
+      { fields: ["numero_comparendo"] },
+      // Compuesto: ciudadano filtrando sus pendientes (dashboard)
+      { fields: ["ciudadano_documento", "estado"] },
+    ],
   }
 );
 

@@ -1,39 +1,40 @@
 import axios from "axios";
 import { env } from "../config/env.js";
 
+// ── Cliente HTTP con timeout configurable ─────────────────────────────────────
+// Sin timeout explícito, un microservicio caído bloquea el event loop
+// hasta que el OS cierre la conexión (puede ser minutos).
 const client = axios.create({
-  timeout: env.requestTimeoutMs,
-  headers: {
-    "Content-Type": "application/json"
-  }
+  timeout: env.requestTimeoutMs || 8000,
+  headers: { "Content-Type": "application/json" },
 });
 
 export const moduleConfig = {
   usuarios: {
     baseUrl: env.authServiceUrl,
     getPath: "/api/usuarios",
-    postPath: "/api/usuarios"
+    postPath: "/api/usuarios",
   },
   personas: {
     baseUrl: env.personasServiceUrl,
     getPath: "/api/personas",
-    postPath: "/api/personas"
+    postPath: "/api/personas",
   },
   automotores: {
     baseUrl: env.automotoresServiceUrl,
     getPath: "/api/automotores",
-    postPath: "/api/automotores"
+    postPath: "/api/automotores",
   },
   infracciones: {
     baseUrl: env.infraccionesServiceUrl,
     getPath: "/api/infracciones",
-    postPath: "/api/infracciones"
+    postPath: "/api/infracciones",
   },
   comparendos: {
     baseUrl: env.comparendosServiceUrl,
     getPath: "/api/comparendos",
-    postPath: "/api/comparendos"
-  }
+    postPath: "/api/comparendos",
+  },
 };
 
 export function assertModule(modulo) {
@@ -43,13 +44,33 @@ export function assertModule(modulo) {
   }
 }
 
-export async function fetchModuleData(modulo, token) {
+/**
+ * Obtiene datos de un módulo con soporte de paginación para evitar
+ * traer el dataset completo cuando no es necesario.
+ *
+ * @param {string} modulo
+ * @param {string} token
+ * @param {object} [opts]
+ * @param {number} [opts.limit]   - Limitar cantidad de registros
+ * @param {number} [opts.page]    - Página (para paginación)
+ */
+export async function fetchModuleData(modulo, token, { limit, page } = {}) {
   assertModule(modulo);
 
   const config = moduleConfig[modulo];
   const headers = token ? { Authorization: token } : {};
-  const response = await client.get(`${config.baseUrl}${config.getPath}`, { headers });
 
+  // Construir query params si el módulo soporta paginación
+  const params = {};
+  if (limit && limit !== "all") params.limit = limit;
+  if (page) params.page = page;
+
+  const response = await client.get(`${config.baseUrl}${config.getPath}`, {
+    headers,
+    params: Object.keys(params).length ? params : undefined,
+  });
+
+  // Normalizar estructura de respuesta (array directo, .data, o .data.data)
   if (Array.isArray(response.data)) return response.data;
   if (Array.isArray(response.data?.data)) return response.data.data;
   if (Array.isArray(response.data?.rows)) return response.data.rows;
@@ -57,6 +78,9 @@ export async function fetchModuleData(modulo, token) {
   return [];
 }
 
+/**
+ * Importa una fila en un módulo remoto.
+ */
 export async function postModuleRow(modulo, row, token) {
   assertModule(modulo);
 

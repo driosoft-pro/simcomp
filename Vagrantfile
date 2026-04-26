@@ -11,13 +11,16 @@
 # Imágenes:
 #   Frontend:       deytonro/simcomp-frontend:latest
 #   Microservicios: deytonro/simcomp-*:latest
+#   Haproxy:        deytonro/simcomp-haproxy-balance
+#   Spark:          deytonro/simcomp-analytics-spark  
 #
 # Uso:
 #   vagrant up
 #   Luego: vagrant provision managerDocker --provision-with deploy-stack
 #   Acceder en: http://192.168.100.2
 #   Stats:      http://192.168.100.2:8404/stats
-#   Spark:      http://192.168.100.2:8404/stats
+#   Spark:      http://192.168.100.2:8010
+#   Spark:      http://192.168.100.2:4040
 # =============================================================================
 
 # -*- mode: ruby -*-
@@ -115,7 +118,10 @@ Vagrant.configure("2") do |config|
   # Limpiar archivos de Swarm automáticamente en el Host antes de subir
   config.trigger.before :up do |trigger|
     trigger.info = "Limpiando rastro de Swarm previo..."
-    trigger.run = { inline: "rm -f provisioning_docker/.swarm-token provisioning_docker/.swarm-manager-ip" }
+    trigger.ruby do |env,machine|
+      File.delete("provisioning_docker/.swarm-token") if File.exist?("provisioning_docker/.swarm-token")
+      File.delete("provisioning_docker/.swarm-manager-ip") if File.exist?("provisioning_docker/.swarm-manager-ip")
+    end
   end
 
   # --- Manager ---

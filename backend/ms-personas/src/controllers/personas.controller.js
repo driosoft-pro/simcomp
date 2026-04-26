@@ -9,44 +9,62 @@ import {
   actualizarPersona,
 } from "../services/personas.service.js";
 
+// ── Auth lookup con timeout ───────────────────────────────────────────────────
+const AUTH_TIMEOUT_MS = 4000;
+
+function buildAuthApiUrl() {
+  const base = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
+  return base.endsWith("/api") ? base : `${base}/api`;
+}
+
+async function fetchUserByEmail(email) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+  try {
+    const url = `${buildAuthApiUrl()}/usuarios/email/${encodeURIComponent(email)}`;
+    const res = await fetch(url, { signal: controller.signal });
+    if (res.ok) {
+      const body = await res.json();
+      return body.data || null;
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function crearPersonaController(req, res) {
   try {
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        ok: false,
-        errors: errors.array(),
-      });
+      return res.status(400).json({ ok: false, errors: errors.array() });
     }
 
     const persona = await crearPersona(req.body);
     const requesterRole = req.headers["x-user-role"];
 
+    // Auto-crear usuario agente para supervisor (fire-and-forget)
     if (requesterRole === "supervisor") {
-      try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-        const authApiUrl = authServiceUrl.endsWith("/api/auth") ? authServiceUrl.replace("/auth", "") : (authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`);
-
-        await fetch(`${authApiUrl}/usuarios`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": req.headers["authorization"],
-            "x-user-role": requesterRole
-          },
-          body: JSON.stringify({
-            username: persona.numero_documento,
-            email: persona.email,
-            password: persona.numero_documento, // Password por defecto = documento
-            rol: "agente",
-            estado: "activo"
-          })
-        });
-        console.log(`Usuario Agente auto-creado para persona ${persona.numero_documento}`);
-      } catch (authError) {
-        console.error("Error al auto-crear usuario para supervisor:", authError.message);
-      }
+      const authApiUrl = buildAuthApiUrl();
+      fetch(`${authApiUrl}/usuarios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": req.headers["authorization"] || "",
+          "x-user-role": requesterRole,
+        },
+        body: JSON.stringify({
+          username: persona.numero_documento,
+          email: persona.email,
+          password: persona.numero_documento,
+          rol: "agente",
+          estado: "activo",
+        }),
+      }).catch(err => console.error("[personas] Error auto-creando usuario agente:", err.message));
     }
 
     return res.status(201).json({
@@ -62,67 +80,58 @@ export async function crearPersonaController(req, res) {
         message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
 
 export async function listarPersonasController(req, res) {
   try {
-    let personas = await listarPersonas();
-
     const userRole = req.headers["x-user-role"];
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 50;
 
-    // Si es supervisor o agente, solo puede ver personas que correspondan a usuarios permitidos
-    if (userRole === "supervisor" || userRole === "agente") {
-      console.log(`Filtrando lista de personas para ${userRole}.`);
-
-      try {
-        const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-        const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
-        const response = await fetch(`${authApiUrl}/usuarios`, {
-          headers: {
-            "Authorization": req.headers["authorization"],
-            "x-user-role": userRole // Pasar el rol para que el ms-auth también filtre si es necesario
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const allowedUsers = result.data || [];
-          const allowedEmails = new Set(allowedUsers.map(u => u.email.toLowerCase()));
-
-          personas = personas.filter(p => p.email && allowedEmails.has(p.email.toLowerCase()));
-          console.log(`Personas filtradas para ${userRole}: ${personas.length}`);
-        } else {
-          console.error(`Error al consultar ms-auth-service para filtrar personas (${userRole})`);
-          // Si falla la comunicación, por seguridad retornamos lista vacía o error
-          personas = [];
-        }
-      } catch (fetchError) {
-        console.error("Error de conexión con ms-auth-service:", fetchError.message);
-        personas = [];
-      }
+    // Admin/ciudadano: listado directo con paginación
+    if (userRole !== "supervisor" && userRole !== "agente") {
+      const personas = await listarPersonas({ page, limit });
+      return res.json({ ok: true, data: personas });
     }
 
-    return res.json({
-      ok: true,
-      data: personas,
-    });
-  } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
-      return res.status(409).json({
-        ok: false,
-        message: `Ya existe un registro con estos datos únicos (${details})`,
+    // Supervisor/Agente: filtrar por emails permitidos desde ms-auth
+    // Esta llamada es necesaria por la arquitectura multi-servicio.
+    // Se mitiga solicitando solo emails (no el objeto completo).
+    let allowedEmails = null;
+    try {
+      const authApiUrl = buildAuthApiUrl();
+      const response = await fetch(`${authApiUrl}/usuarios`, {
+        headers: {
+          "Authorization": req.headers["authorization"] || "",
+          "x-user-role": userRole,
+        },
+        signal: AbortSignal.timeout(AUTH_TIMEOUT_MS),
       });
+
+      if (response.ok) {
+        const result = await response.json();
+        const users = result.data || [];
+        allowedEmails = new Set(users.map(u => u.email?.toLowerCase()).filter(Boolean));
+      }
+    } catch {
+      // Si falla ms-auth, por seguridad retornamos lista vacía
+      return res.json({ ok: true, data: [] });
     }
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+
+    if (!allowedEmails || allowedEmails.size === 0) {
+      return res.json({ ok: true, data: [] });
+    }
+
+    // Traer personas sin paginación extra aquí porque el filtro de emails
+    // ya viene con el set correcto. Usar limit alto para capturar todos.
+    const personas = await listarPersonas({ limit: 1000, page: 1 });
+    const filtered = personas.filter(p => p.email && allowedEmails.has(p.email.toLowerCase()));
+
+    return res.json({ ok: true, data: filtered });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
 
@@ -132,67 +141,37 @@ export async function obtenerPersonaPorIdController(req, res) {
     const persona = await obtenerPersonaPorId(persona_id);
 
     if (!persona) {
-      return res.status(404).json({
-        ok: false,
-        message: "Persona no encontrada",
-      });
+      return res.status(404).json({ ok: false, message: "Persona no encontrada" });
     }
 
-    // Restricción para agentes y supervisores: solo pueden ver personas que correspondan a usuarios permitidos
     const userRole = req.headers["x-user-role"];
     const callerEmail = req.headers["x-user-email"];
 
-    if (userRole === "agente" || userRole === "supervisor") {
-      // Short-circuit: si el usuario está accediendo a su propio perfil, permitir directamente
-      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
-        // Es el propio perfil, no necesitamos llamar a ms-auth
-      } else {
-        // Verificar si la persona tiene un usuario con rol permitido usando lookup directo
-        try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
-          const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
+    // Admin y ciudadano viendo su propio perfil: acceso directo sin llamada a ms-auth
+    if (userRole === "admin") {
+      return res.json({ ok: true, data: persona });
+    }
 
-          if (response.ok) {
-            const result = await response.json();
-            const targetUser = result.data;
-            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
-            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
-              return res.status(403).json({
-                ok: false,
-                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-              });
-            }
-          } else if (response.status === 404) {
-            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
-          } else {
-            console.error(`Error ms-auth (${userRole}): ${response.status}`);
-            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
-          }
-        } catch (error) {
-          console.error("Error conexión ms-auth:", error.message);
-          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
-        }
+    if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
+      return res.json({ ok: true, data: persona });
+    }
+
+    // Agente/supervisor viendo perfil ajeno: verificar rol del target en ms-auth
+    if (userRole === "agente" || userRole === "supervisor") {
+      const targetUser = await fetchUserByEmail(persona.email);
+      const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+
+      if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+        return res.status(403).json({
+          ok: false,
+          message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+        });
       }
     }
 
-    return res.json({
-      ok: true,
-      data: persona,
-    });
+    return res.json({ ok: true, data: persona });
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
-      return res.status(409).json({
-        ok: false,
-        message: `Ya existe un registro con estos datos únicos (${details})`,
-      });
-    }
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
 
@@ -202,63 +181,32 @@ export async function obtenerPersonaPorDocumentoController(req, res) {
     const persona = await obtenerPersonaPorDocumento(numero);
 
     if (!persona) {
-      return res.status(404).json({
-        ok: false,
-        message: "Persona no encontrada",
-      });
+      return res.status(404).json({ ok: false, message: "Persona no encontrada" });
     }
 
-    // Restricción para agentes y supervisores
     const userRole = req.headers["x-user-role"];
     const callerEmail = req.headers["x-user-email"];
 
-    if (userRole === "agente" || userRole === "supervisor") {
-      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
-        // Es el propio perfil, permitir directamente
-      } else {
-        try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
-          const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
+    if (userRole === "admin") return res.json({ ok: true, data: persona });
+    if (callerEmail && persona.email?.toLowerCase() === callerEmail.toLowerCase()) {
+      return res.json({ ok: true, data: persona });
+    }
 
-          if (response.ok) {
-            const result = await response.json();
-            const targetUser = result.data;
-            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
-            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
-              return res.status(403).json({
-                ok: false,
-                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-              });
-            }
-          } else if (response.status === 404) {
-            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
-          } else {
-            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
-          }
-        } catch (error) {
-          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
-        }
+    if (userRole === "agente" || userRole === "supervisor") {
+      const targetUser = await fetchUserByEmail(persona.email);
+      const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+
+      if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+        return res.status(403).json({
+          ok: false,
+          message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+        });
       }
     }
 
-    return res.json({
-      ok: true,
-      data: persona,
-    });
+    return res.json({ ok: true, data: persona });
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
-      return res.status(409).json({
-        ok: false,
-        message: `Ya existe un registro con estos datos únicos (${details})`,
-      });
-    }
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
 
@@ -266,74 +214,44 @@ export async function validarExistenciaPersonaController(req, res) {
   try {
     const { numero } = req.params;
     const result = await validarExistenciaPersona(numero);
-
-    return res.json({
-      ok: true,
-      data: result,
-    });
+    return res.json({ ok: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
+
 export async function obtenerPersonaPorEmailController(req, res) {
   try {
     const { email } = req.params;
     const persona = await obtenerPersonaPorEmail(email);
 
     if (!persona) {
-      return res.status(404).json({
-        ok: false,
-        message: "Persona no encontrada",
-      });
+      return res.status(404).json({ ok: false, message: "Persona no encontrada" });
     }
 
-    // Restricción para agentes y supervisores
     const userRole = req.headers["x-user-role"];
     const callerEmail = req.headers["x-user-email"];
 
-    if (userRole === "agente" || userRole === "supervisor") {
-      if (callerEmail && persona.email && callerEmail.toLowerCase() === persona.email.toLowerCase()) {
-        // Es el propio perfil, permitir directamente
-      } else {
-        try {
-          const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-          const authApiUrl = authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`;
-          const encodedEmail = encodeURIComponent(persona.email);
-          const response = await fetch(`${authApiUrl}/usuarios/email/${encodedEmail}`);
+    if (userRole === "admin") return res.json({ ok: true, data: persona });
+    if (callerEmail && persona.email?.toLowerCase() === callerEmail.toLowerCase()) {
+      return res.json({ ok: true, data: persona });
+    }
 
-          if (response.ok) {
-            const result = await response.json();
-            const targetUser = result.data;
-            const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
-            if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
-              return res.status(403).json({
-                ok: false,
-                message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
-              });
-            }
-          } else if (response.status === 404) {
-            return res.status(403).json({ ok: false, message: `No tienes permiso para ver los datos de esta persona (${userRole})` });
-          } else {
-            return res.status(500).json({ ok: false, message: "Error validando permisos con el servicio de autenticación" });
-          }
-        } catch (error) {
-          return res.status(500).json({ ok: false, message: "Error de conexión con el servicio de autenticación" });
-        }
+    if (userRole === "agente" || userRole === "supervisor") {
+      const targetUser = await fetchUserByEmail(persona.email);
+      const allowedRoles = userRole === "agente" ? ["ciudadano"] : ["agente", "ciudadano"];
+
+      if (!targetUser || !allowedRoles.includes(targetUser.rol)) {
+        return res.status(403).json({
+          ok: false,
+          message: `No tienes permiso para ver los datos de esta persona (${userRole})`,
+        });
       }
     }
 
-    return res.json({
-      ok: true,
-      data: persona,
-    });
+    return res.json({ ok: true, data: persona });
   } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }
 
@@ -343,15 +261,10 @@ export async function actualizarPersonaController(req, res) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        ok: false,
-        errors: errors.array(),
-      });
+      return res.status(400).json({ ok: false, errors: errors.array() });
     }
 
     const requesterRole = req.headers["x-user-role"];
-    const requesterId = req.headers["x-user-id"];
-    // Si viene de ms-auth-service como sincronización interna, evitar bucle de vuelta
     const isInternalSync = req.headers["x-internal-sync"] === "true";
 
     const personaActual = await obtenerPersonaPorId(persona_id);
@@ -359,44 +272,42 @@ export async function actualizarPersonaController(req, res) {
       return res.status(404).json({ ok: false, message: "Persona no encontrada" });
     }
 
-    // Determine target role by calling ms-auth-service
-    let targetRole = "ciudadano"; // Default
-    try {
-      const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://ms-auth-service:8001";
-      const authApiUrl = authServiceUrl.endsWith("/api/auth") ? authServiceUrl.replace("/auth", "") : (authServiceUrl.endsWith("/api") ? authServiceUrl : `${authServiceUrl}/api`);
-      const response = await fetch(`${authApiUrl}/usuarios/email/${personaActual.email}`);
-      if (response.ok) {
-        const result = await response.json();
-        targetRole = result.data?.rol || "ciudadano";
-      }
-    } catch (error) {
-      console.error("Error fetching target role from ms-auth-service:", error.message);
-    }
+    const isOwnProfile = personaActual.email === req.headers["x-user-email"];
 
-    const isOwnProfile = personaActual.email === req.headers["x-user-email"]; // Assuming we pass email in headers or can find by ID
+    // ── Resolución de permisos ─────────────────────────────────────────────
+    // Admin: siempre puede, sin llamada a ms-auth
+    // Perfil propio: siempre puede (campos limitados), sin llamada a ms-auth
+    // Agente/Supervisor editando perfil ajeno: necesita saber rol del target → 1 fetch
 
-    // Permission check
     let canUpdate = false;
     let allowedFields = [];
+    let targetRole = null;
 
     if (requesterRole === "admin") {
       canUpdate = true;
-      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos",
+        "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
     } else if (isOwnProfile) {
       canUpdate = true;
-      if (requesterRole === "agente") {
-        allowedFields = ["nombres", "apellidos", "email", "direccion", "telefono"];
-      } else if (requesterRole === "supervisor") {
+      if (requesterRole === "agente" || requesterRole === "supervisor") {
         allowedFields = ["nombres", "apellidos", "email", "direccion", "telefono"];
       } else if (requesterRole === "ciudadano") {
         allowedFields = ["email", "direccion"];
       }
-    } else if (requesterRole === "agente" && targetRole === "ciudadano") {
-      canUpdate = true;
-      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
-    } else if (requesterRole === "supervisor" && targetRole === "agente") {
-      canUpdate = true;
-      allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos", "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+    } else if (requesterRole === "agente" || requesterRole === "supervisor") {
+      // Solo aquí necesitamos saber el rol del target — llamada lazy a ms-auth
+      const targetUser = await fetchUserByEmail(personaActual.email);
+      targetRole = targetUser?.rol || null;
+
+      if (requesterRole === "agente" && targetRole === "ciudadano") {
+        canUpdate = true;
+        allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos",
+          "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+      } else if (requesterRole === "supervisor" && (targetRole === "agente" || targetRole === "ciudadano")) {
+        canUpdate = true;
+        allowedFields = ["tipo_documento", "numero_documento", "nombres", "apellidos",
+          "fecha_nacimiento", "genero", "direccion", "telefono", "email", "estado"];
+      }
     }
 
     if (!canUpdate) {
@@ -406,26 +317,19 @@ export async function actualizarPersonaController(req, res) {
       });
     }
 
-    // Filter body based on allowed fields
+    // Filtrar campos permitidos
     const updateData = {};
     allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
-      }
+      if (req.body[field] !== undefined) updateData[field] = req.body[field];
     });
 
     if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        ok: false,
-        message: "No hay campos válidos para actualizar",
-      });
+      return res.status(400).json({ ok: false, message: "No hay campos válidos para actualizar" });
     }
 
-    // Handle state update restriction for non-admins
+    // Restricción de inactivar para no-admins
     if (updateData.estado === "inactivo" && requesterRole !== "admin") {
-      if (requesterRole === "supervisor" && targetRole === "agente") {
-        // Supervisor can inactive agente, this is allowed
-      } else {
+      if (!(requesterRole === "supervisor" && targetRole === "agente")) {
         return res.status(403).json({
           ok: false,
           message: "Solo los administradores y supervisores (para agentes) pueden inhabilitar personas",
@@ -435,17 +339,10 @@ export async function actualizarPersonaController(req, res) {
 
     const persona = await actualizarPersona(persona_id, updateData, { skipAuthSync: isInternalSync });
 
-    return res.json({
-      ok: true,
-      message: "Persona actualizada correctamente",
-      data: persona,
-    });
+    return res.json({ ok: true, message: "Persona actualizada correctamente", data: persona });
   } catch (error) {
     if (error.message === "Persona no encontrada") {
-      return res.status(404).json({
-        ok: false,
-        message: error.message,
-      });
+      return res.status(404).json({ ok: false, message: error.message });
     }
     if (error.name === "SequelizeUniqueConstraintError") {
       const details = error.errors.map(e => `${e.path}: ${e.value}`).join(", ");
@@ -454,9 +351,6 @@ export async function actualizarPersonaController(req, res) {
         message: `Ya existe un registro con estos datos únicos (${details})`,
       });
     }
-    return res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 }

@@ -86,12 +86,22 @@ export async function crearPersonaController(req, res) {
 
 export async function listarPersonasController(req, res) {
   try {
-    const { page, limit, search } = req.query;
+    const { page, limit, search, order } = req.query;
     const userRole = req.headers["x-user-role"];
+    const username = req.headers["x-user-username"];
+    const documento = req.headers["x-user-documento"];
 
     // Admin/ciudadano: listado directo con paginación
     if (userRole !== "supervisor" && userRole !== "agente") {
-      const { rows, total } = await listarPersonas({ page, limit, search });
+      const { rows, total } = await listarPersonas({
+        page,
+        limit,
+        search,
+        order,
+        userRole,
+        username,
+        documento
+      });
       return res.json({ ok: true, data: rows, total });
     }
 
@@ -125,8 +135,8 @@ export async function listarPersonasController(req, res) {
 
     // Traer personas sin paginación extra aquí porque el filtro de emails
     // ya viene con el set correcto. Usar limit alto para capturar todos.
-    const personas = await listarPersonas({ limit: 1000, page: 1 });
-    const filtered = personas.filter(p => p.email && allowedEmails.has(p.email.toLowerCase()));
+    const { rows: personasRows } = await listarPersonas({ limit: 1000, page: 1 });
+    const filtered = (personasRows || []).filter(p => p.email && allowedEmails.has(p.email.toLowerCase()));
 
     return res.json({ ok: true, data: filtered });
   } catch (error) {

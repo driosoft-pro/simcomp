@@ -25,12 +25,13 @@ export const authMiddleware = (req, res, next) => {
   try {
     const secret = getEnv("JWT_SECRET");
     const decoded = jwt.verify(token, secret);
-    
+
     // Inyectamos los headers esperados por los controladores
     req.headers["x-user-id"] = decoded.sub;
     req.headers["x-user-role"] = decoded.rol;
     req.headers["x-user-username"] = decoded.username || "";
     req.headers["x-user-email"] = decoded.email || "";
+    req.headers["x-user-documento"] = decoded.numero_documento || "";
 
     next();
   } catch (error) {

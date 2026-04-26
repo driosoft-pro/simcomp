@@ -24,7 +24,7 @@ export function useComparendosByPlaca(placa: string) {
   })
 }
 
-export function useComparendos(params?: { page?: number; limit?: number; search?: string }) {
+export function useComparendos(params?: { page?: number; limit?: number; search?: string; order?: string }) {
   return useQuery<PaginatedResponse<Comparendo>>({
     queryKey: ['comparendos', params],
     queryFn: () => getComparendos(params),

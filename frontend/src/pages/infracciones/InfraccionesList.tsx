@@ -48,6 +48,15 @@ const INFRACCION_FILTER_OPTIONS: FilterOption[] = [
       { label: 'No Vigente', value: false },
     ] 
   },
+  { 
+    label: 'Orden', 
+    key: 'order', 
+    type: 'select', 
+    options: [
+      { label: '📅 Más recientes primero', value: 'DESC' },
+      { label: '⏳ Más antiguos primero', value: 'ASC' },
+    ] 
+  },
 ]
 const tipoSancionStyles: Record<Infraccion['tipo_sancion'], string> = {
   MONETARIA: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',

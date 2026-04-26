@@ -37,6 +37,15 @@ const COMPARENDO_FILTER_OPTIONS: FilterOption[] = [
       { label: 'Barranquilla', value: 'Barranquilla' },
     ] 
   },
+  { 
+    label: 'Orden', 
+    key: 'order', 
+    type: 'select', 
+    options: [
+      { label: '📅 Más recientes primero', value: 'DESC' },
+      { label: '⏳ Más antiguos primero', value: 'ASC' },
+    ] 
+  },
 ]
 import { useState } from 'react'
 

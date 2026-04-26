@@ -38,8 +38,8 @@ export async function crearComparendoController(req, res) {
     const comparendo = await crearComparendo(req.body, { userRole });
 
     return res.status(201).json({
-      message: Array.isArray(comparendo) 
-        ? "Comparendos creados correctamente" 
+      message: Array.isArray(comparendo)
+        ? "Comparendos creados correctamente"
         : "Comparendo creado correctamente",
       data: comparendo,
     });
@@ -60,12 +60,24 @@ export async function crearComparendoController(req, res) {
 
 export async function listarComparendosController(req, res) {
   try {
-    const { page, limit, search } = req.query;
+    const { page, limit, search, order, estado, ciudad } = req.query;
     const userRole = req.headers["x-user-role"];
     const username = req.headers["x-user-username"];
     const email = req.headers["x-user-email"];
+    const documento = req.headers["x-user-documento"];
 
-    const result = await listarComparendos({ userRole, username, email, page, limit, search });
+    const result = await listarComparendos({ 
+      userRole, 
+      username, 
+      email, 
+      page, 
+      limit, 
+      search, 
+      order, 
+      documento,
+      estado,
+      ciudad
+    });
     return res.json({ ok: true, ...result });
   } catch (error) {
     return res.status(500).json({

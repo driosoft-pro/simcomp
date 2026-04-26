@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Infraccion from "../models/infracciones.model.js";
 
 /**
@@ -23,7 +24,7 @@ export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente
 
   const result = await Infraccion.findAndCountAll({
     where,
-    order: [["codigo", "ASC"]],
+    order: [["created_at", "DESC"]],
     limit: safeLimit,
     offset,
   });

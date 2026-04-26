@@ -2,7 +2,7 @@ import { apiClient } from './axios.config'
 import type { ApiResponse, LicenciaConduccion, Persona, UUID, CreatePersonaPayload, UpdatePersonaPayload, CreateLicenciaPayload, UpdateLicenciaPayload } from '../types'
 import { API_URLS } from '../utils/constants'
 
-export async function getPersonas(params?: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Persona>> {
+export async function getPersonas(params?: { page?: number; limit?: number; search?: string; order?: string }): Promise<PaginatedResponse<Persona>> {
   const response = await apiClient.get<PaginatedResponse<Persona>>(
     `${API_URLS.personas}/personas`,
     { params }

@@ -8,7 +8,7 @@ import { Op } from "sequelize";
 async function syncFetch(url, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeout || 5000);
-  
+
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
     return response.ok;
@@ -24,9 +24,22 @@ export async function crearPersona(data) {
   return Persona.create(data);
 }
 
-export async function listarPersonas({ page = 1, limit = 50, search = '' } = {}) {
+export async function listarPersonas({ page = 1, limit = 50, search = '', order = 'DESC', userRole = '', username = '', documento = '' } = {}) {
   const offset = (Math.max(1, page) - 1) * limit;
   const where = {};
+
+  const normalizedRole = String(userRole || '').toLowerCase();
+
+  // Restricción por rol: El ciudadano solo ve su propio registro
+  if (normalizedRole === 'ciudadano') {
+    const finalDoc = String(documento || username || '').replace('cc.', '').trim();
+    if (finalDoc) {
+      where.numero_documento = finalDoc;
+    } else {
+      // Si no hay documento asociado al usuario, no devolvemos nada
+      return { rows: [], total: 0 };
+    }
+  }
 
   if (search) {
     const searchLower = search.toLowerCase();
@@ -42,7 +55,7 @@ export async function listarPersonas({ page = 1, limit = 50, search = '' } = {})
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["created_at", "DESC"]],
+    order: [["created_at", order === 'ASC' ? 'ASC' : 'DESC']],
     include: [{ model: Licencia, as: "licencias" }],
   });
   return {
@@ -89,7 +102,7 @@ export async function actualizarPersona(id, data, options = {}) {
 
   // Actualizar en base de datos local
   await persona.update(data);
-  
+
   const newDoc = persona.numero_documento;
   const newEmail = persona.email;
   const newNombre = `${persona.nombres} ${persona.apellidos}`;

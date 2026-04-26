@@ -23,7 +23,8 @@ export const authMiddleware = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, getEnv("JWT_SECRET"));
+    const secret = getEnv("JWT_SECRET");
+    const decoded = jwt.verify(token, secret);
     
     // Inyectamos los headers esperados por los controladores
     req.headers["x-user-id"] = decoded.sub;
@@ -33,6 +34,7 @@ export const authMiddleware = (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error(`[Auth] Error de validación: ${error.message}`);
     return res.status(401).json({
       success: false,
       message: "Token inválido o expirado",

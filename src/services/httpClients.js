@@ -71,11 +71,19 @@ export async function fetchModuleData(modulo, token, { limit, page } = {}) {
   });
 
   // Normalizar estructura de respuesta (array directo, .data, o .data.data)
-  if (Array.isArray(response.data)) return response.data;
-  if (Array.isArray(response.data?.data)) return response.data.data;
-  if (Array.isArray(response.data?.rows)) return response.data.rows;
+  const total = response.data?.total || response.data?.count || null;
+  let data = [];
 
-  return [];
+  if (Array.isArray(response.data)) data = response.data;
+  else if (Array.isArray(response.data?.data)) data = response.data.data;
+  else if (Array.isArray(response.data?.rows)) data = response.data.rows;
+
+  // Si tenemos un total explícito en la respuesta, devolvemos el objeto con metadatos
+  if (total !== null) {
+    return { data, total: Number(total) };
+  }
+
+  return data;
 }
 
 /**

@@ -4,7 +4,7 @@ import Infraccion from "../models/infracciones.model.js";
  * Lista infracciones con soporte para paginación y filtros por estado/vigencia.
  * Evita traer todo el dataset a memoria.
  */
-export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente, tipo_sancion } = {}) {
+export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente, tipo_sancion, search = '' } = {}) {
   const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
@@ -13,12 +13,25 @@ export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente
   if (vigente !== undefined) where.vigente = vigente === "true" || vigente === true;
   if (tipo_sancion) where.tipo_sancion = tipo_sancion;
 
-  return Infraccion.findAll({
+  if (search) {
+    const searchLower = search.toLowerCase();
+    where[Op.or] = [
+      { codigo: { [Op.iLike]: `%${searchLower}%` } },
+      { descripcion: { [Op.iLike]: `%${searchLower}%` } },
+    ];
+  }
+
+  const result = await Infraccion.findAndCountAll({
     where,
     order: [["codigo", "ASC"]],
     limit: safeLimit,
     offset,
   });
+
+  return {
+    rows: result.rows,
+    total: result.count
+  };
 }
 
 export async function getInfraccionById(id) {

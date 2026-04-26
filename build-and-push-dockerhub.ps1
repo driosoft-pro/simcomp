@@ -72,7 +72,8 @@ $Services = @(
 
     "simcomp-frontend|./frontend",
     "simcomp-gateway|./provisioning_docker/nginx",
-    "simcomp-haproxy-balance|./provisioning_docker/haproxy"
+    "simcomp-haproxy-balance|./provisioning_docker/haproxy",
+    "simcomp-analytics-spark|./analytics-spark-service"
 )
 
 $Built = @()

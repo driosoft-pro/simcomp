@@ -7,7 +7,7 @@ set -Eeuo pipefail
 # =========================================================
 
 # ---------- Configuración por defecto ----------
-DEFAULT_DOCKERHUB_USER="tu_usuario"
+DEFAULT_DOCKERHUB_USER="deytonro"
 DEFAULT_VERSION="v1.0.0"
 DEFAULT_REGISTRY="docker.io"
 DEFAULT_ENV_FILE=".env.docker-push"
@@ -155,6 +155,7 @@ SERVICES=(
   "simcomp-frontend|./frontend"
   "simcomp-gateway|./provisioning_docker/nginx"
   "simcomp-haproxy-balance|./provisioning_docker/haproxy"
+  "simcomp-analytics-spark|./analytics-spark-service"
 )
 
 # Filtrar servicios si se especificó uno

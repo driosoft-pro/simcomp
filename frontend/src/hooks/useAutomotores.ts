@@ -9,7 +9,7 @@ import {
   deleteAutomotor,
   toggleEstadoAutomotor,
 } from '../api/automotores.api'
-import type { Automotor, UUID } from '../types'
+import type { Automotor, UUID, PaginatedResponse } from '../types'
 
 export function useAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string; order?: string }) {
   return useQuery<PaginatedResponse<Automotor>>({

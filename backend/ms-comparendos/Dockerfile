@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml* package-lock.json* ./
 
 # Instalar con pnpm si hay lockfile, sino npm --omit=dev
 RUN if [ -f pnpm-lock.yaml ]; then \
-      npm install -g pnpm@10 && pnpm install --frozen-lockfile --prod; \
+      npm install -g pnpm@10 && pnpm install --no-frozen-lockfile --prod; \
     else \
       npm install --omit=dev; \
     fi

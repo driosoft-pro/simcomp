@@ -1,5 +1,5 @@
 import { apiClient } from './axios.config'
-import type { ApiResponse, LicenciaConduccion, Persona, UUID, CreatePersonaPayload, UpdatePersonaPayload, CreateLicenciaPayload, UpdateLicenciaPayload } from '../types'
+import type { ApiResponse, LicenciaConduccion, Persona, UUID, CreatePersonaPayload, UpdatePersonaPayload, CreateLicenciaPayload, UpdateLicenciaPayload, PaginatedResponse } from '../types'
 import { API_URLS } from '../utils/constants'
 
 export async function getPersonas(params?: { page?: number; limit?: number; search?: string; order?: string }): Promise<PaginatedResponse<Persona>> {
@@ -9,7 +9,7 @@ export async function getPersonas(params?: { page?: number; limit?: number; sear
   )
   return {
     ...response.data,
-    data: response.data.data.map(p => ({ ...p, persona_id: (p as any).id }))
+    data: response.data.data.map((p: Persona) => ({ ...p, persona_id: (p as any).id }))
   }
 }
 

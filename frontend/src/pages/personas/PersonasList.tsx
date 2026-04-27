@@ -9,6 +9,7 @@ import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
 import PersonaForm from '../../components/forms/PersonaForm'
 import { formatDateShort } from '../../utils/formatters'
+import type { Persona } from '../../types'
 
 const PERSONA_FILTER_OPTIONS: FilterOption[] = [
   { 
@@ -171,7 +172,7 @@ function PersonasList() {
                   </tr>
                 ))}
 
-              {items?.map((persona) => (
+              {items?.map((persona: Persona) => (
                 <tr
                   key={persona.persona_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"

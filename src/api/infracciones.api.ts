@@ -1,5 +1,5 @@
 import { apiClient } from './axios.config'
-import type { ApiResponse, Infraccion, UUID } from '../types'
+import type { ApiResponse, Infraccion, UUID, PaginatedResponse } from '../types'
 import { API_URLS } from '../utils/constants'
 
 export async function getInfracciones(params?: { page?: number; limit?: number; search?: string; estado?: string; vigente?: boolean; order?: string }): Promise<PaginatedResponse<Infraccion>> {

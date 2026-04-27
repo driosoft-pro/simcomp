@@ -1,5 +1,5 @@
 import { apiClient } from './axios.config'
-import type { ApiResponse, Comparendo, UUID, CreateComparendoPayload } from '../types'
+import type { ApiResponse, Comparendo, UUID, CreateComparendoPayload, PaginatedResponse } from '../types'
 import { API_URLS } from '../utils/constants'
 
 export async function getComparendos(params?: { page?: number; limit?: number; search?: string; order?: string }): Promise<PaginatedResponse<Comparendo>> {
@@ -9,7 +9,7 @@ export async function getComparendos(params?: { page?: number; limit?: number; s
   )
   return {
     ...response.data,
-    data: response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+    data: response.data.data.map((c: Comparendo) => ({ ...c, comparendo_id: (c as any).id }))
   }
 }
 
@@ -33,21 +33,21 @@ export async function getComparendosByPersona(personaId: UUID): Promise<Comparen
   const response = await apiClient.get<ApiResponse<Comparendo[]>>(
     `${API_URLS.comparendos}/comparendos/persona/${personaId}`,
   )
-  return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  return response.data.data.map((c: Comparendo) => ({ ...c, comparendo_id: (c as any).id }))
 }
 
 export async function getComparendosByAutomotor(automotorId: UUID): Promise<Comparendo[]> {
   const response = await apiClient.get<ApiResponse<Comparendo[]>>(
     `${API_URLS.comparendos}/comparendos/automotor/${automotorId}`,
   )
-  return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  return response.data.data.map((c: Comparendo) => ({ ...c, comparendo_id: (c as any).id }))
 }
 
 export async function getComparendosByPlaca(placa: string): Promise<Comparendo[]> {
   const response = await apiClient.get<ApiResponse<Comparendo[]>>(
     `${API_URLS.comparendos}/comparendos/placa/${placa}`,
   )
-  return response.data.data.map(c => ({ ...c, comparendo_id: (c as any).id }))
+  return response.data.data.map((c: Comparendo) => ({ ...c, comparendo_id: (c as any).id }))
 }
 
 export async function createComparendo(
@@ -58,9 +58,8 @@ export async function createComparendo(
     data,
   )
   const resData = response.data.data
-  
   if (Array.isArray(resData)) {
-    return resData.map(c => ({ ...c, comparendo_id: (c as any).id }))
+    return resData.map((c: Comparendo) => ({ ...c, comparendo_id: (c as any).id }))
   }
   
   return { ...resData, comparendo_id: (resData as any).id }

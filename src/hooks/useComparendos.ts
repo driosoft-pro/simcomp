@@ -14,7 +14,7 @@ import {
   updateComparendo,
   getSiguienteNumeroComparendo,
 } from '../api/comparendos.api'
-import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial } from '../types'
+import type { Comparendo, UUID, CreateComparendoPayload, ComparendoHistorial, PaginatedResponse } from '../types'
 
 export function useComparendosByPlaca(placa: string) {
   return useQuery<Comparendo[]>({

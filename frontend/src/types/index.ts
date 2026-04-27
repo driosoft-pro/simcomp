@@ -215,7 +215,7 @@ export interface Comparendo {
   lugar: string
   ciudad: string
   observaciones?: string | null
-  estado: 'PENDIENTE' | 'PAGADO' | 'ANULADO' | 'VIGENTE' | 'CERRADO' | 'EN_PROCESO_DE_PAGO' | 'EN_COBRO_COACTIVO' | 'IMPUGNADO' | 'EXONERADO'
+  estado: 'PENDIENTE' | 'PAGADO' | 'ANULADO'
   created_at?: string
   updated_at?: string
   deleted_at?: string | null

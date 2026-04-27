@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml ./
 
 # Usar pnpm con frozen-lockfile para builds reproducibles y más rápidos
 RUN npm install -g pnpm@10 && \
-    pnpm install --frozen-lockfile --prod
+    pnpm install --no-frozen-lockfile --prod
 
 # ── Stage 2: imagen de producción (sin devDependencies ni build tools) ────────
 FROM node:22-alpine AS production

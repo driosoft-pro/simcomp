@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 import { useComparendos } from '../../hooks/useComparendos'
 import { useAuth } from '../../hooks/useAuth'
 import { formatDate, formatDateShort } from '../../utils/formatters'
+import type { Comparendo } from '../../types'
 import SearchInput from '../../components/ui/SearchInput'
 import DataFilters from '../../components/ui/DataFilters'
 import type { FilterOption } from '../../components/ui/DataFilters'
 import Pagination from '../../components/ui/Pagination'
-import type { Comparendo } from '../../types'
 import { Plus } from 'lucide-react'
 
 const COMPARENDO_FILTER_OPTIONS: FilterOption[] = [
@@ -16,13 +16,7 @@ const COMPARENDO_FILTER_OPTIONS: FilterOption[] = [
     type: 'select', 
     options: [
       { label: 'Pendiente', value: 'PENDIENTE' },
-      { label: 'Vigente', value: 'VIGENTE' },
-      { label: 'En Proceso de Pago', value: 'EN_PROCESO_DE_PAGO' },
       { label: 'Pagado', value: 'PAGADO' },
-      { label: 'Cerrado', value: 'CERRADO' },
-      { label: 'En Cobro Coactivo', value: 'EN_COBRO_COACTIVO' },
-      { label: 'Impugnado', value: 'IMPUGNADO' },
-      { label: 'Exonerado', value: 'EXONERADO' },
       { label: 'Anulado', value: 'ANULADO' },
     ] 
   },
@@ -51,13 +45,7 @@ import { useState } from 'react'
 
 const estadoStyles: Record<Comparendo['estado'], string> = {
   PENDIENTE: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
-  VIGENTE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  EN_PROCESO_DE_PAGO: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   PAGADO: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  CERRADO: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
-  EN_COBRO_COACTIVO: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  IMPUGNADO: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  EXONERADO: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
   ANULADO: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
 }
 
@@ -74,9 +62,6 @@ function ComparendosList() {
     search: searchTerm,
     ...filters
   })
-  
-  const isCiudadano = user?.rol === 'ciudadano'
-
   const items = paginatedData?.data || []
   const totalItems = paginatedData?.total || 0
   const totalPages = Math.ceil(totalItems / pageSize)
@@ -180,7 +165,7 @@ function ComparendosList() {
                   </tr>
                 ))}
 
-              {items?.map((comparendo) => (
+              {items?.map((comparendo: Comparendo) => (
                 <tr
                   key={comparendo.comparendo_id}
                   className="border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
@@ -196,7 +181,7 @@ function ComparendosList() {
                     {formatDate(comparendo.fecha_comparendo)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${estadoStyles[comparendo.estado] ?? 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${estadoStyles[comparendo.estado as keyof typeof estadoStyles] ?? 'bg-slate-100 text-slate-600'}`}>
                       {comparendo.estado.replace(/_/g, ' ')}
                     </span>
                   </td>

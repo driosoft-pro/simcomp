@@ -9,7 +9,7 @@ import {
   toggleVigenciaInfraccion,
   activateInfraccion,
 } from '../api/infracciones.api'
-import type { Infraccion, UUID } from '../types'
+import type { Infraccion, UUID, PaginatedResponse } from '../types'
 
 export function useInfracciones(params?: { page?: number; limit?: number; search?: string; estado?: string; vigente?: boolean; order?: string }) {
   return useQuery<PaginatedResponse<Infraccion>>({

@@ -4,6 +4,7 @@ import { useComparendo, useUpdateComparendo } from '../../hooks/useComparendos'
 import { useInfracciones } from '../../hooks/useInfracciones'
 import { ArrowLeft, Save, X } from 'lucide-react'
 import { useToast } from '../../context/ToastContext'
+import type { Infraccion } from '../../types'
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:focus:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500'
@@ -60,7 +61,7 @@ function EditarComparendo() {
     setFormData((prev) => ({ ...prev, [name]: value }))
 
     if (name === 'infraccion_codigo') {
-      const selected = infracciones?.find(i => i.codigo === value)
+      const selected = infracciones?.data?.find((i: Infraccion) => i.codigo === value)
       if (selected) {
         setFormData(prev => ({
           ...prev,
@@ -224,7 +225,7 @@ function EditarComparendo() {
                 className={inputClass}
               >
                 <option value="">Seleccione una infracción</option>
-                {infracciones?.map((inf) => (
+                {infracciones?.data?.map((inf: Infraccion) => (
                   <option key={inf.id} value={inf.codigo}>
                     {inf.codigo} - {inf.descripcion.substring(0, 50)}...
                   </option>

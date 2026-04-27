@@ -1,5 +1,5 @@
 import { apiClient } from './axios.config'
-import type { ApiResponse, Automotor, UUID } from '../types'
+import type { ApiResponse, Automotor, UUID, PaginatedResponse } from '../types'
 import { API_URLS } from '../utils/constants'
 
 export async function getAutomotores(params?: { page?: number; limit?: number; search?: string; estado?: string; propietario?: string; order?: string }): Promise<PaginatedResponse<Automotor>> {
@@ -9,7 +9,7 @@ export async function getAutomotores(params?: { page?: number; limit?: number; s
   )
   return {
     ...response.data,
-    data: response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
+    data: response.data.data.map((a: Automotor) => ({ ...a, automotor_id: (a as any).id }))
   }
 }
 
@@ -34,7 +34,7 @@ export async function getAutomotoresByPropietario(documento: string): Promise<Au
   const response = await apiClient.get<ApiResponse<Automotor[]>>(
     `${API_URLS.automotores}/automotores/propietario/${encodeURIComponent(documento)}`,
   )
-  return response.data.data.map(a => ({ ...a, automotor_id: (a as any).id }))
+  return response.data.data.map((a: Automotor) => ({ ...a, automotor_id: (a as any).id }))
 }
 
 export async function createAutomotor(data: import('../types').CreateAutomotorPayload): Promise<Automotor> {

@@ -28,21 +28,21 @@ for SERVICE in "${SERVICES[@]}"; do
     
     awk '
     BEGIN { mode="shared"; shared=""; local_env=""; vagrant_env=""; docker_env=""; swarm_env=""; default_env="" }
-    /^# 1\. / { mode="local"; next }
-    /^# 2\. / { mode="vagrant"; next }
-    /^# 3\. / { mode="docker"; next }
-    /^# 4\. / { mode="swarm"; next }
-    /^# Configuración para desarrollo local/ { mode="skip"; next }
-    /^# DEFAULT \/ PRODUCTION/ { mode="default"; next }
+    /^#\s*1\./ { mode="local"; next }
+    /^#\s*2\./ { mode="vagrant"; next }
+    /^#\s*3\./ { mode="docker"; next }
+    /^#\s*4\./ { mode="swarm"; next }
+    /^#\s*Configuración para desarrollo local/ { mode="skip"; next }
+    /^#\s*DEFAULT \/ PRODUCTION/ { mode="default"; next }
     {
       if (mode == "skip") next;
       
       line = $0
-      # Descomentar variables (ej: "# VAR=VAL" -> "VAR=VAL")
-      if (match(line, /^# [a-zA-Z0-9_]+=/)) {
-        line = substr(line, 3)
-      } else if (match(line, /^#[a-zA-Z0-9_]+=/)) {
-        line = substr(line, 2)
+      # Descomentar variables (ej: "# VAR=VAL" o "#VAR=VAL")
+      if (line ~ /^#\s+[a-zA-Z0-9_]+=/) {
+        sub(/^#\s+/, "", line)
+      } else if (line ~ /^#[a-zA-Z0-9_]+=/) {
+        sub(/^#/, "", line)
       }
       
       if (mode == "shared") shared = shared line "\n"

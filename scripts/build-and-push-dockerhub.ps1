@@ -45,14 +45,20 @@ function Test-ValidContext($path) {
 }
 
 # ---------- Config ----------
-Load-Env
+$Cli = Get-Cli
 
-$DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { "tu_usuario" }
+$DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { Read-Host "Ingrese su usuario de Docker Hub" }
+$DockerHubPass = if ($env:DOCKERHUB_PASS) { $env:DOCKERHUB_PASS } else { Read-Host "Ingrese su contraseña de Docker Hub (no se mostrará)" -AsSecureString }
 $Version = if ($env:VERSION) { $env:VERSION } else { "v1.0.0" }
 $Registry = if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" }
-$DockerHubPass = $env:DOCKERHUB_PASS
 
-$Cli = Get-Cli
+# Convertir secure string a plain text para docker login si es necesario
+if ($DockerHubPass -is [System.Security.SecureString]) {
+    $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($DockerHubPass)
+    $DockerHubPassPlain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+} else {
+    $DockerHubPassPlain = $DockerHubPass
+}
 
 # ---------- Servicios ----------
 $Services = @(
@@ -93,7 +99,7 @@ function Login-Registry() {
     }
 
     Write-Info "Autenticando en $Registry..."
-    $DockerHubPass | & $Cli login $Registry -u $DockerHubUser --password-stdin
+    $DockerHubPassPlain | & $Cli login $Registry -u $DockerHubUser --password-stdin
 }
 
 # ---------- Build ----------
@@ -113,12 +119,13 @@ function Build-Images() {
 
         Write-Info "Construyendo $Name ..."
         & $Cli build -t $VersionTag $Context
-        if ($LASTEXITCODE -ne 0) { Write-Fail "Error construyendo $Name" }
-        
-        & $Cli tag $VersionTag $LatestTag
-
-        $script:Built += $svc
-        Write-Ok "$Name construido"
+        if ($LASTEXITCODE -eq 0) {
+            & $Cli tag $VersionTag $LatestTag
+            $script:Built += $svc
+            Write-Ok "$Name construido"
+        } else {
+            Write-Warn "Error construyendo $Name. Se saltará este servicio."
+        }
     }
 }
 
@@ -141,13 +148,26 @@ function Push-Images() {
     }
 }
 
+# ---------- Limpieza ----------
+function Remove-DanglingImages() {
+    Write-Info "Buscando y limpiando imágenes sin etiqueta (<none>) ..."
+    $dangling = & $Cli images -f "dangling=true" -q
+    if ($dangling) {
+        Write-Info "Se encontraron imágenes huérfanas. Procediendo a eliminar..."
+        & $Cli rmi -f $dangling
+        Write-Ok "Imágenes huérfanas eliminadas."
+    } else {
+        Write-Info "No se encontraron imágenes huérfanas."
+    }
+}
+
 # ---------- Ejecución ----------
 Write-Info "CLI: $Cli | Usuario: $DockerHubUser | Versión: $Version | Acción: $Action"
 
 switch ($Action) {
     "build" { Build-Images }
     "push" { Login-Registry; Push-Images }
-    "all" { Login-Registry; Build-Images; Push-Images }
+    "all" { Login-Registry; Build-Images; Push-Images; Remove-DanglingImages }
     Default { Write-Fail "Acción inválida: build | push | all" }
 }
 

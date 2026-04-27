@@ -10,7 +10,7 @@ set -Eeuo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 # ---------- Configuración por defecto ----------
-DEFAULT_DOCKERHUB_USER="deytonro"
+DEFAULT_DOCKERHUB_USER=""
 DEFAULT_VERSION="v1.0.0"
 DEFAULT_REGISTRY="docker.io"
 DEFAULT_ENV_FILE=".env.docker-push"
@@ -209,11 +209,13 @@ build_images() {
     latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
 
     log "Construyendo $image_name ..."
-    "$CLI" build -t "$version_tag" "$context_dir"
-    "$CLI" tag "$version_tag" "$latest_tag"
-
-    BUILT_SERVICES+=("$item")
-    ok "$image_name construido."
+    if "$CLI" build -t "$version_tag" "$context_dir"; then
+      "$CLI" tag "$version_tag" "$latest_tag"
+      BUILT_SERVICES+=("$item")
+      ok "$image_name construido."
+    else
+      error "Fallo al construir $image_name. Se saltará este servicio."
+    fi
   done
 }
 
@@ -241,6 +243,20 @@ push_images() {
   done
 }
 
+cleanup_dangling_images() {
+  log "Limpiando imágenes sin etiqueta (<none>) ..."
+  local dangling_images
+  dangling_images=$("$CLI" images -f "dangling=true" -q 2>/dev/null)
+  
+  if [[ -n "$dangling_images" ]]; then
+    # shellcheck disable=SC2086
+    "$CLI" rmi -f $dangling_images || warn "Algunas imágenes no se pudieron eliminar (podrían estar en uso)."
+    ok "Imágenes huérfanas eliminadas con éxito."
+  else
+    log "No se encontraron imágenes huérfanas."
+  fi
+}
+
 main() {
   log "CLI: $CLI | Usuario: $DOCKERHUB_USER | Versión: $VERSION | Acción: $ACTION"
 
@@ -256,6 +272,7 @@ main() {
       login_registry
       build_images
       push_images
+      cleanup_dangling_images
       ;;
   esac
 

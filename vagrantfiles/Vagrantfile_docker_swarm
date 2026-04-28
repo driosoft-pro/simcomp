@@ -94,6 +94,13 @@ MANAGER_DEPLOY = <<~'SHELL'
     sleep 5
   done
 
+  # LIMPIEZA PREVENTIVA: Asegurar que no hay volúmenes de intentos fallidos
+  # Esto evita el error "Skipping initialization" en Postgres
+  echo "[SIMCOMP] Limpiando volúmenes previos en el cluster..."
+  docker stack rm simcomp 2>/dev/null || true
+  sleep 5
+  docker volume prune -f 2>/dev/null || true
+
   cd /vagrant/provisioning_docker
   echo "[SIMCOMP] Cluster listo. Desplegando stack simcomp..."
   docker stack deploy -c stack.yml simcomp

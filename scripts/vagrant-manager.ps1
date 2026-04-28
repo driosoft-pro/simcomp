@@ -41,14 +41,46 @@ if (Test-Path "Vagrantfile") {
     vagrant destroy -f
 }
 
-Write-Host "[*] Eliminando la carpeta .vagrant para un inicio limpio..." -ForegroundColor Green
+Write-Host "[*] Iniciando limpieza profunda de rastro de Vagrant..." -ForegroundColor Yellow
 if (Test-Path ".vagrant") {
-    Remove-Item -Recurse -Force ".vagrant"
+    # El flag -Force y -ErrorAction SilentlyContinue aseguran que no se detenga por bloqueos
+    Remove-Item -Path ".vagrant" -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path ".vagrant") {
+        Write-Host "  --> Intentando borrado alternativo de .vagrant..." -ForegroundColor Gray
+        cmd /c "rmdir /s /q .vagrant" 2>$null
+    }
 }
+# Borrar archivos temporales de tokens y estados de Swarm
+if (Test-Path "provisioning_docker/.swarm-token") { Remove-Item "provisioning_docker/.swarm-token" -Force }
+if (Test-Path "provisioning_docker/.swarm-manager-ip") { Remove-Item "provisioning_docker/.swarm-manager-ip" -Force }
+Write-Host "[✔] Limpieza de directorio .vagrant completada." -ForegroundColor Green
 
 Write-Host "[*] Copiando $archivo a Vagrantfile..." -ForegroundColor Green
 Copy-Item -Path $archivo -Destination "Vagrantfile" -Force
 
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host "Iniciando 'vagrant up'..." -ForegroundColor Green
-vagrant up
+
+if ($opcion -eq "1") {
+    Write-Host "Iniciando entorno Nativo (Vagrant + Ansible)..." -ForegroundColor Green
+    vagrant up
+} else {
+    Write-Host "Iniciando máquinas virtuales (Worker1 -> Worker2 -> Manager)..." -ForegroundColor Green
+    vagrant up workerDocker1 --no-provision
+    vagrant up workerDocker2 --no-provision
+    vagrant up managerDocker --no-provision
+
+    Write-Host "`n[*] Inicializando Docker Swarm en el Manager..." -ForegroundColor Green
+    vagrant provision managerDocker --provision-with fix-dns,docker-install,swarm-init
+
+    Write-Host "`n[*] Uniendo Worker 1 al Swarm..." -ForegroundColor Green
+    vagrant provision workerDocker1
+
+    Write-Host "`n[*] Uniendo Worker 2 al Swarm..." -ForegroundColor Green
+    vagrant provision workerDocker2
+
+    Write-Host "`n[*] Desplegando el Stack de la aplicación en el Manager..." -ForegroundColor Green
+    vagrant provision managerDocker --provision-with deploy-stack
+    
+    Write-Host "=========================================================" -ForegroundColor Cyan
+    Write-Host "¡Despliegue de Docker Swarm completado con éxito!" -ForegroundColor Green
+}

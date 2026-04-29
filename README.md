@@ -45,6 +45,107 @@ Sistema integral de gestión de comparendos de tránsito desplegado en **Docker 
 
 ---
 
+## 🚀 Guía Rápida: Comandos y Accesos
+
+Esta sección resume cómo poner en marcha el sistema en diferentes ambientes y cómo acceder a cada uno.
+
+| Ambiente | Comando de Inicio | Acceso Frontend / API |
+| :--- | :--- | :--- |
+| **Local (Nativo)** | `pnpm dev` (en cada carpeta) | [http://localhost:5173](http://localhost:5173) |
+| **Docker Compose** | `docker compose up -d` <br> `podman-compose up -d` | [http://localhost:8080](http://localhost:8080) |
+| **Vagrant (Ansible)** | `./scripts/vagrant-manager.sh` (Opción 1) | [http://simcomp.co](http://simcomp.co) |
+| **Vagrant (Swarm)** | `./scripts/vagrant-manager.sh` (Opción 2/3) | [http://simcomp.co](http://simcomp.co) |
+
+### 🔗 Enlaces de Interés
+
+#### 💻 Desarrollo Local / Docker Compose / Podman
+- **Frontend (HAProxy)**: [http://localhost:8080](http://localhost:8080)
+- **Dashboard Analytics**: [http://localhost:8010](http://localhost:8010)
+- **HAProxy Stats**: [http://localhost:8404/stats](http://localhost:8404/stats) (admin / Admin123*)
+- **Documentación API (Swagger)**: `http://localhost:8001/api/docs` (Auth) ... `8006` (Reportes)
+
+#### ☁️ Entorno Vagrant / Swarm (192.168.100.x)
+- **Frontend Principal**: [http://simcomp.co](http://simcomp.co)
+- **Dashboard Analytics**: [http://192.168.100.3:8010](http://192.168.100.3:8010)
+- **HAProxy Stats (Cluster)**: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
+- **Spark UI**: [http://192.168.100.3:4040](http://192.168.100.3:4040) (Durante ejecución de jobs)
+
+### 🛠️ Comandos Esenciales por Ambiente
+
+#### 1. Desarrollo Local Nativo
+```bash
+# Iniciar base de datos (requiere Docker/Podman)
+docker compose up -d db-auth db-personas db-automotores db-infracciones db-comparendos
+# o con podman
+podman-compose up -d db-auth db-personas db-automotores db-infracciones db-comparendos
+
+# Backend (en cada servicio)
+cd backend/ms-auth-service && pnpm dev
+
+# Frontend
+cd frontend && pnpm dev
+```
+
+#### 2. Docker Compose / Podman (Completo)
+```bash
+# Iniciar todo el ecosistema con Docker
+docker compose up -d --build
+
+# Iniciar con Podman
+podman-compose up -d --build
+
+# Ver logs
+docker compose logs -f
+# o podman
+podman-compose logs -f
+```
+
+---
+
+## 🧪 Verificación y Pruebas (Docker/Podman)
+
+Una vez que el sistema esté arriba con `podman-compose` o `docker compose`, puedes realizar las siguientes pruebas desde tu navegador:
+
+### 1. Acceso a la Aplicación (Frontend)
+*   **URL**: [http://localhost:8080](http://localhost:8080)
+*   **Qué probar**: Deberías ver la pantalla de login. Intenta ingresar con las credenciales por defecto (si están en tu `init.sql`).
+
+### 2. Estado de los Microservicios (Health Check)
+Puedes verificar que cada microservicio responda correctamente de forma directa:
+*   **Auth**: `http://localhost:8001/api/health`
+*   **Personas**: `http://localhost:8002/api/health`
+*   **Automotores**: `http://localhost:8003/api/health`
+*   **Infracciones**: `http://localhost:8004/api/health`
+*   **Comparendos**: `http://localhost:8005/api/health`
+*   **Reportes**: `http://localhost:8006/api/health`
+
+### 3. Analytics Spark
+Verifica que el panel de Big Data esté operativo:
+*   **Dashboard**: [http://localhost:8010](http://localhost:8010)
+*   **Spark UI**: [http://localhost:4040](http://localhost:4040) (Solo visible mientras se procesa un Job)
+
+### 4. Monitoreo del Balanceador (HAProxy)
+HAProxy gestiona el tráfico entre los frontends y las APIs:
+*   **URL**: [http://localhost:8404/stats](http://localhost:8404/stats)
+*   **Credenciales**: `admin` / `Admin123*`
+*   **Qué ver**: Deberías ver todos los backends en verde (UP).
+
+---
+
+#### 3. Vagrant & Docker Swarm
+```bash
+# 1. Inicializar infraestructura
+./scripts/vagrant-manager.sh  # Seguir menú interactivo
+
+# 2. Desplegar el stack (si no se hizo automáticamente)
+vagrant provision managerDocker --provision-with deploy-stack
+
+# 3. Verificar estado
+vagrant ssh managerDocker -c "docker stack services simcomp"
+```
+
+---
+
 ## 🏗️ Arquitectura de Alta Disponibilidad (Docker Swarm)
 
 El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resiliencia y balanceo de carga:

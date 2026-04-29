@@ -84,4 +84,11 @@ else
     
     echo "========================================================="
     echo "¡Despliegue de Docker Swarm completado con éxito!"
+    echo ""
+    echo "Acceso a la plataforma:"
+    echo "  - Frontend: http://simcomp.co o http://192.168.100.2"
+    echo "  - Stats:    http://192.168.100.2:8404/stats (admin:Admin123*)"
+    echo "  - Spark UI: http://192.168.100.2:8010"
+    echo "  - Spark Jobs: http://192.168.100.2:4040"
+    echo "========================================================="
 fi

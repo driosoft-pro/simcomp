@@ -68,6 +68,7 @@ export async function login(req, res) {
       },
     });
   } catch (error) {
+    console.error("[Login Error]", error.message);
     const status = error.message === "Usuario inactivo" ? 403 : 401;
 
     return res.status(status).json({

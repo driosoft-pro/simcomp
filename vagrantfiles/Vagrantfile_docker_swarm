@@ -105,7 +105,10 @@ MANAGER_DEPLOY = <<~'SHELL'
   echo "[SIMCOMP] Cluster listo. Desplegando stack simcomp..."
   docker stack deploy -c stack.yml simcomp
   
-  echo "[SIMCOMP] Finalizado. App en http://192.168.100.2"
+  echo "[SIMCOMP] Finalizado. App en http://192.168.100.2 o http://simcomp.co"
+  echo "[SIMCOMP] Estadísticas HAProxy: http://192.168.100.2:8404/stats (admin:Admin123*)"
+  echo "[SIMCOMP] Spark Analytics: http://192.168.100.2:8010"
+  echo "[SIMCOMP] Spark UI (Jobs): http://192.168.100.2:4040"
 SHELL
 
 # --------------------------------------------------------------------------

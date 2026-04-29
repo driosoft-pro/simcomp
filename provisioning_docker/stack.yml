@@ -53,6 +53,7 @@ services:
   ms-auth-service:
     image: deytonro/simcomp-auth-service:latest
     environment:
+      SERVICE_NAME: ms-auth-service
       PORT: 8001
       AUTH_DB_HOST: simcomp_db-auth
       AUTH_DB_PORT: 5432
@@ -60,6 +61,8 @@ services:
       AUTH_DB_USER: auth_user
       AUTH_DB_PASSWORD: auth_pass
       JWT_SECRET: supersecretkey_auth_2026
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_DAYS: 7
     networks:
       - simcomp-backend
     deploy:
@@ -73,12 +76,14 @@ services:
   ms-personas:
     image: deytonro/simcomp-personas-service:latest
     environment:
+      SERVICE_NAME: ms-personas
       PORT: 8002
       PERSONAS_DB_HOST: simcomp_db-personas
       PERSONAS_DB_PORT: 5432
       PERSONAS_DB_NAME: personas_db
       PERSONAS_DB_USER: personas_user
       PERSONAS_DB_PASSWORD: personas_pass
+      JWT_SECRET: supersecretkey_auth_2026
     networks:
       - simcomp-backend
     deploy:
@@ -92,12 +97,14 @@ services:
   ms-automotores:
     image: deytonro/simcomp-automotores-service:latest
     environment:
+      SERVICE_NAME: ms-automotores
       PORT: 8003
       AUTOMOTORES_DB_HOST: simcomp_db-automotores
       AUTOMOTORES_DB_PORT: 5432
       AUTOMOTORES_DB_NAME: automotores_db
       AUTOMOTORES_DB_USER: automotores_user
       AUTOMOTORES_DB_PASSWORD: automotores_pass
+      JWT_SECRET: supersecretkey_auth_2026
     networks:
       - simcomp-backend
     deploy:
@@ -111,12 +118,14 @@ services:
   ms-infracciones:
     image: deytonro/simcomp-infracciones-service:latest
     environment:
+      SERVICE_NAME: ms-infracciones
       PORT: 8004
       INFRACCIONES_DB_HOST: simcomp_db-infracciones
       INFRACCIONES_DB_PORT: 5432
       INFRACCIONES_DB_NAME: infracciones_db
       INFRACCIONES_DB_USER: infracciones_user
       INFRACCIONES_DB_PASSWORD: infracciones_pass
+      JWT_SECRET: supersecretkey_auth_2026
     networks:
       - simcomp-backend
     deploy:
@@ -130,12 +139,14 @@ services:
   ms-comparendos:
     image: deytonro/simcomp-comparendos-service:latest
     environment:
+      SERVICE_NAME: ms-comparendos
       PORT: 8005
       COMPARENDOS_DB_HOST: simcomp_db-comparendos
       COMPARENDOS_DB_PORT: 5432
       COMPARENDOS_DB_NAME: comparendos_db
       COMPARENDOS_DB_USER: comparendos_user
       COMPARENDOS_DB_PASSWORD: comparendos_pass
+      JWT_SECRET: supersecretkey_auth_2026
     networks:
       - simcomp-backend
     deploy:
@@ -149,12 +160,14 @@ services:
   ms-reportes:
     image: deytonro/simcomp-reportes-service:latest
     environment:
+      SERVICE_NAME: ms-reportes
       PORT: 8006
       AUTH_SERVICE_URL: http://simcomp_ms-auth-service:8001
       PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
       AUTOMOTORES_SERVICE_URL: http://simcomp_ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://simcomp_ms-infracciones:8004
       COMPARENDOS_SERVICE_URL: http://simcomp_ms-comparendos:8005
+      JWT_SECRET: supersecretkey_auth_2026
     networks:
       - simcomp-backend
     deploy:

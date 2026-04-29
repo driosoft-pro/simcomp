@@ -5,6 +5,7 @@ services:
   # =========================
 
   db-auth:
+    build: ./backend/ms-auth-service/db
     image: docker.io/deytonro/simcomp-auth-db:latest
     environment:
       POSTGRES_USER: ${AUTH_DB_USER}
@@ -21,6 +22,7 @@ services:
       - simcomp-net
 
   db-personas:
+    build: ./backend/ms-personas/db
     image: docker.io/deytonro/simcomp-personas-db:latest
     environment:
       POSTGRES_USER: ${PERSONAS_DB_USER}
@@ -37,6 +39,7 @@ services:
       - simcomp-net
 
   db-automotores:
+    build: ./backend/ms-automotores/db
     image: docker.io/deytonro/simcomp-automotores-db:latest
     environment:
       POSTGRES_USER: ${AUTOMOTORES_DB_USER}
@@ -53,6 +56,7 @@ services:
       - simcomp-net
 
   db-infracciones:
+    build: ./backend/ms-infracciones/db
     image: docker.io/deytonro/simcomp-infracciones-db:latest
     environment:
       POSTGRES_USER: ${INFRACCIONES_DB_USER}
@@ -69,6 +73,7 @@ services:
       - simcomp-net
 
   db-comparendos:
+    build: ./backend/ms-comparendos/db
     image: docker.io/deytonro/simcomp-comparendos-db:latest
     environment:
       POSTGRES_USER: ${COMPARENDOS_DB_USER}
@@ -89,6 +94,7 @@ services:
   # =========================
 
   ms-auth-service:
+    build: ./backend/ms-auth-service
     image: docker.io/deytonro/simcomp-auth-service:latest
     restart: always
     depends_on:
@@ -97,6 +103,7 @@ services:
     ports:
       - "8001:8001"
     environment:
+      SERVICE_NAME: ms-auth-service
       PORT: 8001
       AUTH_DB_HOST: db-auth
       AUTH_DB_PORT: 5432
@@ -104,6 +111,8 @@ services:
       AUTH_DB_USER: ${AUTH_DB_USER}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
     volumes:
       - ./backend/ms-auth-service/src:/app/src
@@ -111,6 +120,7 @@ services:
       - simcomp-net
 
   ms-personas:
+    build: ./backend/ms-personas
     image: docker.io/deytonro/simcomp-personas-service:latest
     restart: always
     depends_on:
@@ -121,6 +131,7 @@ services:
     ports:
       - "8002:8002"
     environment:
+      SERVICE_NAME: ms-personas
       PORT: 8002
       PERSONAS_DB_HOST: db-personas
       PERSONAS_DB_PORT: 5432
@@ -128,6 +139,8 @@ services:
       PERSONAS_DB_USER: ${PERSONAS_DB_USER}
       PERSONAS_DB_PASSWORD: ${PERSONAS_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
       AUTH_SERVICE_URL: http://ms-auth-service:8001
       AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
       COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
@@ -135,6 +148,7 @@ services:
       - simcomp-net
 
   ms-automotores:
+    build: ./backend/ms-automotores
     image: docker.io/deytonro/simcomp-automotores-service:latest
     restart: always
     depends_on:
@@ -145,6 +159,7 @@ services:
     ports:
       - "8003:8003"
     environment:
+      SERVICE_NAME: ms-automotores
       PORT: 8003
       AUTOMOTORES_DB_HOST: db-automotores
       AUTOMOTORES_DB_PORT: 5432
@@ -153,12 +168,15 @@ services:
       AUTOMOTORES_DB_PASSWORD: ${AUTOMOTORES_DB_PASSWORD}
       PERSONAS_SERVICE_URL: http://ms-personas:8002
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
     volumes:
       - ./backend/ms-automotores/src:/app/src
     networks:
       - simcomp-net
 
   ms-infracciones:
+    build: ./backend/ms-infracciones
     image: docker.io/deytonro/simcomp-infracciones-service:latest
     restart: always
     depends_on:
@@ -167,6 +185,7 @@ services:
     ports:
       - "8004:8004"
     environment:
+      SERVICE_NAME: ms-infracciones
       PORT: 8004
       INFRACCIONES_DB_HOST: db-infracciones
       INFRACCIONES_DB_PORT: 5432
@@ -174,12 +193,15 @@ services:
       INFRACCIONES_DB_USER: ${INFRACCIONES_DB_USER}
       INFRACCIONES_DB_PASSWORD: ${INFRACCIONES_DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
     volumes:
       - ./backend/ms-infracciones/src:/app/src
     networks:
       - simcomp-net
 
   ms-comparendos:
+    build: ./backend/ms-comparendos
     image: docker.io/deytonro/simcomp-comparendos-service:latest
     restart: always
     depends_on:
@@ -194,6 +216,7 @@ services:
     ports:
       - "8005:8005"
     environment:
+      SERVICE_NAME: ms-comparendos
       PORT: 8005
       COMPARENDOS_DB_HOST: db-comparendos
       COMPARENDOS_DB_PORT: 5432
@@ -204,12 +227,15 @@ services:
       AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
     volumes:
       - ./backend/ms-comparendos/src:/app/src
     networks:
       - simcomp-net
 
   ms-reportes:
+    build: ./backend/ms-reportes
     image: docker.io/deytonro/simcomp-reportes-service:latest
     restart: always
     depends_on:
@@ -226,6 +252,7 @@ services:
     ports:
       - "8006:8006"
     environment:
+      SERVICE_NAME: ms-reportes
       PORT: 8006
       AUTH_SERVICE_URL: http://ms-auth-service:8001
       PERSONAS_SERVICE_URL: http://ms-personas:8002
@@ -233,6 +260,8 @@ services:
       INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
       COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
     volumes:
       - ./backend/ms-reportes/src:/app/src
     networks:
@@ -243,6 +272,7 @@ services:
   # =========================
 
   haproxy:
+    build: ./provisioning_docker/haproxy
     image: docker.io/deytonro/simcomp-haproxy-balance:latest
     volumes:
       - ./provisioning_docker/haproxy/haproxy.local.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
@@ -266,6 +296,7 @@ services:
   # =========================
 
   frontend1:
+    build: ./frontend
     image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
     environment:
@@ -274,6 +305,7 @@ services:
       - simcomp-net
 
   frontend2:
+    build: ./frontend
     image: docker.io/deytonro/simcomp-frontend:latest
     restart: unless-stopped
     environment:
@@ -282,14 +314,19 @@ services:
       - simcomp-net
 
   ms-analytics-spark:
+    build: ./analytics-spark-service
     image: docker.io/deytonro/simcomp-analytics-spark-service:latest
     restart: always
     ports:
       - "8010:8010"
       - "4040:4040"
     environment:
+      SERVICE_NAME: ms-analytics-spark
       APP_HOST: 0.0.0.0
       APP_PORT: 8010
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
       SPARK_MASTER_URL: local[*]
       SPARK_LOCAL_IP: 0.0.0.0
     volumes:

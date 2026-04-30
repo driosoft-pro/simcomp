@@ -227,7 +227,8 @@ El servicio está integrado en el stack principal (`stack.yml`). Para desplegarl
    *(O directamente dentro del manager con `docker stack deploy -c stack.yml simcomp`)*
 2. **Ubicación**: Se despliega automáticamente en el nodo **workerDocker1** (1 réplica) para optimizar recursos.
 3. **Acceso al Dashboard**:
-   Navega a http://192.168.100.2:8010 (o la IP de cualquier nodo del cluster gracias al _routing mesh_).
+   Navega a [http://simcomp.co:8010](http://simcomp.co:8010) (o la IP de cualquier nodo del cluster gracias al _routing mesh_).
+   También puedes ver la consola de monitoreo de Spark en [http://simcomp.co:4040](http://simcomp.co:4040) (mientras existan trabajos activos).
 
 ---
 

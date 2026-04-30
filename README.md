@@ -62,13 +62,19 @@ Esta sección resume cómo poner en marcha el sistema en diferentes ambientes y 
 - **Frontend (HAProxy)**: [http://localhost:8080](http://localhost:8080)
 - **Dashboard Analytics**: [http://localhost:8010](http://localhost:8010)
 - **HAProxy Stats**: [http://localhost:8404/stats](http://localhost:8404/stats) (admin / Admin123*)
+- **Grafana (Monitoreo)**: [http://localhost:3000](http://localhost:3000) (admin / admin)
+- **Prometheus**: [http://localhost:9090](http://localhost:9090)
+- **cAdvisor**: [http://localhost:8080](http://localhost:8080)
 - **Documentación API (Swagger)**: `http://localhost:8001/api/docs` (Auth) ... `8006` (Reportes)
 
 #### ☁️ Entorno Vagrant / Swarm (192.168.100.x)
 - **Frontend Principal**: [http://simcomp.co](http://simcomp.co)
-- **Dashboard Analytics**: [http://192.168.100.3:8010](http://192.168.100.3:8010)
+- **Dashboard Analytics**: [http://simcomp.co:8010](http://simcomp.co:8010)
 - **HAProxy Stats (Cluster)**: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
-- **Spark UI**: [http://192.168.100.3:4040](http://192.168.100.3:4040) (Durante ejecución de jobs)
+- **Grafana (Monitoreo)**: [http://simcomp.co:3000](http://simcomp.co:3000) (admin / admin)
+- **Prometheus**: [http://simcomp.co:9090](http://simcomp.co:9090)
+- **Spark UI**: [http://simcomp.co:4040](http://simcomp.co:4040) (Durante ejecución de jobs)
+- **cAdvisor (Manager)**: [http://simcomp.co:8080](http://simcomp.co:8080)
 
 ### 🛠️ Comandos Esenciales por Ambiente
 
@@ -157,11 +163,15 @@ El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resil
 | **workerDocker2** | `192.168.100.4` | Worker | Microservicios y Bases de Datos. |
 
 ### Componentes del Stack:
-1. **HAProxy**: Balanceador de carga de entrada (Puerto 80) y panel de estadísticas (Puerto 8404).
+1. **HAProxy**: Balanceador de carga de entrada (Puerto 80) y panel de estadísticas (Puerto 8404). Configurado en modo `dnsrr` para máxima eficiencia.
 2. **Nginx API Gateway**: Proxy inverso con validación de JWT para proteger microservicios.
 3. **Frontend**: Aplicación React (Vite) servida por Nginx.
 4. **7 Microservicios**: Auth, Personas, Automotores, Infracciones, Comparendos, Reportes y Analytics Spark.
 5. **PostgreSQL 16**: 5 bases de datos independientes con persistencia en volúmenes.
+6. **Observabilidad**: 
+   - **Prometheus**: Recolección de métricas de contenedores y servicios.
+   - **Grafana**: Visualización de métricas mediante dashboards preconfigurados.
+   - **cAdvisor**: Exportador de métricas de contenedores (corre como servicio global en todos los nodos).
 
 ---
 
@@ -259,6 +269,9 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 | **Ver tareas de un servicio** | `docker service ps simcomp_frontend` |
 | **Estado de los nodos** | `docker node ls` |
 | **Uso de recursos (stats)** | `docker stats` |
+| **Grafana Dashboard** | Accede a [http://simcomp.co:3000](http://simcomp.co:3000) |
+| **Prometheus Targets** | Accede a [http://simcomp.co:9090/targets](http://simcomp.co:9090/targets) |
+| **HAProxy Metrics** | Accede a [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats) |
 
 ### 📈 Escalamiento (Scaling)
 Puedes aumentar o disminuir las réplicas de cualquier microservicio en caliente:
@@ -357,13 +370,16 @@ echo "tu_llave_secreta_super_segura" | docker secret create jwt_secret -
 | http://simcomp.co/api/infracciones       | JWT     | Infracciones via HAProxy         |
 | http://simcomp.co/api/comparendos       | JWT     | Comparendos via HAProxy          |
 | http://simcomp.co/api/reportes/estadisticas| JWT   | Reportes via HAProxy             |
+| http://simcomp.co:3000/                 | admin | Grafana Monitoring Dashboards    |
+| http://simcomp.co:9090/                 | —     | Prometheus Metrics Dashboard     |
+| http://simcomp.co:8404/stats            | admin | HAProxy Load Balancing Stats     |
 | http://192.168.100.3:8001/api/docs       | —       | Swagger auth-service             |
 | http://192.168.100.3:8002/api/docs       | —       | Swagger personas-service         |
 | http://192.168.100.3:8003/api/docs       | —       | Swagger automotores-service      |
 | http://192.168.100.3:8004/api/docs       | —       | Swagger infracciones-service     |
 | http://192.168.100.3:8005/api/docs       | —       | Swagger comparendos-service      |
 | http://192.168.100.3:8006/api/docs       | —       | Swagger reportes-service         |
-| http://192.168.100.3:8010/               | —       | Dashboard de Analytics Spark     |
+| http://simcomp.co:8010/                 | —       | Dashboard de Analytics Spark     |
 
 ---
 
@@ -582,3 +598,31 @@ vagrant up
 ---
 
 *SIMCOMP — Vagrant + Ansible · 3 VMs · 192.168.100.x · Node.js 22 + PostgreSQL 16 + PM2 + Nginx JWT Gateway · v1.1.0*
+---
+
+## Solución de Problemas (Docker Swarm)
+
+**Los servicios en el Manager (HAProxy/Frontend) aparecen como `Shutdown` o `Complete`:**
+Este problema suele ocurrir tras un reinicio de las VMs (`vagrant halt` -> `vagrant up`).
+```bash
+# Forzar el reinicio de los servicios críticos
+vagrant ssh managerDocker -c "docker service update --force simcomp_haproxy"
+vagrant ssh managerDocker -c "docker service update --force simcomp_frontend"
+```
+*También puedes usar la opción **REPARAR** en el `./scripts/vagrant-manager.sh`.*
+
+**Error "No such image" en los Workers:**
+Si al desplegar ves errores de imagen no encontrada, asegúrate de que los workers tengan acceso a internet o intenta forzar el pull:
+```bash
+vagrant ssh workerDocker1 -c "docker pull deytonro/simcomp-auth-service:latest"
+```
+
+**El Stack no termina de subir (Servicios en 0/1 o 0/5):**
+Verifica los logs del servicio que falla para encontrar el error exacto (ej: falta de secretos o DB no lista):
+```bash
+vagrant ssh managerDocker -c "docker service logs -f simcomp_ms-auth-service"
+```
+
+---
+
+*SIMCOMP — Vagrant + Swarm · Cluster 3 Nodos · 192.168.100.x · Node.js 22 + PostgreSQL 16 + HAProxy · v1.2.0*

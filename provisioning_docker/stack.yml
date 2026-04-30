@@ -14,14 +14,26 @@ volumes:
 configs:
   haproxy_conf_v3:
     file: haproxy/haproxy.swarm.cfg
+  prometheus_conf_v2:
+    file: prometheus.yml
+  grafana_datasources:
+    file: grafana/provisioning/datasources/datasource.yml
+  grafana_dashboards_provider:
+    file: grafana/provisioning/dashboards/dashboard.yml
+  grafana_dashboard_docker_v3:
+    file: grafana/dashboards/docker-dashboard.json
 
 services:
 
   haproxy:
     image: deytonro/simcomp-haproxy-balance
     ports:
-      - "80:80"
-      - "8404:8404"
+      - target: 80
+        published: 80
+        mode: host
+      - target: 8404
+        published: 8404
+        mode: host
     networks:
       - simcomp-public
       - simcomp-backend
@@ -29,6 +41,7 @@ services:
       - source: haproxy_conf_v3
         target: /usr/local/etc/haproxy/haproxy.cfg
     deploy:
+      endpoint_mode: dnsrr
       replicas: 1
       placement:
         constraints:
@@ -40,9 +53,11 @@ services:
     image: deytonro/simcomp-frontend:latest
     environment:
       VITE_API_BASE_URL: /api
+      API_URL: /api
     networks:
       - simcomp-backend
     deploy:
+      endpoint_mode: dnsrr
       replicas: 1
       placement:
         constraints:
@@ -53,7 +68,6 @@ services:
   ms-auth-service:
     image: deytonro/simcomp-auth-service:latest
     environment:
-      SERVICE_NAME: ms-auth-service
       PORT: 8001
       AUTH_DB_HOST: simcomp_db-auth
       AUTH_DB_PORT: 5432
@@ -66,7 +80,7 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -76,7 +90,6 @@ services:
   ms-personas:
     image: deytonro/simcomp-personas-service:latest
     environment:
-      SERVICE_NAME: ms-personas
       PORT: 8002
       PERSONAS_DB_HOST: simcomp_db-personas
       PERSONAS_DB_PORT: 5432
@@ -87,7 +100,7 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -97,7 +110,6 @@ services:
   ms-automotores:
     image: deytonro/simcomp-automotores-service:latest
     environment:
-      SERVICE_NAME: ms-automotores
       PORT: 8003
       AUTOMOTORES_DB_HOST: simcomp_db-automotores
       AUTOMOTORES_DB_PORT: 5432
@@ -108,7 +120,7 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -118,7 +130,6 @@ services:
   ms-infracciones:
     image: deytonro/simcomp-infracciones-service:latest
     environment:
-      SERVICE_NAME: ms-infracciones
       PORT: 8004
       INFRACCIONES_DB_HOST: simcomp_db-infracciones
       INFRACCIONES_DB_PORT: 5432
@@ -129,7 +140,7 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -139,7 +150,6 @@ services:
   ms-comparendos:
     image: deytonro/simcomp-comparendos-service:latest
     environment:
-      SERVICE_NAME: ms-comparendos
       PORT: 8005
       COMPARENDOS_DB_HOST: simcomp_db-comparendos
       COMPARENDOS_DB_PORT: 5432
@@ -150,7 +160,7 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -160,7 +170,6 @@ services:
   ms-reportes:
     image: deytonro/simcomp-reportes-service:latest
     environment:
-      SERVICE_NAME: ms-reportes
       PORT: 8006
       AUTH_SERVICE_URL: http://simcomp_ms-auth-service:8001
       PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
@@ -171,7 +180,27 @@ services:
     networks:
       - simcomp-backend
     deploy:
-      replicas: 5
+      replicas: 3
+      placement:
+        constraints:
+          - node.hostname == workerDocker1
+      restart_policy:
+        condition: on-failure
+
+  ms-analytics-spark:
+    image: deytonro/simcomp-analytics-spark:latest
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8010
+      SPARK_MASTER_URL: local[*]
+      SPARK_LOCAL_IP: 0.0.0.0
+    ports:
+      - "8010:8010"
+      - "4040:4040"
+    networks:
+      - simcomp-backend
+    deploy:
+      replicas: 1
       placement:
         constraints:
           - node.hostname == workerDocker1
@@ -268,22 +297,68 @@ services:
       restart_policy:
         condition: on-failure
 
-  ms-analytics-spark:
-    image: deytonro/simcomp-analytics-spark:latest
-    environment:
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8010
-      SPARK_MASTER_URL: local[*]
-      SPARK_LOCAL_IP: 0.0.0.0
-    ports:
-      - "8010:8010"
-      - "4040:4040"
+  # =====================================================================
+  # OBSERVABILITY
+  # =====================================================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
     networks:
       - simcomp-backend
+    ports:
+      - "8080:8080"
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - simcomp-backend
+    ports:
+      - "9090:9090"
+    configs:
+      - source: prometheus_conf_v2
+        target: /etc/prometheus/prometheus.yml
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.hostname == workerDocker1
-      restart_policy:
-        condition: on-failure
+          - node.hostname == managerDocker
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - simcomp-backend
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    configs:
+      - source: grafana_datasources
+        target: /etc/grafana/provisioning/datasources/datasource.yml
+      - source: grafana_dashboards_provider
+        target: /etc/grafana/provisioning/dashboards/dashboard.yml
+      - source: grafana_dashboard_docker_v3
+        target: /etc/grafana/dashboards/docker-dashboard.json
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == managerDocker
+

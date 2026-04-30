@@ -22,7 +22,7 @@ El gestor interactivo `scripts/vagrant-manager.sh` (o `.ps1`) utilizará estos a
   - `workerDocker1` (192.168.100.3): Worker 1 (Ejecución de contenedores de microservicios y DBs).
   - `workerDocker2` (192.168.100.4): Worker 2 (Ejecución de contenedores y réplicas).
 - **Tecnología**: Docker Engine nativo con inicialización de Swarm automática y sincronización segura de `join-tokens`.
-- **Casos de Uso**: Pruebas de escalabilidad (`docker service scale`), balanceo de carga real, y orquestación pura usando `stack.yml`.
+- **Casos de Uso**: Pruebas de escalabilidad (`docker service scale`), balanceo de carga real, orquestación pura usando `stack.yml` y monitoreo centralizado con Prometheus/Grafana.
 
 ### 3. `Vagrantfile_docker_swarm_spark`
 - **Descripción**: Idéntico a `Vagrantfile_docker_swarm` pero con configuraciones ampliadas de memoria/CPU en `workerDocker1` para soportar las altas exigencias del servicio Analytics Spark.

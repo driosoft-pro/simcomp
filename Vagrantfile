@@ -22,16 +22,38 @@
 #   Spark:      http://192.168.100.2:8010
 #   Spark:      http://192.168.100.2:4040
 # =============================================================================
-
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+# SIMCOMP — Vagrantfile (HYBRID NETWORK READY
+# Compatible con VirtualBox y Libvirt/KVM
+# =============================================================================
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+  config.vm.box_check_update = false
+  config.vm.synced_folder ".", "/vagrant"
 
 # --------------------------------------------------------------------------
-# Scripts de Provisionamiento
+# VARIABLES (DESDE .env)
 # --------------------------------------------------------------------------
+NETWORK_MODE = ENV['NET_MODE'] || "private"
 
+MANAGER_IP = ENV['MANAGER_IP'] || "192.168.100.2"
+WORKER1_IP = ENV['WORKER1_IP'] || "192.168.100.3"
+WORKER2_IP = ENV['WORKER2_IP'] || "192.168.100.4"
+
+# --------------------------------------------------------------------------
+# NETWORK HELPER
+# --------------------------------------------------------------------------
+def configure_network(vm, mode, ip=nil)
+  if mode == "public"
+    vm.network "public_network", type: "dhcp"
+  else
+    vm.network "private_network", ip: ip
+  end
+end
+
+# --------------------------------------------------------------------------
+# FIX DNS
+# --------------------------------------------------------------------------
 FIX_DNS = <<~'SHELL'
-  set -e
   echo "[SIMCOMP] Configurando DNS..."
   systemctl disable systemd-resolved --now 2>/dev/null || true
   rm -f /etc/resolv.conf
@@ -39,159 +61,179 @@ FIX_DNS = <<~'SHELL'
   echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 SHELL
 
+# --------------------------------------------------------------------------
+# DOCKER INSTALL
+# --------------------------------------------------------------------------
 DOCKER_INSTALL = <<~'SHELL'
   set -e
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq
-  apt-get install -y -qq ca-certificates curl gnupg lsb-release apt-transport-https software-properties-common
+
+  apt-get update -y
+  apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https
+
   install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   chmod a+r /etc/apt/keyrings/docker.asc
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update -qq
-  apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  > /etc/apt/sources.list.d/docker.list
+
+  apt-get update -y
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
   usermod -aG docker vagrant
   systemctl enable docker
   systemctl start docker
 SHELL
 
+# --------------------------------------------------------------------------
+# MANAGER INIT (AUTO IP + TOKEN SERVER)
+# --------------------------------------------------------------------------
 MANAGER_INIT = <<~'SHELL'
-  set -e
-  echo "[SIMCOMP] Configurando Firewall del Manager..."
-  ufw allow 2377/tcp && ufw allow 7946/tcp && ufw allow 7946/udp && ufw allow 4789/udp && ufw allow 8000/tcp || true
+  echo "[SIMCOMP] Inicializando Manager..."
 
-  echo "[SIMCOMP] Inicializando Docker Swarm..."
-  docker swarm init --advertise-addr 192.168.100.2 2>/dev/null || true
-  
-  # Guardamos el token
-  docker swarm join-token worker -q > /tmp/swarm-token
-  
-  echo "[SIMCOMP] Compartiendo token en puerto 8000..."
-  # Escuchar en todas las interfaces para mayor compatibilidad
-  cd /tmp && nohup python3 -m http.server 8000 > /dev/null 2>&1 &
-  sleep 2
+  # En private_network libvirt asigna la IP privada como segunda interfaz
+  # hostname -I retorna primero la NAT (192.168.121.x) — usamos la 192.168.100.x
+  IP=$(hostname -I | tr ' ' '\n' | grep '^192\.168\.100\.' | head -1)
+  if [ -z "$IP" ]; then
+    IP=$(hostname -I | awk '{print $1}')
+  fi
+  echo "[SIMCOMP] Advertise IP: $IP"
+
+  if ! docker info | grep -q "Swarm: active"; then
+    docker swarm init --advertise-addr $IP
+  fi
+
+  TOKEN=$(docker swarm join-token -q worker)
+
+  apt-get install -y python3 -y
+  mkdir -p /opt/simcomp
+  echo "$TOKEN" > /opt/simcomp/token
+
+  pkill -f 'python3 -m http.server' 2>/dev/null || true
+  cd /opt/simcomp
+  nohup python3 -m http.server 8000 > /dev/null 2>&1 &
+  echo "[SIMCOMP] Token server escuchando en $IP:8000"
 SHELL
 
+# --------------------------------------------------------------------------
+# WORKER JOIN (LIBVIRT-SAFE)
+# --------------------------------------------------------------------------
 WORKER_JOIN = <<~'SHELL'
-  set -e
-  echo "[SIMCOMP] Intentando descargar token..."
-  until curl -s -f http://192.168.100.2:8000/swarm-token > /tmp/swarm-token; do
-    echo "  --> Error al conectar con http://192.168.100.2:8000. Reintentando..."
+  echo "[SIMCOMP] Detectando manager..."
+
+  # Intentar resolución por hostname; si falla, usar IP estática conocida
+  MANAGER_IP=$(getent hosts managerDocker 2>/dev/null | awk '{print $1}')
+
+  if [ -z "$MANAGER_IP" ]; then
+    MANAGER_IP="192.168.100.2"
+    echo "[SIMCOMP] Fallback a IP estática: $MANAGER_IP"
+  else
+    echo "[SIMCOMP] Manager encontrado en: $MANAGER_IP"
+  fi
+
+  # Esperar token HTTP del manager
+  TIMEOUT=120
+  ELAPSED=0
+
+  while true; do
+    TOKEN=$(curl -sf http://$MANAGER_IP:8000/token 2>/dev/null)
+
+    if [ -n "$TOKEN" ]; then
+      echo "[SIMCOMP] Token recibido"
+      break
+    fi
+
+    echo "  -> Esperando token del manager..."
     sleep 5
+    ELAPSED=$((ELAPSED+5))
+
+    if [ $ELAPSED -ge $TIMEOUT ]; then
+      echo "[ERROR] Timeout esperando token del manager"
+      exit 1
+    fi
   done
-  
-  WORKER_TOKEN=$(cat /tmp/swarm-token)
-  echo "[SIMCOMP] ¡Token obtenido! Uniéndose al Swarm..."
-  docker swarm join --token "$WORKER_TOKEN" 192.168.100.2:2377 2>/dev/null || true
+
+  if ! docker info | grep -q "Swarm: active"; then
+    docker swarm join --token $TOKEN $MANAGER_IP:2377
+  else
+    echo "[SIMCOMP] Ya está en el swarm"
+  fi
 SHELL
 
+# --------------------------------------------------------------------------
+# DEPLOY
+# --------------------------------------------------------------------------
 MANAGER_DEPLOY = <<~'SHELL'
-  set -e
-  echo "[SIMCOMP] Configurando secretos..."
-  echo -n "admin123" | docker secret create db_password - 2>/dev/null || true
-  echo -n "supersecretkey_auth_2026" | docker secret create jwt_secret - 2>/dev/null || true
-  
-  echo "[SIMCOMP] Esperando a que los 3 nodos (Manager + 2 Workers) estén 'Ready'..."
+  echo "[SIMCOMP] Esperando nodos..."
+
   until [ $(docker node ls 2>/dev/null | grep -c "Ready") -ge 3 ]; do
-    echo "  --> Nodos actuales: $(docker node ls 2>/dev/null | grep -c "Ready" || echo 0)/3. Esperando..."
     sleep 5
   done
 
-  # LIMPIEZA PREVENTIVA: Asegurar que no hay volúmenes de intentos fallidos
-  # Esto evita el error "Skipping initialization" en Postgres
-  echo "[SIMCOMP] Limpiando volúmenes previos en el cluster..."
   docker stack rm simcomp 2>/dev/null || true
-  sleep 5
-  docker volume prune -f 2>/dev/null || true
+  sleep 10
+
+  docker volume prune -f
 
   cd /vagrant/provisioning_docker
-  echo "[SIMCOMP] Cluster listo. Desplegando stack simcomp..."
   docker stack deploy -c stack.yml simcomp
-  
-  echo "[SIMCOMP] Finalizado. App en http://192.168.100.2 o http://simcomp.co"
-  echo "[SIMCOMP] Estadísticas HAProxy: http://192.168.100.2:8404/stats (admin:Admin123*)"
-  echo "[SIMCOMP] Spark Analytics: http://192.168.100.2:8010"
-  echo "[SIMCOMP] Spark UI (Jobs): http://192.168.100.2:4040"
+
+  echo "[SIMCOMP] Deploy completado"
 SHELL
 
 # --------------------------------------------------------------------------
-# Configuración Vagrant
+# MANAGER
 # --------------------------------------------------------------------------
+config.vm.define "managerDocker", primary: true do |m|
+  m.vm.hostname = "managerDocker"
 
-Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
-  config.vm.box_check_update = false
+  configure_network(m.vm, NETWORK_MODE, MANAGER_IP)
 
-  # Carpeta del proyecto compartida
-  config.vm.synced_folder ".", "/vagrant", disabled: false
-
-  # Limpiar archivos de Swarm automáticamente en el Host antes de subir
-  config.trigger.before :up do |trigger|
-    trigger.info = "Limpiando rastro de Swarm previo..."
-    trigger.ruby do |env,machine|
-      File.delete("provisioning_docker/.swarm-token") if File.exist?("provisioning_docker/.swarm-token")
-      File.delete("provisioning_docker/.swarm-manager-ip") if File.exist?("provisioning_docker/.swarm-manager-ip")
-    end
+  m.vm.provider "virtualbox" do |vb|
+    vb.memory = 3072
+    vb.cpus   = 2
   end
 
-  # --- Manager ---
-  config.vm.define "managerDocker", primary: true do |manager|
-    manager.vm.hostname = "managerDocker"
-    manager.vm.network "private_network", ip: "192.168.100.2"
-
-    manager.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-Manager"
-      vb.memory = 3072
-      vb.cpus   = 2
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnshostresolver2", "on"]
-      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
-    end
-
-    manager.vm.provision "shell", name: "fix-dns",       inline: FIX_DNS
-    manager.vm.provision "shell", name: "docker-install", inline: DOCKER_INSTALL
-    manager.vm.provision "shell", name: "swarm-init",    inline: MANAGER_INIT
-    manager.vm.provision "shell", name: "deploy-stack",  inline: MANAGER_DEPLOY
+  m.vm.provider "libvirt" do |lv|
+    lv.memory = 3072
+    lv.cpus   = 2
   end
 
-  # --- Worker 1 ---
-  config.vm.define "workerDocker1" do |worker1|
-    worker1.vm.hostname = "workerDocker1"
-    worker1.vm.network "private_network", ip: "192.168.100.3"
+  m.vm.provision "shell", name: "fix-dns",       inline: FIX_DNS
+  m.vm.provision "shell", name: "docker-install", inline: DOCKER_INSTALL
+  m.vm.provision "shell", name: "swarm-init",    inline: MANAGER_INIT
+  m.vm.provision "shell", name: "deploy-stack",   inline: MANAGER_DEPLOY, run: "never"
+end
 
-    worker1.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-Worker1"
+# --------------------------------------------------------------------------
+# WORKERS
+# --------------------------------------------------------------------------
+[
+  ["workerDocker1", WORKER1_IP],
+  ["workerDocker2", WORKER2_IP]
+].each do |name, ip|
+
+  config.vm.define name do |w|
+    w.vm.hostname = name
+
+    configure_network(w.vm, NETWORK_MODE, ip)
+
+    w.vm.provider "virtualbox" do |vb|
       vb.memory = 4096
       vb.cpus   = 2
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnshostresolver2", "on"]
-      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
-    worker1.vm.provision "shell", name: "fix-dns",       inline: FIX_DNS
-    worker1.vm.provision "shell", name: "docker-install", inline: DOCKER_INSTALL
-    worker1.vm.provision "shell", name: "swarm-join",    inline: WORKER_JOIN
-  end
-
-  # --- Worker 2 ---
-  config.vm.define "workerDocker2" do |worker2|
-    worker2.vm.hostname = "workerDocker2"
-    worker2.vm.network "private_network", ip: "192.168.100.4"
-
-    worker2.vm.provider "virtualbox" do |vb|
-      vb.name   = "SIMCOMP-Worker2"
-      vb.memory = 4096
-      vb.cpus   = 2
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnshostresolver2", "on"]
-      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+    w.vm.provider "libvirt" do |lv|
+      lv.memory = 4096
+      lv.cpus   = 2
     end
 
-    worker2.vm.provision "shell", name: "fix-dns",       inline: FIX_DNS
-    worker2.vm.provision "shell", name: "docker-install", inline: DOCKER_INSTALL
-    worker2.vm.provision "shell", name: "swarm-join",    inline: WORKER_JOIN
+    w.vm.provision "shell", name: "fix-dns",       inline: FIX_DNS
+    w.vm.provision "shell", name: "docker-install", inline: DOCKER_INSTALL
+    w.vm.provision "shell", name: "worker-join",   inline: WORKER_JOIN
   end
+end
+
 end

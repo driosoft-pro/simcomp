@@ -30,10 +30,12 @@ provisioning_docker/
 
 - **Orquestación**: Docker Swarm
 - **Virtualización**: Vagrant & VirtualBox (Ubuntu 22.04)
-- **API Gateway**: Nginx (Reverse Proxy)
+- **API Gateway**: Nginx (Reverse Proxy) & HAProxy (Load Balancer mode `dnsrr`)
+- **Observabilidad**: Prometheus, Grafana & cAdvisor
 - **Bases de Datos**: PostgreSQL 16
 - **Backend**: Node.js (Express)
 - **Frontend**: React (Vite)
+- **Analytics**: PySpark & Flask
 
 ---
 
@@ -136,8 +138,13 @@ echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
 El servicio de análisis masivo de datos (PySpark) corre dedicado en un worker. Ofrece un panel visual propio y la consola oficial de Spark.
 
 **Enlaces en Navegador:**
-- **Dashboard:** [http://192.168.100.2:8010](http://192.168.100.2:8010) (o [http://127.0.0.1:8010](http://127.0.0.1:8010) si usas docker local)
-- **Spark UI:** [http://192.168.100.2:4040](http://192.168.100.2:4040) (o [http://127.0.0.1:4040](http://127.0.0.1:4040) si usas docker local)
+- **Frontend Principal**: [http://simcomp.co](http://simcomp.co)
+- **Dashboard Analytics**: [http://simcomp.co:8010](http://simcomp.co:8010)
+- **Spark UI**: [http://simcomp.co:4040](http://simcomp.co:4040)
+- **Grafana (Monitoreo)**: [http://simcomp.co:3000](http://simcomp.co:3000) (admin / admin)
+- **Prometheus**: [http://simcomp.co:9090](http://simcomp.co:9090)
+- **HAProxy Stats**: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats) (admin / Admin123*)
+- **cAdvisor**: [http://simcomp.co:8080](http://simcomp.co:8080) (Global)
 
 **Uso Interactivo en Consola (PySpark):**
 Puedes conectarte en vivo al contenedor del servicio para ejecutar código Python de análisis de datos:

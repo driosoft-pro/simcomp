@@ -7,7 +7,7 @@
     </TestPlan>
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="UsuariosSimcomp">
-        <intProp name="ThreadGroup.num_threads">20</intProp>
+        <intProp name="ThreadGroup.num_threads">300</intProp>
         <intProp name="ThreadGroup.ramp_time">2</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
@@ -92,7 +92,7 @@
         </ResultCollector>
         <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Login">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
@@ -110,7 +110,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers Login">
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers Login" enabled="true">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
@@ -119,7 +119,7 @@
             </collectionProp>
           </HeaderManager>
           <hashTree/>
-          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Token">
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Token" enabled="true">
             <stringProp name="JSONPostProcessor.referenceNames">token</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.accessToken</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
@@ -127,7 +127,7 @@
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Usuarios">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/usuarios</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -148,7 +148,7 @@
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Personas">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/personas</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -169,7 +169,7 @@
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Automotores">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/automotores</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -190,7 +190,7 @@
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Infracciones" enabled="true">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/infracciones</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -210,8 +210,8 @@
           </HeaderManager>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Comparendos">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Comparendos" enabled="true">
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/comparendos</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -232,7 +232,7 @@
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Reportes">
-          <stringProp name="HTTPSampler.domain">192.168.100.2</stringProp>
+          <stringProp name="HTTPSampler.domain">simcomp.co</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/reportes/estadisticas</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>

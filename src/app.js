@@ -58,12 +58,8 @@ function simpleRateLimit({ windowMs, max, keyFn }) {
     entry.count++;
     rateLimitStore.set(key, entry);
 
-    // Limpieza periódica para evitar memory leak (cada 10 min aprox)
-    if (rateLimitStore.size > 5000) {
-      for (const [k, v] of rateLimitStore) {
-        if (now > v.resetAt) rateLimitStore.delete(k);
-      }
-    }
+    // Eliminado el bucle de limpieza por solicitud para evitar picos de latencia.
+    // La limpieza se maneja ahora mediante un intervalo global.
 
     if (entry.count > max) {
       res.setHeader("Retry-After", Math.ceil((entry.resetAt - now) / 1000));
@@ -77,18 +73,28 @@ function simpleRateLimit({ windowMs, max, keyFn }) {
   };
 }
 
-// Login: máx 10 intentos por IP por minuto (anti brute-force)
+// Limpieza periódica del store de rate limit (cada 5 minutos)
+// Esto evita el O(N) en el hilo de la solicitud, mejorando el rendimiento.
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimitStore) {
+    if (now > v.resetAt) rateLimitStore.delete(k);
+  }
+}, 300_000);
+
+// Login: máx 500 intentos por IP por minuto.
+// Aumentado para soportar ráfagas de alta concurrencia (300+ usuarios).
 const loginRateLimit = simpleRateLimit({
   windowMs: 60_000,
-  max: 10,
-  keyFn: (req) => req.ip || req.headers["x-forwarded-for"] || "unknown",
+  max: 500,
+  keyFn: (req) => req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.ip || "unknown",
 });
 
-// Refresh: máx 30 por IP por minuto
+// Refresh: máx 1000 por IP por minuto
 const refreshRateLimit = simpleRateLimit({
   windowMs: 60_000,
-  max: 30,
-  keyFn: (req) => req.ip || req.headers["x-forwarded-for"] || "unknown",
+  max: 1000,
+  keyFn: (req) => req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.ip || "unknown",
 });
 
 // ── Health check ─────────────────────────────────────────────────────────────

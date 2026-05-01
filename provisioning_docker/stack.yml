@@ -19,14 +19,14 @@ configs:
   grafana_datasources:
     file: grafana/provisioning/datasources/datasource.yml
   grafana_dashboards_provider:
-    file: grafana/provisioning/dashboards/dashboard.yml
+    file: grafana/dashboards/provider.yml
   grafana_dashboard_docker_v3:
-    file: grafana/dashboards/docker-dashboard.json
+    file: grafana/dashboards/json/simcomp_dashboard.json
 
 services:
 
   haproxy:
-    image: deytonro/simcomp-haproxy-balance
+    image: docker.io/deytonro/simcomp-haproxy-balance:v1.0.0
     ports:
       - target: 80
         published: 80
@@ -300,31 +300,33 @@ services:
   # =====================================================================
   # OBSERVABILITY
   # =====================================================================
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+  glances:
+    image: docker.io/nicolargo/glances:3.4.0.3
+    environment:
+      - GLANCES_OPT=-w --export prometheus
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
     networks:
       - simcomp-backend
-    ports:
-      - "8080:8080"
     deploy:
       mode: global
       resources:
         limits:
-          memory: 128M
+          memory: 256M
         reservations:
-          memory: 64M
+          memory: 128M
+
+  node-exporter:
+    image: docker.io/prom/node-exporter:v1.9.0
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - simcomp-backend
+    deploy:
+      mode: global
 
   prometheus:
-    image: prom/prometheus:latest
+    image: docker.io/prom/prometheus:v3.1.0
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -342,7 +344,7 @@ services:
           - node.hostname == managerDocker
 
   grafana:
-    image: grafana/grafana:latest
+    image: docker.io/grafana/grafana:11.5.1
     ports:
       - "3000:3000"
     networks:

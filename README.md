@@ -64,7 +64,7 @@ Esta sección resume cómo poner en marcha el sistema en diferentes ambientes y 
 - **HAProxy Stats**: [http://localhost:8404/stats](http://localhost:8404/stats) (admin / Admin123*)
 - **Grafana (Monitoreo)**: [http://localhost:3000](http://localhost:3000) (admin / admin)
 - **Prometheus**: [http://localhost:9090](http://localhost:9090)
-- **cAdvisor**: [http://localhost:8080](http://localhost:8080)
+- **cAdvisor**: [http://localhost:8081](http://localhost:8081)
 - **Documentación API (Swagger)**: `http://localhost:8001/api/docs` (Auth) ... `8006` (Reportes)
 
 #### ☁️ Entorno Vagrant / Swarm (192.168.100.x)

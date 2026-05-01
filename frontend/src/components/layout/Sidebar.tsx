@@ -9,6 +9,10 @@ import {
   X,
   ShieldCheck,
   BarChart3,
+  Activity,
+  Gauge,
+  Server,
+  Cpu,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { APP_VERSION } from '../../utils/constants'
@@ -20,6 +24,7 @@ interface NavItem {
   icon: React.ComponentType<{ size?: number; className?: string }>
   roles: UserRole[]
   color: string
+  isExternal?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -71,6 +76,38 @@ const navItems: NavItem[] = [
     icon: BarChart3,
     roles: ['admin', 'supervisor'],
     color: 'text-indigo-400',
+  },
+  {
+    label: 'Grafana Pro',
+    path: `http://${window.location.hostname}:3000`,
+    icon: Gauge,
+    roles: ['admin', 'supervisor'],
+    color: 'text-orange-400',
+    isExternal: true,
+  },
+  {
+    label: 'Prometheus',
+    path: `http://${window.location.hostname}:9090`,
+    icon: Activity,
+    roles: ['admin'],
+    color: 'text-red-400',
+    isExternal: true,
+  },
+  {
+    label: 'Glances RT',
+    path: `http://${window.location.hostname}:61208`,
+    icon: Cpu,
+    roles: ['admin', 'supervisor'],
+    color: 'text-lime-400',
+    isExternal: true,
+  },
+  {
+    label: 'Spark UI',
+    path: `http://${window.location.hostname}:4040`,
+    icon: Server,
+    roles: ['admin'],
+    color: 'text-cyan-400',
+    isExternal: true,
   },
 ]
 
@@ -140,6 +177,28 @@ function Sidebar({
         )}
         {filteredItems.map((item) => {
           const Icon = item.icon
+
+          if (item.isExternal) {
+            return (
+              <a
+                key={item.path}
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-slate-800/70 hover:text-slate-100 ${
+                  isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'
+                }`}
+                title={isMinimized ? item.label : undefined}
+              >
+                <Icon size={18} className={`${item.color} shrink-0`} />
+                {!isMinimized && (
+                  <span className="animate-fade-in whitespace-nowrap overflow-hidden">
+                    {item.label}
+                  </span>
+                )}
+              </a>
+            )
+          }
 
           return (
             <NavLink

@@ -30,6 +30,8 @@ Write-Host "[INFO] Raíz del proyecto detectada: $projectRoot" -ForegroundColor 
 Write-Host ""
 
 $services = @(
+    ".",
+    "provisioning_docker",
     "backend/ms-auth-service",
     "backend/ms-automotores",
     "backend/ms-comparendos",

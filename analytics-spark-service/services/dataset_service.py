@@ -1,6 +1,6 @@
 import os
 from werkzeug.utils import secure_filename
-from config import UPLOAD_FOLDER, ALLOWED_EXTENSIONS
+from config import UPLOAD_FOLDER, DATA_FOLDER, ALLOWED_EXTENSIONS
 
 
 def allowed_file(filename):
@@ -28,19 +28,38 @@ def save_dataset(file):
 
 
 def list_datasets():
+    """Lista CSVs disponibles: primero los preempaquetados en data/, luego los subidos en uploads/."""
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(DATA_FOLDER, exist_ok=True)
 
-    return [
-        file for file in os.listdir(UPLOAD_FOLDER)
-        if file.endswith(".csv")
-    ]
+    seen = set()
+    datasets = []
+
+    # 1. CSVs en data/ (preempaquetados con la imagen)
+    for f in os.listdir(DATA_FOLDER):
+        if f.endswith(".csv") and os.path.isfile(os.path.join(DATA_FOLDER, f)):
+            seen.add(f)
+            datasets.append(f)
+
+    # 2. CSVs subidos por el usuario en data/uploads/
+    for f in os.listdir(UPLOAD_FOLDER):
+        if f.endswith(".csv") and f not in seen:
+            datasets.append(f)
+
+    return datasets
 
 
 def get_dataset_path(filename):
     filename = secure_filename(filename)
-    path = os.path.join(UPLOAD_FOLDER, filename)
 
-    if not os.path.exists(path):
-        raise FileNotFoundError("Dataset no encontrado")
+    # Buscar primero en data/ (preempaquetado)
+    path_data = os.path.join(DATA_FOLDER, filename)
+    if os.path.exists(path_data):
+        return path_data
 
-    return path
+    # Luego en uploads/
+    path_upload = os.path.join(UPLOAD_FOLDER, filename)
+    if os.path.exists(path_upload):
+        return path_upload
+
+    raise FileNotFoundError(f"Dataset '{filename}' no encontrado")

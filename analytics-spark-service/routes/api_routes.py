@@ -12,7 +12,18 @@ from services.profiling_service import (
     correlation_matrix,
     numeric_top_metrics,
     paginated_data,
-    execute_spark_code
+    execute_spark_code,
+    # SIMCOMP-specific
+    simcomp_kpis,
+    simcomp_por_ciudad,
+    simcomp_por_estado,
+    simcomp_por_tipo_sancion,
+    simcomp_por_valor_multa,
+    simcomp_tendencia_mensual,
+    simcomp_por_marca,
+    simcomp_por_tipo_servicio,
+    simcomp_por_categoria_licencia,
+    simcomp_por_anio,
 )
 
 api_bp = Blueprint("api", __name__)
@@ -129,4 +140,65 @@ def query(filename):
     path = get_dataset_path(filename)
     return jsonify(execute_spark_code(path, code))
 
-    
+
+# ─── SIMCOMP endpoints ───────────────────────────────────────────────────────
+
+@api_bp.route("/datasets/<filename>/simcomp/kpis")
+def sc_kpis(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_kpis(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-ciudad")
+def sc_por_ciudad(filename):
+    limit = request.args.get("limit", 10, type=int)
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_ciudad(path, limit))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-estado")
+def sc_por_estado(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_estado(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-tipo-sancion")
+def sc_por_tipo_sancion(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_tipo_sancion(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-valor-multa")
+def sc_por_valor_multa(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_valor_multa(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/tendencia-mensual")
+def sc_tendencia_mensual(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_tendencia_mensual(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-marca")
+def sc_por_marca(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_marca(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-tipo-servicio")
+def sc_por_tipo_servicio(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_tipo_servicio(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-categoria-licencia")
+def sc_por_categoria_licencia(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_categoria_licencia(path))
+
+
+@api_bp.route("/datasets/<filename>/simcomp/por-anio")
+def sc_por_anio(filename):
+    path = get_dataset_path(filename)
+    return jsonify(simcomp_por_anio(path))

@@ -75,6 +75,20 @@ function Detect-HostIP {
     return $ip
 }
 
+function Wait-For-Nodes {
+    Log-Message "[*] Esperando a que los nodos esten listos..." "Yellow"
+    for ($i = 1; $i -le 30; $i++) {
+        $ready = (vagrant ssh managerDocker -c "docker node ls --format '{{.Status}}'" 2>$null | Select-String "Ready" | Measure-Object).Count
+        if ($ready -ge 3) {
+            Log-Message "[✔] Nodos listos" "Green"
+            return $true
+        }
+        Log-Message "  -> intento $i/30..." "Gray"
+        Start-Sleep -Seconds 5
+    }
+    return $false
+}
+
 # Network Configuration Mode
 function Select-NetworkMode {
     Clear-Host
@@ -174,17 +188,25 @@ function Wait-For-Docker {
     return $false
 }
 
-function Wait-For-Nodes {
-    Log-Message "[*] Esperando que los nodos estén listos..." "Yellow"
-    for ($i = 1; $i -le 30; $i++) {
-        $readyCount = (vagrant ssh managerDocker -c "docker node ls --format '{{.Status}}'" 2>$null | Select-String "Ready").Count
-        if ($readyCount -ge 3) {
-            Log-Message "[✔] Cluster listo ($readyCount nodos)" "Green"
-            return $true
-        }
-        Start-Sleep -Seconds 5
-    }
     return $false
+}
+
+function Show-Links {
+    $status = vagrant status managerDocker 2>$null
+    if ($status -match "running") {
+        $managerIp = "192.168.100.2"
+        if (Test-Path $ENV_FILE) {
+            $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
+            if ($line) { $managerIp = $line.ToString().Split("=")[1] }
+        }
+        Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
+        Log-Message "    Stats:             http://stats.$managerIp:8404/stats" "Green"
+        Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010" "Green"
+        Log-Message "    Spark UI:          http://spark.$managerIp:4040" "Green"
+        Log-Message "    Prometheus:        http://monitor.$managerIp:9090" "Green"
+        Log-Message "    Grafana:           http://monitor.$managerIp:3000" "Green"
+        Log-Message "    Glances RT:        http://monitor.$managerIp:61208" "Green"
+    }
 }
 
 # Join Remote Worker
@@ -250,7 +272,14 @@ function Guided-Mode {
         if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
     
-    Log-Message "[✔] Proceso educativo completado. App: http://$managerIp" "Green"
+    Log-Message "[✔] PROCESO COMPLETADO" "Green"
+    Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
+    Log-Message "    Stats:             http://stats.$managerIp:8404/stats" "Green"
+    Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010" "Green"
+    Log-Message "    Spark UI:          http://spark.$managerIp:4040" "Green"
+    Log-Message "    Prometheus:        http://monitor.$managerIp:9090" "Green"
+    Log-Message "    Grafana:           http://monitor.$managerIp:3000" "Green"
+    Log-Message "    Glances RT:        http://monitor.$managerIp:61208" "Green"
 }
 
 # Deploy Swarm (Automatic)
@@ -293,9 +322,14 @@ function Deploy-Swarm {
     Inject-Hosts $managerIp "simcomp.co"
     Inject-Hosts $managerIp "simcomp.local"
 
-    Log-Message "[✔] CLUSTER LISTO" "Green"
-    Log-Message "    App:   http://$managerIp  (o http://simcomp.co)" "Green"
-    Log-Message "    Stats: http://$managerIp:8404/stats" "Green"
+    Log-Message "[✔] CLUSTER LISTO Y MONITOREADO" "Green"
+    Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
+    Log-Message "    Stats:             http://stats.$managerIp:8404/stats${NC}"
+    Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010${NC}"
+    Log-Message "    Spark UI:          http://spark.$managerIp:4040${NC}"
+    Log-Message "    Prometheus:        http://monitor.$managerIp:9090${NC}"
+    Log-Message "    Grafana:           http://monitor.$managerIp:3000${NC}"
+    Log-Message "    Glances RT:        http://monitor.$managerIp:61208${NC}"
 }
 
 # Main Menu
@@ -306,6 +340,7 @@ while ($true) {
     Log-Message "======================================" "Blue"
 
     vagrant status 2>$null
+    Show-Links
 
     Log-Message "======================================" "White"
     Log-Message "1) Paso a paso"

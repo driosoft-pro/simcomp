@@ -166,6 +166,19 @@ wait_for_nodes() {
     return 1
 }
 
+show_links() {
+    if vagrant status managerDocker 2>/dev/null | grep -q "running"; then
+        MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+        echo -e "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
+        echo -e "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
+        echo -e "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
+        echo -e "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
+        echo -e "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
+        echo -e "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
+        echo -e "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
+    fi
+}
+
 # =============================
 # NUEVO: MULTI HOST
 # =============================
@@ -220,8 +233,14 @@ guided_mode() {
     read -p "Paso 5: Desplegar Stack → ENTER"
     vagrant provision managerDocker --provision-with deploy-stack
 
-    MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
-    log "${GREEN}[✔] Proceso educativo completado. App: http://$MANAGER_IP${NC}"
+    log "${GREEN}[✔] PROCESO COMPLETADO${NC}"
+    log "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
+    log "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
+    log "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
+    log "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
+    log "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
+    log "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
+    log "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
 }
 
 # =============================
@@ -265,9 +284,15 @@ deploy_swarm() {
     inject_hosts "$MANAGER_IP" "simcomp.co"
     inject_hosts "$MANAGER_IP" "simcomp.local"
 
-    log "${GREEN}[✔] CLUSTER LISTO${NC}"
-    log "${GREEN}    App:   http://$MANAGER_IP  (o http://simcomp.co)${NC}"
-    log "${GREEN}    Stats: http://$MANAGER_IP:8404/stats${NC}"
+    MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+    log "${GREEN}[✔] CLUSTER LISTO Y MONITOREADO${NC}"
+    log "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
+    log "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
+    log "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
+    log "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
+    log "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
+    log "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
+    log "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
 }
 
 # =============================
@@ -280,6 +305,7 @@ while true; do
     echo "======================================"
 
     vagrant status 2>/dev/null || echo "No hay entorno"
+    show_links
 
     echo "======================================"
     echo "1) Paso a paso"

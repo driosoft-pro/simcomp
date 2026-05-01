@@ -6,7 +6,7 @@ services:
 
   db-auth:
     build: ./backend/ms-auth-service/db
-    image: docker.io/deytonro/simcomp-auth-db:latest
+    image: docker.io/deytonro/simcomp-auth-db:v1.0.0
     environment:
       POSTGRES_USER: ${AUTH_DB_USER}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
@@ -23,7 +23,7 @@ services:
 
   db-personas:
     build: ./backend/ms-personas/db
-    image: docker.io/deytonro/simcomp-personas-db:latest
+    image: docker.io/deytonro/simcomp-personas-db:v1.0.0
     environment:
       POSTGRES_USER: ${PERSONAS_DB_USER}
       POSTGRES_PASSWORD: ${PERSONAS_DB_PASSWORD}
@@ -40,7 +40,7 @@ services:
 
   db-automotores:
     build: ./backend/ms-automotores/db
-    image: docker.io/deytonro/simcomp-automotores-db:latest
+    image: docker.io/deytonro/simcomp-automotores-db:v1.0.0
     environment:
       POSTGRES_USER: ${AUTOMOTORES_DB_USER}
       POSTGRES_PASSWORD: ${AUTOMOTORES_DB_PASSWORD}
@@ -57,7 +57,7 @@ services:
 
   db-infracciones:
     build: ./backend/ms-infracciones/db
-    image: docker.io/deytonro/simcomp-infracciones-db:latest
+    image: docker.io/deytonro/simcomp-infracciones-db:v1.0.0
     environment:
       POSTGRES_USER: ${INFRACCIONES_DB_USER}
       POSTGRES_PASSWORD: ${INFRACCIONES_DB_PASSWORD}
@@ -74,7 +74,7 @@ services:
 
   db-comparendos:
     build: ./backend/ms-comparendos/db
-    image: docker.io/deytonro/simcomp-comparendos-db:latest
+    image: docker.io/deytonro/simcomp-comparendos-db:v1.0.0
     environment:
       POSTGRES_USER: ${COMPARENDOS_DB_USER}
       POSTGRES_PASSWORD: ${COMPARENDOS_DB_PASSWORD}
@@ -95,7 +95,7 @@ services:
 
   ms-auth-service:
     build: ./backend/ms-auth-service
-    image: docker.io/deytonro/simcomp-auth-service:latest
+    image: docker.io/deytonro/simcomp-auth-service:v1.0.0
     restart: always
     depends_on:
       db-auth:
@@ -121,7 +121,7 @@ services:
 
   ms-personas:
     build: ./backend/ms-personas
-    image: docker.io/deytonro/simcomp-personas-service:latest
+    image: docker.io/deytonro/simcomp-personas-service:v1.0.0
     restart: always
     depends_on:
       db-personas:
@@ -149,7 +149,7 @@ services:
 
   ms-automotores:
     build: ./backend/ms-automotores
-    image: docker.io/deytonro/simcomp-automotores-service:latest
+    image: docker.io/deytonro/simcomp-automotores-service:v1.0.0
     restart: always
     depends_on:
       db-automotores:
@@ -177,7 +177,7 @@ services:
 
   ms-infracciones:
     build: ./backend/ms-infracciones
-    image: docker.io/deytonro/simcomp-infracciones-service:latest
+    image: docker.io/deytonro/simcomp-infracciones-service:v1.0.0
     restart: always
     depends_on:
       db-infracciones:
@@ -202,7 +202,7 @@ services:
 
   ms-comparendos:
     build: ./backend/ms-comparendos
-    image: docker.io/deytonro/simcomp-comparendos-service:latest
+    image: docker.io/deytonro/simcomp-comparendos-service:v1.0.0
     restart: always
     depends_on:
       db-comparendos:
@@ -236,7 +236,7 @@ services:
 
   ms-reportes:
     build: ./backend/ms-reportes
-    image: docker.io/deytonro/simcomp-reportes-service:latest
+    image: docker.io/deytonro/simcomp-reportes-service:v1.0.0
     restart: always
     depends_on:
       ms-auth-service:
@@ -273,7 +273,7 @@ services:
 
   haproxy:
     build: ./provisioning_docker/haproxy
-    image: docker.io/deytonro/simcomp-haproxy-balance:latest
+    image: docker.io/deytonro/simcomp-haproxy-balance:v1.0.0
     volumes:
       - ./provisioning_docker/haproxy/haproxy.local.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     ports:
@@ -297,7 +297,7 @@ services:
 
   frontend1:
     build: ./frontend
-    image: docker.io/deytonro/simcomp-frontend:latest
+    image: docker.io/deytonro/simcomp-frontend:v1.0.0
     restart: unless-stopped
     environment:
       API_URL: http://127.0.0.1:8080/api
@@ -306,7 +306,7 @@ services:
 
   frontend2:
     build: ./frontend
-    image: docker.io/deytonro/simcomp-frontend:latest
+    image: docker.io/deytonro/simcomp-frontend:v1.0.0
     restart: unless-stopped
     environment:
       API_URL: http://127.0.0.1:8080/api
@@ -315,7 +315,7 @@ services:
 
   ms-analytics-spark:
     build: ./analytics-spark-service
-    image: docker.io/deytonro/simcomp-analytics-spark-service:latest
+    image: docker.io/deytonro/simcomp-analytics-spark-service:v1.0.0
     restart: always
     ports:
       - "8010:8010"
@@ -334,6 +334,60 @@ services:
     networks:
       - simcomp-net
 
+  # =====================================================================
+  # OBSERVABILITY
+  # =====================================================================
+
+  glances:
+    image: docker.io/nicolargo/glances:3.4.0.3
+    container_name: simcomp-glances
+    environment:
+      - GLANCES_OPT=-w
+    ports:
+      - "61208:61208"
+      - "61209:61209"
+    networks:
+      - simcomp-net
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.9.0
+    container_name: simcomp-node-exporter
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+    ports:
+      - "9100:9100"
+    networks:
+      - simcomp-net
+
+  prometheus:
+    image: docker.io/prom/prometheus:v3.1.0
+    container_name: simcomp-prometheus
+    volumes:
+      - ./provisioning_docker/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - simcomp-net
+
+  grafana:
+    image: docker.io/grafana/grafana:11.5.1
+    container_name: simcomp-grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./provisioning_docker/grafana/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./provisioning_docker/grafana/dashboards/provider.yml:/etc/grafana/provisioning/dashboards/provider.yml:ro
+      - ./provisioning_docker/grafana/dashboards/json:/etc/grafana/provisioning/dashboards/json:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - simcomp-net
+
 networks:
   simcomp-net:
     driver: bridge
@@ -344,3 +398,5 @@ volumes:
   automotores_db_data:
   infracciones_db_data:
   comparendos_db_data:
+  prometheus_data:
+  grafana_data:

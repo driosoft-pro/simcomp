@@ -12,6 +12,8 @@ echo ""
 cd "$(dirname "$0")/.." || exit 1
 
 SERVICES=(
+  "."
+  "provisioning_docker"
   "backend/ms-auth-service"
   "backend/ms-automotores"
   "backend/ms-comparendos"

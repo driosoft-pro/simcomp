@@ -5,21 +5,25 @@
     <meta charset="UTF-8">
     <title>SIMCOMP - Analytics Spark</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Dashboard de análisis de comparendos SIMCOMP procesados con Apache Spark. Visualiza KPIs, tendencias y distribuciones del parque automotor.">
 
     <!-- Bootstrap 5.3.3 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 
-<body class="dark"> <!-- Iniciar en dark mode por defecto para estética premium -->
+<body class="dark">
 
     <nav class="topbar">
         <div class="brand">
@@ -30,11 +34,14 @@
         </div>
 
         <div class="nav-actions">
-            <button id="btn-dataset" class="nav-btn active" onclick="showSection('dataset', this)">
+            <button id="btn-simcomp" class="nav-btn active" onclick="showSection('simcomp', this)">
+                <i class="bi bi-speedometer2"></i> <span>SIMCOMP</span>
+            </button>
+            <button id="btn-dataset" class="nav-btn" onclick="showSection('dataset', this)">
                 <i class="bi bi-folder"></i> <span>Dataset</span>
             </button>
             <button id="btn-inicio" class="nav-btn" onclick="showSection('inicio', this)">
-                <i class="bi bi-speedometer2"></i> <span>Inicio</span>
+                <i class="bi bi-bar-chart-line"></i> <span>General</span>
             </button>
             <button id="btn-analysis" class="nav-btn" onclick="showSection('analysis', this)">
                 <i class="bi bi-graph-up-arrow"></i> <span>Análisis</span>
@@ -54,8 +61,201 @@
 
     <main class="dashboard-container">
 
-        <!-- SECCIÓN DATASET (ACTIVA POR DEFECTO) -->
-        <section id="dataset" class="section active-section">
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN SIMCOMP — Dashboard principal de comparendos     -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <section id="simcomp" class="section active-section">
+
+            <!-- Hero banner -->
+            <div class="hero-card mb-4 simcomp-hero">
+                <div class="hero-content">
+                    <p class="eyebrow">Sistema de Comparendos · Valle del Cauca</p>
+                    <h1>Dashboard SIMCOMP</h1>
+                    <p>Análisis interactivo de 10,000 registros de comparendos procesados con Apache Spark.<br>
+                        Datos actualizados — 2024 · 2025 · 2026.</p>
+                </div>
+                <div class="spark-badge">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    <span>Spark Core</span>
+                </div>
+            </div>
+
+            <!-- ── KPI Cards ─────────────────────────────────────── -->
+            <div class="simcomp-kpis mb-4" id="simcomp-kpis-grid">
+                <div class="kpi-card kpi-total">
+                    <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Total Comparendos</span>
+                        <span class="kpi-value" id="kpi-total">—</span>
+                    </div>
+                    <div class="kpi-badge">100%</div>
+                </div>
+                <div class="kpi-card kpi-pendiente">
+                    <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Pendientes</span>
+                        <span class="kpi-value" id="kpi-pendientes">—</span>
+                    </div>
+                    <div class="kpi-badge kpi-badge-warn" id="kpi-pct-pendientes">—%</div>
+                </div>
+                <div class="kpi-card kpi-pagado">
+                    <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Pagados</span>
+                        <span class="kpi-value" id="kpi-pagados">—</span>
+                    </div>
+                    <div class="kpi-badge kpi-badge-ok" id="kpi-pct-pagados">—%</div>
+                </div>
+                <div class="kpi-card kpi-anulado">
+                    <div class="kpi-icon"><i class="bi bi-x-circle-fill"></i></div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Anulados</span>
+                        <span class="kpi-value" id="kpi-anulados">—</span>
+                    </div>
+                    <div class="kpi-badge kpi-badge-neutral" id="kpi-pct-anulados">—%</div>
+                </div>
+            </div>
+
+            <!-- ── Fila 1: Ciudad (barras horiz.) + Estado (dona) ─── -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="panel h-100">
+                        <div class="panel-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3><i class="bi bi-geo-alt text-primary me-2"></i>Comparendos por Ciudad</h3>
+                                <p class="panel-sub">Top 10 municipios con más infracciones registradas</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-ciudad"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-circle-half text-warning me-2"></i>Estado del Comparendo</h3>
+                            <p class="panel-sub">Distribución porcentual por estado actual</p>
+                        </div>
+                        <div class="chart-container chart-container--sm">
+                            <canvas id="chart-estado"></canvas>
+                        </div>
+                        <div id="estado-legend" class="legend-list mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Fila 2: Tipo sanción (barras vert.) + Valor multa ─ -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-shield-exclamation text-danger me-2"></i>Tipo de Sanción</h3>
+                            <p class="panel-sub">Distribución por modalidad de sanción aplicada</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-sancion"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-currency-dollar text-success me-2"></i>Distribución por Valor de Multa
+                            </h3>
+                            <p class="panel-sub">Top 10 valores de multa más frecuentes</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-multa"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Fila 3: Tendencia mensual (línea) ──────────────── -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-graph-up-arrow text-info me-2"></i>Tendencia Mensual de Comparendos</h3>
+                            <p class="panel-sub">Volumen de comparendos emitidos por mes — detecta estacionalidad y
+                                picos de actividad</p>
+                        </div>
+                        <div class="chart-container chart-container--lg">
+                            <canvas id="chart-tendencia"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Fila 4: Marca vehículo + Tipo servicio (dona) ──── -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-car-front text-primary me-2"></i>Marca de Vehículo</h3>
+                            <p class="panel-sub">Top 12 marcas con mayor número de comparendos</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-marca"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-person-badge text-warning me-2"></i>Tipo de Servicio</h3>
+                            <p class="panel-sub">Proporción de vehículos particulares vs. públicos</p>
+                        </div>
+                        <div class="chart-container chart-container--sm">
+                            <canvas id="chart-servicio"></canvas>
+                        </div>
+                        <div id="servicio-legend" class="legend-list mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Fila 5: Categoría licencia + Por año ────────────── -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-id-card text-info me-2"></i>Categoría de Licencia</h3>
+                            <p class="panel-sub">Distribución por categoría de la licencia de conducción</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-licencia"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel h-100">
+                        <div class="panel-header">
+                            <h3><i class="bi bi-calendar3 text-success me-2"></i>Comparendos por Año</h3>
+                            <p class="panel-sub">Volumen anual — 2024 completo · 2025 completo · 2026 parcial</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-anio"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Alert: indicador crítico ──────────────────────── -->
+            <div class="alert-critical mb-4" id="simcomp-alert" style="display:none">
+                <div class="alert-critical-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div>
+                    <strong>Alerta de Gestión:</strong>
+                    <span id="simcomp-alert-msg"></span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN DATASET                                        -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="dataset" class="section">
             <div class="section-header">
                 <h2>Gestión de Datos</h2>
                 <p class="text-muted">Sube o selecciona un dataset para comenzar el análisis distribuido con Spark.</p>
@@ -71,8 +271,10 @@
                             <div class="upload-area" id="uploadArea">
                                 <i class="bi bi-cloud-arrow-up"></i>
                                 <p>Haz clic para seleccionar o arrastra un archivo .csv</p>
-                                <input class="form-control" type="file" id="fileInput" accept=".csv" style="display:none">
-                                <button class="btn btn-primary mt-2" onclick="document.getElementById('fileInput').click()">Seleccionar archivo</button>
+                                <input class="form-control" type="file" id="fileInput" accept=".csv"
+                                    style="display:none">
+                                <button class="btn btn-primary mt-2"
+                                    onclick="document.getElementById('fileInput').click()">Seleccionar archivo</button>
                             </div>
                             <div id="fileInfo" class="mt-3 text-center" style="display:none">
                                 <span class="badge bg-success" id="fileNameDisplay">archivo.csv</span>
@@ -94,7 +296,7 @@
                                 <label class="form-label text-muted">Datasets disponibles en el servidor:</label>
                                 <select id="datasetSelect" class="form-select form-select-lg"></select>
                             </div>
-                            <button class="btn btn-primary btn-lg w-100 py-3" onclick="loadDashboard()">
+                            <button class="btn btn-primary btn-lg w-100 py-3" onclick="loadAllDashboards()">
                                 <i class="bi bi-lightning-charge-fill"></i> Analizar con Spark
                             </button>
                         </div>
@@ -103,13 +305,16 @@
             </div>
         </section>
 
-        <!-- SECCIÓN INICIO (DASHBOARD) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN INICIO (Dashboard general)                     -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section id="inicio" class="section">
             <div class="hero-card mb-4">
                 <div class="hero-content">
                     <p class="eyebrow">Motor de análisis distribuido</p>
                     <h1 id="currentDatasetTitle">Dashboard de Análisis</h1>
-                    <p>Visualización instantánea de métricas clave, distribuciones y correlaciones procesadas por Apache Spark.</p>
+                    <p>Visualización instantánea de métricas clave, distribuciones y correlaciones procesadas por Apache
+                        Spark.</p>
                 </div>
                 <div class="spark-badge">
                     <i class="bi bi-lightning-charge-fill"></i>
@@ -154,8 +359,10 @@
                         <div class="panel-header d-flex justify-content-between align-items-center">
                             <h3>Distribución Categórica</h3>
                             <div class="d-flex gap-2">
-                                <select id="categoricalSelect" class="form-select form-select-sm" style="min-width: 150px;"></select>
-                                <button class="btn btn-outline-primary btn-sm" onclick="loadCategoryChart()">Refrescar</button>
+                                <select id="categoricalSelect" class="form-select form-select-sm"
+                                    style="min-width: 150px;"></select>
+                                <button class="btn btn-outline-primary btn-sm"
+                                    onclick="loadCategoryChart()">Refrescar</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -178,13 +385,15 @@
 
             <div class="panel mb-4">
                 <div class="panel-header">
-                    <h3>Matriz de Correlación (Pearson)</h3>
+                    <h3>Matriz de Correlación</h3>
                 </div>
                 <div id="heatmap" class="heatmap-wrapper"></div>
             </div>
         </section>
 
-        <!-- SECCIÓN ANÁLISIS (DETALLE) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN ANÁLISIS (Detalle)                             -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section id="analysis" class="section">
             <div class="row g-4">
                 <div class="col-md-6">
@@ -267,7 +476,9 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TABLA (EXPLORADOR) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN TABLA (Explorador)                             -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section id="table" class="section">
             <div class="panel">
                 <div class="panel-header d-flex justify-content-between align-items-center">
@@ -275,9 +486,11 @@
                     <div class="d-flex gap-2">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input id="filterInput" class="form-control" placeholder="Buscar en la página..." onkeyup="filterTable()">
+                            <input id="filterInput" class="form-control" placeholder="Buscar en la página..."
+                                onkeyup="filterTable()">
                         </div>
-                        <select id="limitSelect" class="form-select form-select-sm" style="width: auto;" onchange="changeLimit()">
+                        <select id="limitSelect" class="form-select form-select-sm" style="width: auto;"
+                            onchange="changeLimit()">
                             <option value="10">10 filas</option>
                             <option value="20">20 filas</option>
                             <option value="50">50 filas</option>
@@ -304,7 +517,9 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TERMINAL (CONSULTA) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  SECCIÓN TERMINAL                                       -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section id="terminal" class="section">
             <div class="panel terminal-panel">
                 <div class="panel-header terminal-header">
@@ -319,12 +534,15 @@
                 <div class="panel-body terminal-body p-0">
                     <div class="terminal-info p-3">
                         <p><span class="text-success">spark-user@simcomp:~$</span> Entorno PySpark iniciado.</p>
-                        <p class="text-muted small">Variables disponibles: <code>spark</code>, <code>df</code> (el dataset actual cargado).</p>
-                        <p class="text-muted small">Ejemplo: <code>df.show(5)</code> o <code>spark.sql("SELECT * FROM dataset").show()</code></p>
+                        <p class="text-muted small">Variables disponibles: <code>spark</code>, <code>df</code> (el
+                            dataset actual cargado).</p>
+                        <p class="text-muted small">Ejemplo: <code>df.show(5)</code> o
+                            <code>spark.sql("SELECT * FROM dataset").show()</code></p>
                     </div>
                     <div class="terminal-input-container">
                         <span class="prompt">pyspark></span>
-                        <textarea id="queryInput" class="terminal-input" rows="4" placeholder="Escribe tu código PySpark aquí..."></textarea>
+                        <textarea id="queryInput" class="terminal-input" rows="4"
+                            placeholder="Escribe tu código PySpark aquí..."></textarea>
                     </div>
                     <div class="p-3 border-top border-dark d-flex justify-content-between align-items-center">
                         <span class="text-muted small">Presiona <b>Ctrl+Enter</b> para ejecutar</span>
@@ -338,7 +556,8 @@
             <div id="queryResultContainer" class="panel mt-4 result-panel" style="display:none">
                 <div class="panel-header d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Salida Estándar</h3>
-                    <button class="btn btn-close theme-btn-close" onclick="document.getElementById('queryResultContainer').style.display='none'"></button>
+                    <button class="btn btn-close theme-btn-close"
+                        onclick="document.getElementById('queryResultContainer').style.display='none'"></button>
                 </div>
                 <div class="terminal-output terminal-output-container" id="queryOutput">
                 </div>

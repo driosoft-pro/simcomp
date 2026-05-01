@@ -35,6 +35,7 @@ metastore_db/
 derby.log
 *.log
 
-# Data
+# Data — ignorar solo los archivos subidos por el usuario
 data/uploads/*
 !data/uploads/.gitkeep
+# El CSV preempaquetado (data/*.csv) SÍ se incluye en el repositorio

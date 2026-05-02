@@ -227,8 +227,13 @@ function Run-JMeter {
         Default { return }
     }
 
-    if (-not (Get-Command jmeter -ErrorAction SilentlyContinue)) {
-        Log-Message "[!] Error: 'jmeter' no está instalado en este equipo." "Red"
+    $jmeterCmd = "jmeter"
+    if (-not (Get-Command $jmeterCmd -ErrorAction SilentlyContinue)) {
+        # Intentar buscar jmeter.bat en la ruta común de descargas o si el usuario definió algo en .env
+        Log-Message "[!] Error: 'jmeter' no se encuentra en las variables de entorno (PATH)." "Red"
+        Log-Message "Para solucionarlo:" "Yellow"
+        Log-Message "1. Agrega la carpeta 'bin' de JMeter al PATH de Windows." "White"
+        Log-Message "2. O asegúrate de que el comando 'jmeter' funcione en una terminal nueva." "White"
         return
     }
 

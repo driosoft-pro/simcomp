@@ -246,6 +246,13 @@ Database connection established
 GET /api/health
 ```
 
+### Prometheus Metrics
+
+```http
+GET /metrics
+```
+*Métricas del runtime de Node.js expuestas para el raspado de Prometheus.*
+
 ### Login
 
 ```http

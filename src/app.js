@@ -7,6 +7,19 @@ import authRoutes from "./routes/auth.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 import { getEnv } from "./utils/env.js";
+import client from "prom-client";
+
+// Configuración de métricas de Prometheus
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+// Métrica personalizada: Contador de logins
+const loginCounter = new client.Counter({
+  name: "auth_login_total",
+  help: "Total de intentos de login",
+  labelNames: ["status"],
+});
+register.registerMetric(loginCounter);
 
 const app = express();
 
@@ -105,6 +118,12 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     timestamp: new Date().toISOString(),
   });
+});
+
+// ── Prometheus Metrics ───────────────────────────────────────────────────────
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
 });
 
 // ── Rutas ────────────────────────────────────────────────────────────────────

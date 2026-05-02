@@ -129,16 +129,13 @@ def data_paginated(filename):
     return jsonify(paginated_data(path, page, limit))
 
 
-@api_bp.route("/datasets/<filename>/query", methods=["POST"])
-def query(filename):
-    data = request.get_json()
-    code = data.get("code")
-
-    if not code:
-        return jsonify({"error": "No se envió ningún código"}), 400
-
-    path = get_dataset_path(filename)
-    return jsonify(execute_spark_code(path, code))
+# @api_bp.route("/datasets/<filename>/query", methods=["POST"])
+# def query(filename):
+#     """
+#     ⚠️ ADVERTENCIA DE SEGURIDAD: Este endpoint permite ejecución de código arbitrario (RCE).
+#     Se ha desactivado en producción por auditoría de seguridad.
+#     """
+#     return jsonify({"error": "Endpoint desactivado por motivos de seguridad (RCE Audit)"}), 403
 
 
 # ─── SIMCOMP endpoints ───────────────────────────────────────────────────────

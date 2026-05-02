@@ -16,4 +16,9 @@ Vagrantfile
 provisioning_docker/secrets/
 /secrets/
 *.key
-*.pem
+*.pem*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm

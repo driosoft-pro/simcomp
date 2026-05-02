@@ -89,6 +89,16 @@ vagrant ssh managerDocker
 docker node ls
 ```
 
+### 3.5 Generar Secretos (Requerido)
+Antes de desplegar el stack, debes generar los archivos de secretos en la carpeta `secrets/`. Estos archivos están en el `.gitignore` y se generan automáticamente desde la raíz del proyecto:
+
+```bash
+# Desde la raíz del proyecto (Linux/WSL)
+./scripts/build-secrets.sh
+```
+
+Esto creará los archivos `.txt` necesarios en `provisioning_docker/secrets/`.
+
 ### 4. Desplegar el Stack
 Puedes usar el script automatizado o el comando directo desde la carpeta `/vagrant/provisioning_docker` en el manager:
 
@@ -215,15 +225,22 @@ docker system prune -a
 
 ---
 
-## 📜 Scripts de Automatización (`/scripts`)
+## 🛠️ Solución de Problemas (Troubleshooting)
 
-El directorio `scripts/` contiene utilidades para facilitar la administración:
+### 1. El comando `docker stack deploy` falla por falta de secretos
+**Error**: `secret not found: auth_db_password`
+**Solución**: Ejecuta `./scripts/build-secrets.sh` (Linux) o `.\scripts\build-secrets.ps1` (Windows) desde la raíz del proyecto **antes** de desplegar.
 
-- **`deploy-stack.sh`**: Despliega o actualiza el stack completo.
-- **`remove-stack.sh`**: Elimina el stack y limpia configuraciones.
-- **`scale-service.sh`**: Escala un servicio y muestra su estado.
-- **`test-services.sh`**: Realiza pruebas de conectividad (curl) a todos los microservicios.
-- **`init-swarm-manager.sh`**: Configura el firewall e inicializa el Swarm (usado por Vagrant).
+### 2. HAProxy no detecta un nuevo microservicio
+**Solución**:
+- Verifica el nombre del servicio en `stack.yml`.
+- Revisa los logs de HAProxy: `docker service logs simcomp_haproxy`.
+- Asegúrate de que el microservicio esté en la red `simcomp-internal`.
+
+### 3. Latencia alta en la comunicación entre nodos
+**Solución**:
+- Verifica que el firewall no esté bloqueando los puertos de Swarm (2377, 7946, 4789).
+- Revisa el estado de la red overlay: `docker network inspect simcomp-internal`.
 
 ---
 

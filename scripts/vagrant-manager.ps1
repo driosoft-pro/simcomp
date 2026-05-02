@@ -192,21 +192,57 @@ function Wait-For-Docker {
 }
 
 function Show-Links {
-    $status = vagrant status managerDocker 2>$null
-    if ($status -match "running") {
-        $managerIp = "192.168.100.2"
-        if (Test-Path $ENV_FILE) {
-            $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-            if ($line) { $managerIp = $line.ToString().Split("=")[1] }
-        }
-        Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-        Log-Message "    Stats:             http://stats.$managerIp:8404/stats" "Green"
-        Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010" "Green"
-        Log-Message "    Spark UI:          http://spark.$managerIp:4040" "Green"
-        Log-Message "    Prometheus:        http://monitor.$managerIp:9090" "Green"
-        Log-Message "    Grafana:           http://monitor.$managerIp:3000" "Green"
-        Log-Message "    Glances RT:        http://monitor.$managerIp:61208" "Green"
+    $managerIp = "192.168.100.2"
+    if (Test-Path $ENV_FILE) {
+        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
+        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
+
+    # Forma rápida de detectar si el puerto 80 está abierto (HAProxy)
+    $connection = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
+    if ($connection.TcpTestSucceeded) {
+        Log-Message "--- [ ENLACES DISPONIBLES ] ---" "Blue"
+        Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
+        Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
+        Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
+        Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
+        Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
+        Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
+        Log-Message "-------------------------------" "Blue"
+    }
+}
+
+function Run-JMeter {
+    Clear-Host
+    Log-Message "======================================" "Cyan"
+    Log-Message "   SIMCOMP - Pruebas JMeter (CLI)" "Cyan"
+    Log-Message "======================================" "Cyan"
+    Log-Message "1) Flujo Completo (Login -> Personas -> Vehiculos)"
+    Log-Message "2) Estrés Frontend (Carga Masiva)"
+    Log-Message "3) Regresar"
+    Log-Message "======================================" "Cyan"
+    
+    $jopt = Read-Host "Opción"
+    
+    switch ($jopt) {
+        "1" { $test = "jmeter\simcomp_workflow_completo.jmx" }
+        "2" { $test = "jmeter\simcomp_estres-frontend.jmx" }
+        Default { return }
+    }
+
+    if (-not (Get-Command jmeter -ErrorAction SilentlyContinue)) {
+        Log-Message "[!] Error: 'jmeter' no está instalado en este equipo." "Red"
+        return
+    }
+
+    if (!(Test-Path "jmeter\results")) { New-Item -ItemType Directory -Path "jmeter\results" | Out-Null }
+    if (Test-Path "jmeter\report") { Remove-Item -Path "jmeter\report" -Recurse -Force }
+    
+    Log-Message "[*] Iniciando prueba JMeter... (esto puede tardar)" "Yellow"
+    jmeter -n -t "$test" -l "jmeter\results\last_run.jtl" -e -o "jmeter\report"
+    
+    Log-Message "[✔] Prueba finalizada." "Green"
+    Log-Message "[✔] Reporte generado en: $((Get-Location).Path)\jmeter\report\index.html" "Green"
 }
 
 # Join Remote Worker
@@ -274,12 +310,12 @@ function Guided-Mode {
     
     Log-Message "[✔] PROCESO COMPLETADO" "Green"
     Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-    Log-Message "    Stats:             http://stats.$managerIp:8404/stats" "Green"
-    Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010" "Green"
-    Log-Message "    Spark UI:          http://spark.$managerIp:4040" "Green"
-    Log-Message "    Prometheus:        http://monitor.$managerIp:9090" "Green"
-    Log-Message "    Grafana:           http://monitor.$managerIp:3000" "Green"
-    Log-Message "    Glances RT:        http://monitor.$managerIp:61208" "Green"
+    Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
+    Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
+    Log-Message "    Spark UI:          http://$managerIp:4040 (o http://simcomp.co:4040)" "Green"
+    Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
+    Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
+    Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
 }
 
 # Deploy Swarm (Automatic)
@@ -324,12 +360,12 @@ function Deploy-Swarm {
 
     Log-Message "[✔] CLUSTER LISTO Y MONITOREADO" "Green"
     Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-    Log-Message "    Stats:             http://stats.$managerIp:8404/stats${NC}"
-    Log-Message "    Spark Dashboard:   http://spark.$managerIp:8010${NC}"
-    Log-Message "    Spark UI:          http://spark.$managerIp:4040${NC}"
-    Log-Message "    Prometheus:        http://monitor.$managerIp:9090${NC}"
-    Log-Message "    Grafana:           http://monitor.$managerIp:3000${NC}"
-    Log-Message "    Glances RT:        http://monitor.$managerIp:61208${NC}"
+    Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
+    Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
+    Log-Message "    Spark UI:          http://$managerIp:4040 (o http://simcomp.co:4040)" "Green"
+    Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
+    Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
+    Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
 }
 
 # Main Menu
@@ -339,8 +375,19 @@ while ($true) {
     Log-Message "   SIMCOMP INFRA MANAGER - WINDOWS" "Blue"
     Log-Message "======================================" "Blue"
 
-    vagrant status 2>$null
-    Show-Links
+    # Solo mostramos el estado rápido
+    $managerIp = "192.168.100.2"
+    if (Test-Path $ENV_FILE) {
+        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
+        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
+    }
+
+    if (Test-Connection -ComputerName $managerIp -Count 1 -Quiet -ErrorAction SilentlyContinue) {
+        Log-Message "Estado: Online" "Green"
+        Show-Links
+    } else {
+        Log-Message "Estado: Offline (Usa la opción 4 para iniciar)" "Red"
+    }
 
     Log-Message "======================================" "White"
     Log-Message "1) Paso a paso"
@@ -349,11 +396,12 @@ while ($true) {
     Log-Message "4) Iniciar VMs"
     Log-Message "5) Apagar VMs"
     Log-Message "6) Deploy stack"
-    Log-Message "7) Limpiar TODO"
-    Log-Message "8) Auto-discovery red"
-    Log-Message "9) Unir nodo remoto"
-    Log-Message "10) Ver Logs"
-    Log-Message "11) Salir"
+    Log-Message "7) Pruebas JMeter (CLI)"
+    Log-Message "8) Limpiar TODO"
+    Log-Message "9) Auto-discovery red"
+    Log-Message "10) Unir nodo remoto"
+    Log-Message "11) Ver Logs"
+    Log-Message "12) Salir"
     Log-Message "======================================" "White"
 
     $opt = Read-Host "Opción"
@@ -371,11 +419,12 @@ while ($true) {
         "4" { vagrant up }
         "5" { vagrant halt }
         "6" { vagrant provision managerDocker --provision-with deploy-stack }
-        "7" { Cleanup-All }
-        "8" { Auto-Discovery }
-        "9" { Join-RemoteWorker }
-        "10" { Get-Content $LOG_FILE -Wait -Tail 20 }
-        "11" { exit }
+        "7" { Run-JMeter }
+        "8" { Cleanup-All }
+        "9" { Auto-Discovery }
+        "10" { Join-RemoteWorker }
+        "11" { Get-Content $LOG_FILE -Wait -Tail 20 }
+        "12" { exit }
         Default { Log-Message "[!] Opción inválida" "Red" }
     }
 

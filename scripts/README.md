@@ -22,10 +22,18 @@ Automatiza la inicialización de Vagrant limpiando entornos anteriores y permiti
   1. Pregunta cuál de los 3 Vagrantfiles usar (Nativo, Swarm, o Swarm+Spark).
   2. Ejecuta `vagrant destroy -f` para eliminar máquinas previas.
   3. Borra la carpeta oculta `.vagrant` para garantizar un inicio sin conflictos de estado.
-  4. Copia el Vagrantfile seleccionado a la raíz.
-  5. Inicia el proceso con `vagrant up`.
+  4. Inicia las VMs y provisiona el cluster de forma secuencial.
+  5. **Pruebas JMeter**: Permite ejecutar pruebas de carga profesionales y generar reportes HTML desde el menú.
+  6. **Estado Dinámico**: Detecta si el cluster está vivo y muestra los enlaces de servicios automáticamente.
 
-### 3. Constructor y Publicador Docker (`build-and-push-dockerhub`)
+### 3. Gestor de Secretos (`build-secrets`)
+Herramienta crítica para la seguridad del entorno productivo en Swarm.
+- **Cómo usarlo**:
+  - *Linux*: `./build-secrets.sh`
+  - *Windows*: `.\build-secrets.ps1`
+- **¿Qué hace?**: Genera archivos planos en la carpeta `secrets/` (ignorada por git) para que Docker Swarm los use como `docker secret`. Permite definir contraseñas de DB y claves JWT sin exponerlas en el código.
+
+### 4. Constructor y Publicador Docker (`build-and-push-dockerhub`)
 Automatiza la construcción (build) de las imágenes de todos los microservicios y el frontend, etiquetándolas con versión, y opcionalmente subiéndolas (push) a Docker Hub.
 - **Tecnología**: Bash y PowerShell con integración a CLI de `docker` o `podman`.
 - **Cómo usarlo**:

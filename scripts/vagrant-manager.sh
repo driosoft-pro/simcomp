@@ -167,16 +167,53 @@ wait_for_nodes() {
 }
 
 show_links() {
-    if vagrant status managerDocker 2>/dev/null | grep -q "running"; then
-        MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+    # Forma rápida de detectar si el sistema está arriba sin llamar a 'vagrant status' (que es lento)
+    MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+    
+    # Intentar conexión rápida al puerto 80 (HAProxy)
+    if timeout 0.5 bash -c "true < /dev/tcp/$MANAGER_IP/80" 2>/dev/null; then
+        echo -e "${BLUE}--- [ ENLACES DISPONIBLES ] ---${NC}"
         echo -e "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
-        echo -e "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
-        echo -e "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
-        echo -e "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
-        echo -e "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
-        echo -e "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
-        echo -e "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
+        echo -e "${GREEN}    Stats HAProxy:     http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
+        echo -e "${GREEN}    Spark Dashboard:   http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
+        echo -e "${GREEN}    Spark UI:          http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
+        echo -e "${GREEN}    Prometheus:        http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
+        echo -e "${GREEN}    Grafana:           http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
+        echo -e "${GREEN}    Glances RT:        http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
+        echo -e "${BLUE}-------------------------------${NC}"
     fi
+}
+
+run_jmeter() {
+    clear
+    echo "======================================"
+    echo "   SIMCOMP - Pruebas JMeter (CLI)"
+    echo "======================================"
+    echo "1) Flujo Completo (Login -> Personas -> Vehiculos)"
+    echo "2) Estrés Frontend (Carga Masiva)"
+    echo "3) Regresar"
+    echo "======================================"
+    read -p "Opción: " jopt
+    
+    case $jopt in
+        1) TEST="jmeter/simcomp_workflow_completo.jmx" ;;
+        2) TEST="jmeter/simcomp_estres-frontend.jmx" ;;
+        *) return ;;
+    esac
+
+    if ! command -v jmeter &>/dev/null; then
+        log "${RED}[!] Error: 'jmeter' no está instalado en este equipo.${NC}"
+        return 1
+    fi
+
+    mkdir -p jmeter/results
+    rm -rf jmeter/report
+    
+    log "${YELLOW}[*] Iniciando prueba JMeter... (esto puede tardar)${NC}"
+    jmeter -n -t "$TEST" -l jmeter/results/last_run.jtl -e -o jmeter/report
+    
+    log "${GREEN}[✔] Prueba finalizada.${NC}"
+    log "${GREEN}[✔] Reporte generado en: $(pwd)/jmeter/report/index.html${NC}"
 }
 
 # =============================
@@ -235,12 +272,12 @@ guided_mode() {
 
     log "${GREEN}[✔] PROCESO COMPLETADO${NC}"
     log "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
-    log "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
-    log "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
-    log "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
-    log "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
-    log "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
-    log "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
+    log "${GREEN}    Stats HAProxy:     http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
+    log "${GREEN}    Spark Dashboard:   http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
+    log "${GREEN}    Spark UI:          http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
+    log "${GREEN}    Prometheus:        http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
+    log "${GREEN}    Grafana:           http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
+    log "${GREEN}    Glances RT:        http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
 }
 
 # =============================
@@ -287,12 +324,12 @@ deploy_swarm() {
     MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
     log "${GREEN}[✔] CLUSTER LISTO Y MONITOREADO${NC}"
     log "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
-    log "${GREEN}    Stats:             http://stats.$MANAGER_IP:8404/stats${NC}"
-    log "${GREEN}    Spark Dashboard:   http://spark.$MANAGER_IP:8010${NC}"
-    log "${GREEN}    Spark UI:          http://spark.$MANAGER_IP:4040${NC}"
-    log "${GREEN}    Prometheus:        http://monitor.$MANAGER_IP:9090${NC}"
-    log "${GREEN}    Grafana:           http://monitor.$MANAGER_IP:3000${NC}"
-    log "${GREEN}    Glances RT:        http://monitor.$MANAGER_IP:61208${NC}"
+    log "${GREEN}    Stats HAProxy:     http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
+    log "${GREEN}    Spark Dashboard:   http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
+    log "${GREEN}    Spark UI:          http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
+    log "${GREEN}    Prometheus:        http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
+    log "${GREEN}    Grafana:           http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
+    log "${GREEN}    Glances RT:        http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
 }
 
 # =============================
@@ -304,8 +341,15 @@ while true; do
     echo -e "   ${BLUE}SIMCOMP INFRA MANAGER FINAL${NC}"
     echo "======================================"
 
-    vagrant status 2>/dev/null || echo "No hay entorno"
-    show_links
+    # Solo mostramos el estado de las VMs si el usuario lo pide o de forma rápida
+    # Para evitar lentitud, solo verificamos si el Manager responde al ping
+    MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+    if ping -c 1 -W 0.2 "$MANAGER_IP" &>/dev/null; then
+        echo -e "Estado: ${GREEN}Online${NC}"
+        show_links
+    else
+        echo -e "Estado: ${RED}Offline${NC} (Usa la opción 4 para iniciar)"
+    fi
 
     echo "======================================"
     echo "1) Paso a paso"
@@ -314,11 +358,12 @@ while true; do
     echo "4) Iniciar VMs"
     echo "5) Apagar VMs"
     echo "6) Deploy stack"
-    echo "7) Limpiar TODO"
-    echo "8) Auto-discovery red"
-    echo "9) Unir nodo remoto"
-    echo "10) Logs"
-    echo "11) Salir"
+    echo "7) Pruebas JMeter (CLI)"
+    echo "8) Limpiar TODO"
+    echo "9) Auto-discovery red"
+    echo "10) Unir nodo remoto"
+    echo "11) Logs"
+    echo "12) Salir"
     echo "======================================"
 
     read -p "Opción: " opt
@@ -330,11 +375,12 @@ while true; do
         4) vagrant up ;;
         5) vagrant halt ;;
         6) vagrant provision managerDocker --provision-with deploy-stack ;;
-        7) cleanup_all ;;
-        8) auto_discovery ;;
-        9) join_remote_worker ;;
-        10) tail -f simcomp.log ;;
-        11) exit 0 ;;
+        7) run_jmeter ;;
+        8) cleanup_all ;;
+        9) auto_discovery ;;
+        10) join_remote_worker ;;
+        11) tail -f simcomp.log ;;
+        12) exit 0 ;;
     esac
 
     read -p "ENTER..."

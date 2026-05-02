@@ -33,7 +33,14 @@ Herramienta crítica para la seguridad del entorno productivo en Swarm.
   - *Windows*: `.\build-secrets.ps1`
 - **¿Qué hace?**: Genera archivos planos en la carpeta `secrets/` (ignorada por git) para que Docker Swarm los use como `docker secret`. Permite definir contraseñas de DB y claves JWT sin exponerlas en el código.
 
-### 4. Constructor y Publicador Docker (`build-and-push-dockerhub`)
+### 4. Configurador de DNS Local (`setup-hosts`)
+Automatiza el mapeo de la IP del clúster a los dominios `simcomp.co` y subdominios.
+- **Cómo usarlo**:
+  - *Linux*: `sudo ./setup-hosts.sh`
+  - *Windows*: `.\setup-hosts.ps1` (Como Administrador)
+- **¿Qué hace?**: Inyecta una entrada única con todos los dominios (`api.`, `monitor.`, `spark.`, etc.) apuntando a la IP del Manager.
+
+### 5. Constructor y Publicador Docker (`build-and-push-dockerhub`)
 Automatiza la construcción (build) de las imágenes de todos los microservicios y el frontend, etiquetándolas con versión, y opcionalmente subiéndolas (push) a Docker Hub.
 - **Tecnología**: Bash y PowerShell con integración a CLI de `docker` o `podman`.
 - **Cómo usarlo**:

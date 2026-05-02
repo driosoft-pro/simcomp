@@ -231,11 +231,40 @@ Verifica que todos los servicios estén subiendo (puede tomar 1-2 minutos la pri
 vagrant ssh managerDocker -c "docker stack services simcomp"
 ```
 
-### 4. Acceso al Sistema
-Para que los dominios funcionen en tu navegador (Host):
-- **Linux**: `echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts`
+### 4. Acceso al Sistema y DNS
+Para que los dominios funcionen en tu navegador (Host), el sistema incluye scripts de configuración automática:
+
+- **Panel de Control**: Ejecuta `./simcomp-manager.sh` (Linux) o `.\simcomp-manager.ps1` (Windows) y selecciona la **Opción 2**.
+- **Manual (Linux)**: `./scripts/setup-hosts.sh`
+- **Manual (Windows)**: `.\scripts\setup-hosts.ps1`
+
+Una vez configurado, podrás acceder a:
 - **Frontend**: [http://simcomp.co](http://simcomp.co)
-- **HAProxy Stats**: [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats) (admin / Admin123*)
+- **Dashboard Analytics**: [http://spark.simcomp.co:8010](http://spark.simcomp.co:8010)
+- **Monitoreo (Grafana)**: [http://monitor.simcomp.co:3000](http://monitor.simcomp.co:3000)
+- **HAProxy Stats**: [http://stats.simcomp.co:8404/stats](http://stats.simcomp.co:8404/stats)
+
+---
+
+## 🛠️ Panel de Control Central (SIMCOMP Manager)
+
+El proyecto cuenta con un orquestador centralizado que abstrae toda la complejidad técnica. Se recomienda usar este panel para todas las operaciones:
+
+```bash
+# En Linux
+./simcomp-manager.sh
+
+# En Windows (PowerShell Administrador)
+.\simcomp-manager.ps1
+```
+
+**Funciones incluidas:**
+1. **Configuración**: Generación de `.env` y Secretos Docker.
+2. **DNS**: Configuración automática del archivo `hosts`.
+3. **Infraestructura**: Despliegue y gestión de Vagrant/Swarm.
+4. **Build**: Compilación masiva de imágenes Docker.
+5. **JMeter**: Ejecución de pruebas de carga y reportes HTML.
+6. **Git**: Sincronización automática de ramas de microservicios.
 
 ---
 

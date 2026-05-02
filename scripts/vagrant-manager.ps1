@@ -188,9 +188,6 @@ function Wait-For-Docker {
     return $false
 }
 
-    return $false
-}
-
 function Show-Links {
     $managerIp = "192.168.100.2"
     if (Test-Path $ENV_FILE) {

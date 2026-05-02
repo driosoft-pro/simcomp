@@ -452,6 +452,31 @@ chmod +x scripts/build-envs.sh
 .\scripts\build-envs.ps1
 ```
 
+---
+
+## 🔐 Generación de Secretos (Swarm)
+
+Para el despliegue en Docker Swarm, es necesario generar los archivos de secretos que serán inyectados en los contenedores. Estos se extraen automáticamente de tus archivos `.env.swarm`.
+
+### Uso en Linux
+```bash
+# 1. Dar permisos de ejecución
+chmod +x scripts/build-secrets.sh
+
+# 2. Ejecutar generador
+./scripts/build-secrets.sh
+```
+
+### Uso en Windows (PowerShell)
+```powershell
+# Ejecutar generador
+.\scripts\build-secrets.ps1
+```
+
+> [!TIP]
+> Ejecuta este script antes de realizar el despliegue del stack (`deploy-stack`) en el clúster.
+
+---
 > [!TIP]
 > Ejecuta este script cada vez que clones el repositorio o cuando haya cambios en las plantillas `.env.example` de los microservicios.
 
@@ -625,4 +650,68 @@ vagrant ssh managerDocker -c "docker service logs -f simcomp_ms-auth-service"
 
 ---
 
-*SIMCOMP — Vagrant + Swarm · Cluster 3 Nodos · 192.168.100.x · Node.js 22 + PostgreSQL 16 + HAProxy · v1.2.0*
+## 🛡️ Auditoría y Mejoras de Producción
+
+Tras una auditoría técnica profunda, el sistema ha sido elevado a estándares de producción reales con las siguientes mejoras:
+
+### 1. Seguridad: Migración a Docker Secrets
+Se ha eliminado el uso de variables de entorno en texto plano para datos sensibles.
+- **Implementación**: Las contraseñas de bases de datos y `JWT_SECRET` se gestionan mediante `docker secret`.
+- **Beneficio**: Los secretos viajan cifrados y solo se montan en memoria (`/run/secrets/`) dentro de los contenedores autorizados.
+
+### 2. Alta Disponibilidad (HA) Real
+Se han optimizado las políticas de despliegue en `stack.yml`.
+- **Implementación**: Se eliminaron las restricciones fijas a nodos específicos utilizando `placement.preferences`.
+- **Beneficio**: Distribución equitativa de réplicas garantizando resiliencia ante fallos de nodos.
+
+### 3. Observabilidad: Descubrimiento Dinámico (DNS SD)
+- **Implementación**: Prometheus utiliza `dns_sd_configs` para descubrir automáticamente todas las réplicas individuales de un servicio.
+- **Métricas nativas**: Integración de `prom-client` en los microservicios.
+
+### 4. Infraestructura Resiliente
+- **DNS**: Mejora en la persistencia del servicio DNS.
+- **Balanceo**: Optimización de Health Checks en HAProxy para detección de fallos en milisegundos.
+
+### 5. Seguridad de Capa 7
+- **Aislamiento**: ACLs en HAProxy bloquean el acceso externo a rutas `/internal/`, garantizando que la comunicación entre servicios sea estrictamente privada.
+
+---
+
+## 🌐 Configuración de DNS Local (Archivo Hosts)
+
+Para que los enlaces con el dominio `simcomp.co` funcionen correctamente en tu navegador, debes mapear la IP del Manager a dicho dominio en tu sistema operativo:
+
+### 🐧 En Linux (Ubuntu/Debian/Arch)
+1. Abre una terminal.
+2. Edita el archivo de hosts: `sudo nano /etc/hosts`
+3. Agrega la siguiente línea al final:
+   ```text
+   192.168.100.2  simcomp.co www.simcomp.co api.simcomp.co stats.simcomp.co monitor.simcomp.co spark.simcomp.co
+   ```
+
+### 🪟 En Windows 10/11
+1. Abre el **Bloc de notas** como **Administrador**.
+2. Abre el archivo: `C:\Windows\System32\drivers\etc\hosts`
+3. Agrega al final:
+   ```text
+   192.168.100.2  simcomp.co www.simcomp.co api.simcomp.co stats.simcomp.co monitor.simcomp.co spark.simcomp.co
+   ```
+
+---
+
+## 📈 Pruebas de Carga y Rendimiento
+El sistema incluye planes de prueba profesionales para **Apache JMeter**. Puedes encontrar guías detalladas, scripts de ejecución y descripción de métricas en:
+👉 **[Guía de Pruebas JMeter](./jmeter/README.md)**
+
+---
+
+## 👥 Equipo de Desarrollo
+- **Deyton Riascos Ortiz**
+- **Samuel Izquierdo Bonilla**
+- **Mauricio Taborda Gongora**
+
+*Universidad Autónoma de Occidente — Ingeniería de Datos e Inteligencia Artificial*
+
+---
+
+*SIMCOMP — Auditoría de Producción Completada · Cluster 3 Nodos · Docker Swarm · v1.3.0*

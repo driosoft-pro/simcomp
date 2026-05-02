@@ -724,6 +724,35 @@ curl http://localhost:8006/api/reportes/health
 
 ---
 
+## 🛠️ SOLUCIÓN DE PROBLEMAS COMUNES
+
+### 1. Error de Conectividad con la Base de Datos
+**Síntoma**: `ConnectionRefusedError` o el contenedor se reinicia constantemente.
+**Solución**: 
+- Verifica que el cluster de Postgres esté arriba: `pg_lsclusters`.
+- Asegúrate de que las variables de entorno `DB_HOST` apunten correctamente (en Swarm usar el nombre del servicio, en Local usar `localhost`).
+- Si usas Docker Secrets, verifica que los archivos existan en `/run/secrets/`.
+
+### 2. Microservicio no detecta cambios en el código
+**Solución**:
+- En local: Asegúrate de usar `pnpm dev` (usa nodemon).
+- En Swarm: Debes recrear la imagen y hacer un `docker service update --force <nombre_servicio>`.
+
+### 3. Advertencias de dependencias obsoletas
+**Síntoma**: `WARN 4 deprecated subdependencies found`.
+**Solución**:
+Hemos configurado `pnpm.overrides` en el `package.json` raíz para forzar versiones seguras de dependencias críticas (como `glob` o `inflight`). Ejecuta `pnpm install` desde la raíz para aplicar estas correcciones de forma global.
+
+---
+
+## 🔒 SEGURIDAD AVANZADA EN PRODUCCIÓN
+
+- **Aislamiento de Red**: Todos los servicios backend operan en la red interna `simcomp-internal`. Solo el balanceador tiene acceso a la red `simcomp-public`.
+- **Protección de Endpoints Internos**: Rutas como `/internal/sync-persona` están bloqueadas a nivel de HAProxy para peticiones externas.
+- **Validación de JWT**: Todos los servicios (excepto `/login` y `/health`) requieren un Bearer Token válido. El secreto de firma se rota mediante Docker Secrets.
+
+---
+
 ## GUÍA DE MANTENIMIENTO (srv-simcomp-api)
 
 ### Gestión de Procesos (PM2)
@@ -754,7 +783,7 @@ pm2 save
 
 ### USUARIOS DE PRUEBA
 
-Usuatios y contraseñas:
+Usuarios y contraseñas:
 - Admin: Admin123*
 - Supervisores: Super123*
 - Agentes: Agente123*

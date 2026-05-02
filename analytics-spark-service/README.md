@@ -265,6 +265,17 @@ curl -X PUT http://localhost:8010/api/comparendos/ID_DEL_COMPARENDO \
 
 ---
 
+## 🔒 Seguridad y Hardening (Auditoría)
+
+Durante la auditoría de seguridad del sistema, se detectó una vulnerabilidad crítica de **RCE (Remote Code Execution)** en este servicio.
+
+### Mitigación Aplicada:
+- **Endpoint Desactivado**: El endpoint `/api/datasets/<file>/query` que permitía ejecutar código Python/Spark arbitrario mediante `exec()` ha sido **desactivado**.
+- **Restricción de Acceso**: El servicio ahora solo permite consultas pre-definidas a través de los endpoints estadísticos.
+- **Validación de Archivos**: Solo se procesan archivos con extensión `.csv` y nombres validados para prevenir ataques de *Path Traversal*.
+
+---
+
 ## 💻 Validación Avanzada y Consola Spark
 
 ### API de Archivos y Profiling (Pruebas con cURL)

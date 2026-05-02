@@ -11,3 +11,9 @@ coverage
 *.log
 .vagrant
 Vagrantfile
+
+# Secretos y datos sensibles
+provisioning_docker/secrets/
+/secrets/
+*.key
+*.pem

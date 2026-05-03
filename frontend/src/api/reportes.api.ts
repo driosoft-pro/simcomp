@@ -68,3 +68,11 @@ export async function getReportesHealth(): Promise<{ success: boolean; message: 
   return { success: response.status === 200, message: response.data.message || 'OK' }
 }
 
+export async function getStatisticsPdf(): Promise<Blob> {
+  const response = await apiClient.get(
+    `${API_URLS.reportes}/reportes/estadisticas/pdf`,
+    { responseType: 'blob' }
+  )
+  return response.data
+}
+

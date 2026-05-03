@@ -178,8 +178,11 @@ según la responsabilidad del servicio, pero una base mínima del proyecto puede
 ### Instalación
 
 ```bash
-# En cada directorio de microservicio
-npm install
+# Recomendado: Usar el gestor central en la raíz del proyecto
+./simcomp-manager.sh  # Opción 7
+
+# Manual (en cada directorio de microservicio)
+pnpm install  # o npm install
 ```
 
 > En `ms-auth-service` normalmente se requerirán dependencias adicionales de autenticación

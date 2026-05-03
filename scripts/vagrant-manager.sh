@@ -173,13 +173,15 @@ show_links() {
     # Intentar conexión rápida al puerto 80 (HAProxy)
     if timeout 0.5 bash -c "true < /dev/tcp/$MANAGER_IP/80" 2>/dev/null; then
         echo -e "${BLUE}--- [ ENLACES DISPONIBLES ] ---${NC}"
-        echo -e "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
-        echo -e "${GREEN}    Stats HAProxy:     http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
-        echo -e "${GREEN}    Spark Dashboard:   http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
-        echo -e "${GREEN}    Spark UI:          http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
-        echo -e "${GREEN}    Prometheus:        http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
-        echo -e "${GREEN}    Grafana:           http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
-        echo -e "${GREEN}    Glances RT:        http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
+        echo -e "${GREEN}    App Principal:      http://$MANAGER_IP (o http://simcomp.co)${NC}"
+        
+        echo -e "${YELLOW}    [ Métricas e Infraestructura ]${NC}"
+        echo -e "${CYAN}      Stats HAProxy:   http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
+        echo -e "${CYAN}      Spark Dashboard: http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
+        echo -e "${CYAN}      Spark UI:        http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
+        echo -e "${CYAN}      Prometheus:      http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
+        echo -e "${CYAN}      Grafana:         http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
+        echo -e "${CYAN}      Glances RT:      http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
         echo -e "${BLUE}-------------------------------${NC}"
     fi
 }
@@ -191,13 +193,19 @@ run_jmeter() {
     echo "======================================"
     echo "1) Flujo Completo (Login -> Personas -> Vehiculos)"
     echo "2) Estrés Frontend (Carga Masiva)"
-    echo "3) Regresar"
+    echo "3) Solo Login"
+    echo "4) Consulta Comparendos"
+    echo "5) Test Genérico"
+    echo "6) Regresar"
     echo "======================================"
     read -p "Opción: " jopt
     
     case $jopt in
-        1) TEST="jmeter/simcomp_workflow_completo.jmx" ;;
-        2) TEST="jmeter/simcomp_estres-frontend.jmx" ;;
+        1) TEST="jmeter/simcomp_workflow_completo.jmx"; NAME="flujo_completo" ;;
+        2) TEST="jmeter/simcomp_estres-frontend.jmx"; NAME="estres_frontend" ;;
+        3) TEST="jmeter/simcomp_login.jmx"; NAME="solo_login" ;;
+        4) TEST="jmeter/simcomp_comparendos.jmx"; NAME="consulta_comparendos" ;;
+        5) TEST="jmeter/simcomp_test.jmx"; NAME="test_generico" ;;
         *) return ;;
     esac
 
@@ -206,14 +214,59 @@ run_jmeter() {
         return 1
     fi
 
+    REPORT_DIR="jmeter/reports/$NAME"
+    RESULT_FILE="jmeter/results/${NAME}_$(date +%Y%m%d_%H%M%S).jtl"
+    
     mkdir -p jmeter/results
-    rm -rf jmeter/report
+    mkdir -p "jmeter/reports"
+    rm -rf "$REPORT_DIR" # Limpiar el reporte específico si existía
     
-    log "${YELLOW}[*] Iniciando prueba JMeter... (esto puede tardar)${NC}"
-    jmeter -n -t "$TEST" -l jmeter/results/last_run.jtl -e -o jmeter/report
-    
-    log "${GREEN}[✔] Prueba finalizada.${NC}"
-    log "${GREEN}[✔] Reporte generado en: $(pwd)/jmeter/report/index.html${NC}"
+    log "${YELLOW}[*] Iniciando prueba JMeter ($NAME)...${NC}"
+    if jmeter -n -t "$TEST" -l "$RESULT_FILE" -e -o "$REPORT_DIR"; then
+        log "${GREEN}[✔] Prueba finalizada correctamente.${NC}"
+        
+        # Generar o actualizar index.html general con estilo premium
+        INDEX_FILE="jmeter/reports/index.html"
+        cat <<EOF > "$INDEX_FILE"
+<html>
+<head>
+    <title>SIMCOMP - Reportes de Pruebas</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f13; color: #e0e0e0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 800px; width: 100%; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h1 { color: #4caf50; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
+        ul { list-style: none; padding: 0; }
+        li { background: #252533; margin: 10px 0; border-radius: 8px; transition: transform 0.2s, background 0.2s; border: 1px solid transparent; }
+        li:hover { transform: translateX(10px); background: #2d2d3d; border-color: #4caf50; }
+        a { display: block; padding: 15px 20px; color: #fff; text-decoration: none; font-size: 1.1em; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SIMCOMP Performance Hub</h1>
+        <ul>
+EOF
+        for d in jmeter/reports/*/; do
+            folder=$(basename "$d")
+            displayName=$(echo "$folder" | tr '_' ' ' | sed 's/\b\(.\)/\u\1/g')
+            echo "<li><a href='./$folder/index.html'>📊 Reporte: $displayName</a></li>" >> "$INDEX_FILE"
+        done
+        cat <<EOF >> "$INDEX_FILE"
+        </ul>
+        <div class="footer">
+            Última actualización: $(date) | SIMCOMP Infrastructure
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+        log "${GREEN}[✔] Reporte generado en: $(pwd)/$REPORT_DIR/index.html${NC}"
+        log "${GREEN}[✔] Menú de reportes actualizado: $(pwd)/$INDEX_FILE${NC}"
+    else
+        log "${RED}[!] Error: La prueba de JMeter falló o fue cancelada.${NC}"
+    fi
 }
 
 # =============================

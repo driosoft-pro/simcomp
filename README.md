@@ -236,8 +236,11 @@ const { user, role, isAuthenticated, login, logout } = useAuth()
 ## Instalación y Uso
 
 ```bash
-# 1. Instalar dependencias
-npm install
+# 1. Instalar dependencias (Recomendado desde la raíz)
+./simcomp-manager.sh  # Opción 7
+
+# O manual en esta carpeta
+pnpm install
 
 # 2. Configurar entorno local
 cp .env.example .env

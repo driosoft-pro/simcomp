@@ -18,14 +18,21 @@ app.use(cors({
   credentials: true
 }));
 
-// ── Logging (dev: completo / prod: solo errores) ──────────────────────────────
+// ── Logging (solo en desarrollo) ─────────────────────────────────────────────
 if (env.nodeEnv !== "production") {
   app.use(morgan("dev"));
 } else {
+  // En producción: formato mínimo, solo errores (status >= 400)
   app.use(morgan("tiny", {
     skip: (req, res) => res.statusCode < 400,
   }));
 }
+
+// Logging agresivo para diagnóstico de tráfico
+app.use((req, res, next) => {
+  console.log(`[DEBUG-TRAFFIC] ${new Date().toISOString()} | Method: ${req.method} | URL: ${req.url} | OriginalURL: ${req.originalUrl} | IP: ${req.ip}`);
+  next();
+});
 
 // ── Parsing ──────────────────────────────────────────────────────────────────
 // 10mb para importación de CSVs. Los archivos ZIP/Excel se generan en stream,
@@ -55,7 +62,9 @@ app.get("/api/health", (req, res) => {
 });
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
+// Doble montaje para asegurar que responda tanto si llega con prefijo como si no
 app.use("/api/reportes", reportesRoutes);
+app.use("/", reportesRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {

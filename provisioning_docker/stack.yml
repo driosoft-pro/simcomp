@@ -1,8 +1,10 @@
 networks:
-  simcomp-public:
+  public:
     driver: overlay
-  simcomp-backend:
+    attachable: true
+  backend:
     driver: overlay
+    attachable: true
 
 volumes:
   auth_db_data:
@@ -26,16 +28,16 @@ secrets:
     file: ./secrets/jwt_secret.txt
 
 configs:
-  haproxy_conf_v3:
-    file: haproxy/haproxy.swarm.cfg
+  haproxy_conf_v4:
+    file: ./haproxy/haproxy.swarm.cfg
   prometheus_conf_v3:
-    file: prometheus.yml
+    file: ./prometheus.yml
   grafana_datasources:
-    file: grafana/provisioning/datasources/datasource.yml
+    file: ./grafana/provisioning/datasources/datasource.yml
   grafana_dashboards_provider_v5:
-    file: grafana/dashboards/provider.yml
-  grafana_dashboard_pro_v3:
-    file: grafana/dashboards/json/simcomp_dashboard.json
+    file: ./grafana/dashboards/provider.yml
+  grafana_dashboard_pro_v4:
+    file: ./grafana/dashboards/json/simcomp_dashboard.json
 
 services:
 
@@ -49,10 +51,10 @@ services:
         published: 8404
         mode: host
     networks:
-      - simcomp-public
-      - simcomp-backend
+      - public
+      - backend
     configs:
-      - source: haproxy_conf_v3
+      - source: haproxy_conf_v4
         target: /usr/local/etc/haproxy/haproxy.cfg
     deploy:
       endpoint_mode: dnsrr
@@ -69,7 +71,7 @@ services:
       VITE_API_BASE_URL: /api
       API_URL: /api
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       endpoint_mode: dnsrr
       replicas: 2
@@ -87,18 +89,19 @@ services:
       AUTH_DB_PORT: 5432
       AUTH_DB_NAME: auth_db
       AUTH_DB_USER: auth_user
-      # AUTH_DB_PASSWORD se lee desde el secreto por la función getEnv
+      NODE_ENV: production
       JWT_EXPIRES_IN: 1h
       JWT_REFRESH_EXPIRES_DAYS: 7
+      PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
     secrets:
       - source: auth_db_pass
         target: auth_db_password
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
-      replicas: 3
+      replicas: 4
       placement:
         preferences:
           - spread: node.id
@@ -113,15 +116,20 @@ services:
       PERSONAS_DB_PORT: 5432
       PERSONAS_DB_NAME: personas_db
       PERSONAS_DB_USER: personas_user
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://simcomp_ms-auth-service:8001
+      AUTOMOTORES_SERVICE_URL: http://simcomp_ms-automotores:8003
+      COMPARENDOS_SERVICE_URL: http://simcomp_ms-comparendos:8005
+      INFRACCIONES_SERVICE_URL: http://simcomp_ms-infracciones:8004
     secrets:
       - source: personas_db_pass
         target: personas_db_password
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
-      replicas: 2
+      replicas: 3
       placement:
         preferences:
           - spread: node.id
@@ -136,13 +144,15 @@ services:
       AUTOMOTORES_DB_PORT: 5432
       AUTOMOTORES_DB_NAME: automotores_db
       AUTOMOTORES_DB_USER: automotores_user
+      NODE_ENV: production
+      PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
     secrets:
       - source: automotores_db_pass
         target: automotores_db_password
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       replicas: 2
       restart_policy:
@@ -156,13 +166,15 @@ services:
       INFRACCIONES_DB_PORT: 5432
       INFRACCIONES_DB_NAME: infracciones_db
       INFRACCIONES_DB_USER: infracciones_user
+      NODE_ENV: production
+      PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
     secrets:
       - source: infracciones_db_pass
         target: infracciones_db_password
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       replicas: 2
       restart_policy:
@@ -176,13 +188,15 @@ services:
       COMPARENDOS_DB_PORT: 5432
       COMPARENDOS_DB_NAME: comparendos_db
       COMPARENDOS_DB_USER: comparendos_user
+      NODE_ENV: production
+      PERSONAS_SERVICE_URL: http://simcomp_ms-personas:8002
     secrets:
       - source: comparendos_db_pass
         target: comparendos_db_password
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       replicas: 2
       restart_policy:
@@ -197,11 +211,12 @@ services:
       AUTOMOTORES_SERVICE_URL: http://simcomp_ms-automotores:8003
       INFRACCIONES_SERVICE_URL: http://simcomp_ms-infracciones:8004
       COMPARENDOS_SERVICE_URL: http://simcomp_ms-comparendos:8005
+      NODE_ENV: production
     secrets:
       - source: jwt_secret_key
         target: jwt_secret
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       replicas: 2
       restart_policy:
@@ -218,7 +233,7 @@ services:
       - "8010:8010"
       - "4040:4040"
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       replicas: 1
       placement:
@@ -232,7 +247,6 @@ services:
     environment:
       POSTGRES_USER: auth_user
       POSTGRES_DB: auth_db
-      # POSTGRES_PASSWORD se lee desde /run/secrets/auth_db_password_file
       POSTGRES_PASSWORD_FILE: /run/secrets/auth_db_password
     secrets:
       - source: auth_db_pass
@@ -240,7 +254,9 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     networks:
-      - simcomp-backend
+      backend:
+        aliases:
+          - db-auth
     deploy:
       replicas: 1
       placement:
@@ -261,7 +277,9 @@ services:
     volumes:
       - personas_db_data:/var/lib/postgresql/data
     networks:
-      - simcomp-backend
+      backend:
+        aliases:
+          - db-personas
     deploy:
       replicas: 1
       placement:
@@ -282,7 +300,9 @@ services:
     volumes:
       - automotores_db_data:/var/lib/postgresql/data
     networks:
-      - simcomp-backend
+      backend:
+        aliases:
+          - db-automotores
     deploy:
       replicas: 1
       placement:
@@ -303,7 +323,9 @@ services:
     volumes:
       - infracciones_db_data:/var/lib/postgresql/data
     networks:
-      - simcomp-backend
+      backend:
+        aliases:
+          - db-infracciones
     deploy:
       replicas: 1
       placement:
@@ -324,7 +346,9 @@ services:
     volumes:
       - comparendos_db_data:/var/lib/postgresql/data
     networks:
-      - simcomp-backend
+      backend:
+        aliases:
+          - db-comparendos
     deploy:
       replicas: 1
       placement:
@@ -333,9 +357,6 @@ services:
       restart_policy:
         condition: on-failure
 
-  # =====================================================================
-  # OBSERVABILITY
-  # =====================================================================
   glances:
     image: docker.io/nicolargo/glances:3.4.0.3
     environment:
@@ -343,25 +364,20 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - simcomp-backend
+      - backend
     ports:
       - target: 61208
         published: 61208
         mode: host
     deploy:
       mode: global
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
 
   node-exporter:
     image: docker.io/prom/node-exporter:v1.9.0
     volumes:
       - /:/host:ro,rslave
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       mode: global
 
@@ -371,7 +387,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     networks:
-      - simcomp-backend
+      - backend
     ports:
       - "9090:9090"
     configs:
@@ -388,7 +404,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - simcomp-backend
+      - backend
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     configs:
@@ -396,7 +412,7 @@ services:
         target: /etc/grafana/provisioning/datasources/datasource.yml
       - source: grafana_dashboards_provider_v5
         target: /etc/grafana/provisioning/dashboards/provider.yml
-      - source: grafana_dashboard_pro_v3
+      - source: grafana_dashboard_pro_v4
         target: /etc/grafana/provisioning/dashboards/json/simcomp_dashboard.json
     deploy:
       replicas: 1
@@ -412,7 +428,6 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
-      - simcomp-backend
+      - backend
     deploy:
       mode: global
-

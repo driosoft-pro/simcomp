@@ -339,13 +339,13 @@ services:
   # =====================================================================
 
   glances:
-    image: docker.io/nicolargo/glances:3.4.0.3
+    image: docker.io/nicolargo/glances:latest-full
     container_name: simcomp-glances
     environment:
       - GLANCES_OPT=-w
     ports:
       - "61208:61208"
-      - "61209:61209"
+      - "9091:9091"
     networks:
       - simcomp-net
 

@@ -11,6 +11,9 @@ function Show-Menu {
     Write-Host " [4] Compilar Imágenes Docker (Build masivo)"
     Write-Host " [5] Ejecutar Pruebas JMeter (CLI + Reporte HTML)"
     Write-Host " [6] Sincronizar Ramas de Microservicios (GIT)"
+    Write-Host " [7] Instalar Dependencias (pnpm/npm)"
+    Write-Host " [8] Gestionar Entorno Local (Nativo/Host)"
+    Write-Host " [9] Reparar Permisos de Ejecución (Unblock)"
     Write-Host " [0] Salir"
     Write-Host "----------------------------------------------------"
     $choice = Read-Host " Selecciona una opción"
@@ -27,7 +30,7 @@ function Show-Menu {
             .\scripts\vagrant-manager.ps1
         }
         "4" {
-            .\scripts\build-and-push-dockerhub.ps1 -Action build
+            .\scripts\build-manager.ps1
         }
         "5" {
             .\scripts\vagrant-manager.ps1 -Option 7
@@ -45,6 +48,15 @@ function Show-Menu {
             }
             git checkout dev
             Write-Host " [✔] Repositorio sincronizado." -ForegroundColor Green
+        }
+        "7" {
+            .\scripts\install-deps.ps1
+        }
+        "8" {
+            .\scripts\local-manager.ps1
+        }
+        "9" {
+            .\scripts\fix-permissions.ps1
         }
         "0" { exit }
         default { Write-Host " Opción inválida." -ForegroundColor Red }

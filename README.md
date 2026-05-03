@@ -244,9 +244,35 @@ Una vez configurado, podrás acceder a:
 - **Monitoreo (Grafana)**: [http://monitor.simcomp.co:3000](http://monitor.simcomp.co:3000)
 - **HAProxy Stats**: [http://stats.simcomp.co:8404/stats](http://stats.simcomp.co:8404/stats)
 
+## 🚀 Guía de Inicio Rápido
+
+Para manejar todo el sistema SIMCOMP, utiliza los gestores centrales incluidos en la raíz del proyecto.
+
+### 🐧 En Linux (Bash)
+1.  **Dar permisos**: Antes de empezar, otorga permisos de ejecución al gestor:
+    ```bash
+    chmod +x simcomp-manager.sh
+    ```
+2.  **Ejecutar**:
+    ```bash
+    ./simcomp-manager.sh
+    ```
+    *Dentro del menú, puedes usar la **Opción 9** para aplicar permisos automáticamente a todos los demás scripts del proyecto.*
+
+### 🪟 En Windows (PowerShell)
+1.  **Habilitar ejecución**: Abre una terminal de PowerShell como Administrador y permite la ejecución de scripts locales si es necesario:
+    ```powershell
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+    ```
+2.  **Ejecutar**:
+    ```powershell
+    .\simcomp-manager.ps1
+    ```
+    *Si los scripts están bloqueados por haber sido descargados, usa la **Opción 9** dentro del menú para desbloquearlos automáticamente.*
+
 ---
 
-## 🛠️ Panel de Control Central (SIMCOMP Manager)
+### 📋 Funciones del Gestor Central (SIMCOMP Manager)
 
 El proyecto cuenta con un orquestador centralizado que abstrae toda la complejidad técnica. Se recomienda usar este panel para todas las operaciones:
 
@@ -265,6 +291,7 @@ El proyecto cuenta con un orquestador centralizado que abstrae toda la complejid
 4. **Build**: Compilación masiva de imágenes Docker.
 5. **JMeter**: Ejecución de pruebas de carga y reportes HTML.
 6. **Git**: Sincronización automática de ramas de microservicios.
+7. **Dependencias**: Instalación masiva de paquetes Node.js (`pnpm`/`npm`).
 
 ---
 
@@ -696,6 +723,22 @@ Se han optimizado las políticas de despliegue en `stack.yml`.
 ### 3. Observabilidad: Descubrimiento Dinámico (DNS SD)
 - **Implementación**: Prometheus utiliza `dns_sd_configs` para descubrir automáticamente todas las réplicas individuales de un servicio.
 - **Métricas nativas**: Integración de `prom-client` en los microservicios.
+
+### 🚀 Rendimiento y Optimización (High Concurrency)
+
+Para soportar cargas superiores a 500 peticiones en ráfagas de 10 segundos en hardware modesto, se han aplicado las siguientes optimizaciones:
+
+*   **HAProxy Tuning**:
+    *   `maxconn` aumentado a 20,000.
+    *   Algoritmo `leastconn` para una distribución de carga más inteligente.
+    *   Compresión Gzip habilitada para reducir latencia de red.
+    *   `http-server-close` para liberar descriptores de archivos rápidamente.
+*   **Escalado de Microservicios**:
+    *   Réplicas aumentadas en servicios críticos (`ms-auth` a 4 réplicas, `ms-personas` a 3).
+    *   `NODE_ENV=production` forzado para desactivar logs innecesarios.
+*   **Infraestructura Vagrant**:
+    *   Incremento de RAM (4GB Manager, 5GB Workers).
+    *   Optimización de la red overlay de Docker Swarm.
 
 ### 4. Infraestructura Resiliente
 - **DNS**: Mejora en la persistencia del servicio DNS.

@@ -27,7 +27,7 @@ interface NavItem {
   isExternal?: boolean
 }
 
-const navItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
   {
     label: 'Dashboard',
     path: '/',
@@ -77,12 +77,31 @@ const navItems: NavItem[] = [
     roles: ['admin', 'supervisor'],
     color: 'text-indigo-400',
   },
+]
+
+const metricsItems: NavItem[] = [
   {
-    label: 'Grafana Pro',
-    path: `http://${window.location.hostname}:3000`,
-    icon: Gauge,
+    label: 'Stats HAProxy',
+    path: `http://${window.location.hostname}:8404/stats`,
+    icon: Activity,
     roles: ['admin', 'supervisor'],
-    color: 'text-orange-400',
+    color: 'text-blue-400',
+    isExternal: true,
+  },
+  {
+    label: 'Spark Dashboard',
+    path: `http://${window.location.hostname}:8010`,
+    icon: LayoutDashboard,
+    roles: ['admin', 'supervisor'],
+    color: 'text-cyan-400',
+    isExternal: true,
+  },
+  {
+    label: 'Spark UI',
+    path: `http://${window.location.hostname}:4040`,
+    icon: Server,
+    roles: ['admin'],
+    color: 'text-sky-400',
     isExternal: true,
   },
   {
@@ -94,19 +113,19 @@ const navItems: NavItem[] = [
     isExternal: true,
   },
   {
+    label: 'Grafana Pro',
+    path: `http://${window.location.hostname}:3000`,
+    icon: Gauge,
+    roles: ['admin', 'supervisor'],
+    color: 'text-orange-400',
+    isExternal: true,
+  },
+  {
     label: 'Glances RT',
     path: `http://${window.location.hostname}:61208`,
     icon: Cpu,
     roles: ['admin', 'supervisor'],
     color: 'text-lime-400',
-    isExternal: true,
-  },
-  {
-    label: 'Spark UI',
-    path: `http://${window.location.hostname}:4040`,
-    icon: Server,
-    roles: ['admin'],
-    color: 'text-cyan-400',
     isExternal: true,
   },
 ]
@@ -126,10 +145,83 @@ function Sidebar({
   onToggleMinimize 
 }: SidebarProps) {
   const { user } = useAuth()
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-  const filteredItems = navItems.filter((item) =>
+  const filteredMainItems = mainNavItems.filter((item) =>
     user ? item.roles.includes(user.rol) : false,
   )
+
+  const filteredMetricsItems = metricsItems.filter((item) =>
+    user ? item.roles.includes(user.rol) : false,
+  )
+
+  const renderItem = (item: NavItem) => {
+    const Icon = item.icon
+    const isDisabled = item.isExternal && isLocal
+
+    if (item.isExternal) {
+      return (
+        <a
+          key={item.path}
+          href={isDisabled ? '#' : item.path}
+          target={isDisabled ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={(e) => isDisabled && e.preventDefault()}
+          className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+            isDisabled 
+              ? 'cursor-not-allowed opacity-40 grayscale' 
+              : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
+          } ${isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'}`}
+          title={isMinimized ? `${item.label}${isDisabled ? ' (No disponible en local)' : ''}` : isDisabled ? 'No disponible en local' : undefined}
+        >
+          <Icon size={18} className={`${item.color} shrink-0`} />
+          {!isMinimized && (
+            <div className="flex flex-1 items-center justify-between">
+              <span className="animate-fade-in whitespace-nowrap overflow-hidden">
+                {item.label}
+              </span>
+              {isDisabled && (
+                <span className="text-[9px] font-bold uppercase tracking-tighter text-slate-500 opacity-50">Local</span>
+              )}
+            </div>
+          )}
+        </a>
+      )
+    }
+
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        end={item.path === '/'}
+        onClick={isMobile && onClose ? onClose : undefined}
+        className={({ isActive }) =>
+          `group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+            isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'
+          } ${
+            isActive
+              ? 'bg-gradient-to-r from-blue-600/90 to-indigo-600/80 text-white shadow-md shadow-blue-900/30'
+              : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
+          }`
+        }
+        title={isMinimized ? item.label : undefined}
+      >
+        {({ isActive }) => (
+          <>
+            <Icon
+              size={18}
+              className={`${isActive ? 'text-white' : item.color} shrink-0`}
+            />
+            {!isMinimized && (
+              <span className="animate-fade-in whitespace-nowrap overflow-hidden">
+                {item.label}
+              </span>
+            )}
+          </>
+        )}
+      </NavLink>
+    )
+  }
 
   return (
     <aside 
@@ -175,64 +267,20 @@ function Sidebar({
             Menú principal
           </p>
         )}
-        {filteredItems.map((item) => {
-          const Icon = item.icon
+        {filteredMainItems.map(renderItem)}
 
-          if (item.isExternal) {
-            return (
-              <a
-                key={item.path}
-                href={item.path}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 text-slate-400 hover:bg-slate-800/70 hover:text-slate-100 ${
-                  isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'
-                }`}
-                title={isMinimized ? item.label : undefined}
-              >
-                <Icon size={18} className={`${item.color} shrink-0`} />
-                {!isMinimized && (
-                  <span className="animate-fade-in whitespace-nowrap overflow-hidden">
-                    {item.label}
-                  </span>
-                )}
-              </a>
-            )
-          }
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              onClick={isMobile && onClose ? onClose : undefined}
-              className={({ isActive }) =>
-                `group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
-                  isMinimized ? 'justify-center w-12 mx-auto' : 'gap-3'
-                } ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600/90 to-indigo-600/80 text-white shadow-md shadow-blue-900/30'
-                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
-                }`
-              }
-              title={isMinimized ? item.label : undefined}
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    size={18}
-                    className={`${isActive ? 'text-white' : item.color} shrink-0`}
-                  />
-                  {!isMinimized && (
-                    <span className="animate-fade-in whitespace-nowrap overflow-hidden">
-                      {item.label}
-                    </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          )
-        })}
+        {filteredMetricsItems.length > 0 && (
+          <>
+            {!isMinimized && (
+              <p className="px-3 pb-1 pt-6 text-[10px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in">
+                Métricas e Infraestructura
+              </p>
+            )}
+            <div className={isMinimized ? 'pt-4' : ''}>
+              {filteredMetricsItems.map(renderItem)}
+            </div>
+          </>
+        )}
       </nav>
 
       {/* Pie del sidebar */}

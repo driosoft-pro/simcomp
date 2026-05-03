@@ -16,6 +16,7 @@ import {
   UserCog
 } from 'lucide-react'
 import { useStatistics, useExport, useImport, useReportesHealth } from '../../hooks/useReportes'
+import * as reportesApi from '../../api/reportes.api'
 import { useToast } from '../../context/ToastContext'
 import ExportModal from '../../components/ui/ExportModal'
 
@@ -169,15 +170,16 @@ function Reportes() {
               
               <button
                onClick={() => {
-                 apiClient.get(`${API_URLS.reportes}/estadisticas/pdf`, { responseType: 'blob' })
-                   .then(res => {
-                     const url = window.URL.createObjectURL(res.data);
+                 reportesApi.getStatisticsPdf()
+                   .then(blob => {
+                     const url = window.URL.createObjectURL(blob);
                      const link = document.createElement('a');
                      link.href = url;
                      link.setAttribute('download', 'estadisticas_generales.pdf');
                      document.body.appendChild(link);
                      link.click();
                      link.remove();
+                     window.URL.revokeObjectURL(url);
                    })
                    .catch(() => addToast('Error al exportar PDF de estadísticas', 'error'))
                }}

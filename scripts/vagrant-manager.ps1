@@ -199,12 +199,15 @@ function Show-Links {
     $connection = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
     if ($connection.TcpTestSucceeded) {
         Log-Message "--- [ ENLACES DISPONIBLES ] ---" "Blue"
-        Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-        Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
-        Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
-        Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
-        Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
-        Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
+        Log-Message "    App Principal:      http://$managerIp (o http://simcomp.co)" "Green"
+        
+        Log-Message "    [ Métricas e Infraestructura ]" "Yellow"
+        Log-Message "      Stats HAProxy:   http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Cyan"
+        Log-Message "      Spark Dashboard: http://$managerIp:8010 (o http://simcomp.co:8010)" "Cyan"
+        Log-Message "      Spark UI:        http://$managerIp:4040 (o http://simcomp.co:4040)" "Cyan"
+        Log-Message "      Prometheus:      http://$managerIp:9090 (o http://simcomp.co:9090)" "Cyan"
+        Log-Message "      Grafana:         http://$managerIp:3000 (o http://simcomp.co:3000)" "Cyan"
+        Log-Message "      Glances RT:      http://$managerIp:61208 (o http://simcomp.co:61208)" "Cyan"
         Log-Message "-------------------------------" "Blue"
     }
 }
@@ -216,30 +219,89 @@ function Run-JMeter {
     Log-Message "======================================" "Cyan"
     Log-Message "1) Flujo Completo (Login -> Personas -> Vehiculos)"
     Log-Message "2) Estrés Frontend (Carga Masiva)"
-    Log-Message "3) Regresar"
+    Log-Message "3) Solo Login"
+    Log-Message "4) Consulta Comparendos"
+    Log-Message "5) Test Genérico"
+    Log-Message "6) Regresar"
     Log-Message "======================================" "Cyan"
     
     $jopt = Read-Host "Opción"
     
     switch ($jopt) {
-        "1" { $test = "jmeter\simcomp_workflow_completo.jmx" }
-        "2" { $test = "jmeter\simcomp_estres-frontend.jmx" }
+        "1" { $test = "jmeter/simcomp_workflow_completo.jmx"; $name = "flujo_completo" }
+        "2" { $test = "jmeter/simcomp_estres-frontend.jmx"; $name = "estres_frontend" }
+        "3" { $test = "jmeter/simcomp_login.jmx"; $name = "solo_login" }
+        "4" { $test = "jmeter/simcomp_comparendos.jmx"; $name = "consulta_comparendos" }
+        "5" { $test = "jmeter/simcomp_test.jmx"; $name = "test_generico" }
         Default { return }
     }
 
-    if (-not (Get-Command jmeter -ErrorAction SilentlyContinue)) {
-        Log-Message "[!] Error: 'jmeter' no está instalado en este equipo." "Red"
+    $jmeterCmd = "jmeter"
+    if (-not (Get-Command $jmeterCmd -ErrorAction SilentlyContinue)) {
+        Log-Message "[!] Error: 'jmeter' no se encuentra en las variables de entorno (PATH)." "Red"
         return
     }
 
-    if (!(Test-Path "jmeter\results")) { New-Item -ItemType Directory -Path "jmeter\results" | Out-Null }
-    if (Test-Path "jmeter\report") { Remove-Item -Path "jmeter\report" -Recurse -Force }
+    $reportDir = "jmeter/reports/$name"
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $resultFile = "jmeter/results/${name}_$timestamp.jtl"
+
+    if (!(Test-Path "jmeter/results")) { New-Item -ItemType Directory -Path "jmeter/results" | Out-Null }
+    if (!(Test-Path "jmeter/reports")) { New-Item -ItemType Directory -Path "jmeter/reports" | Out-Null }
+    if (Test-Path "$reportDir") { Remove-Item -Path "$reportDir" -Recurse -Force }
     
-    Log-Message "[*] Iniciando prueba JMeter... (esto puede tardar)" "Yellow"
-    jmeter -n -t "$test" -l "jmeter\results\last_run.jtl" -e -o "jmeter\report"
+    Log-Message "[*] Iniciando prueba JMeter ($name)..." "Yellow"
+    jmeter -n -t "$test" -l "$resultFile" -e -o "$reportDir"
     
-    Log-Message "[✔] Prueba finalizada." "Green"
-    Log-Message "[✔] Reporte generado en: $((Get-Location).Path)\jmeter\report\index.html" "Green"
+    if ($LASTEXITCODE -eq 0) {
+        Log-Message "[✔] Prueba finalizada correctamente." "Green"
+        
+        # Generar o actualizar index.html general con estilo premium
+        $indexFile = "jmeter/reports/index.html"
+        $htmlContent = @"
+<html>
+<head>
+    <title>SIMCOMP - Reportes de Pruebas</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f13; color: #e0e0e0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 800px; width: 100%; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h1 { color: #4caf50; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
+        ul { list-style: none; padding: 0; }
+        li { background: #252533; margin: 10px 0; border-radius: 8px; transition: transform 0.2s, background 0.2s; border: 1px solid transparent; }
+        li:hover { transform: translateX(10px); background: #2d2d3d; border-color: #4caf50; }
+        a { display: block; padding: 15px 20px; color: #fff; text-decoration: none; font-size: 1.1em; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SIMCOMP Performance Hub</h1>
+        <ul>
+"@
+        $folders = Get-ChildItem "jmeter/reports" -Directory
+        foreach ($f in $folders) {
+            $folderName = $f.Name
+            $displayName = (Get-Culture).TextInfo.ToTitleCase($folderName.Replace("_", " "))
+            $htmlContent += "<li><a href='./$folderName/index.html'>📊 Reporte: $displayName</a></li>`n"
+        }
+        
+        $date = Get-Date
+        $htmlContent += @"
+        </ul>
+        <div class="footer">
+            Última actualización: $date | SIMCOMP Infrastructure
+        </div>
+    </div>
+</body>
+</html>
+"@
+        $htmlContent | Set-Content $indexFile
+
+        Log-Message "[✔] Reporte generado en: $reportDir/index.html" "Green"
+        Log-Message "[✔] Menú de reportes actualizado: $indexFile" "Green"
+    } else {
+        Log-Message "[!] Error: La prueba de JMeter falló o fue cancelada." "Red"
+    }
 }
 
 # Join Remote Worker
@@ -306,13 +368,7 @@ function Guided-Mode {
     }
     
     Log-Message "[✔] PROCESO COMPLETADO" "Green"
-    Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-    Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
-    Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
-    Log-Message "    Spark UI:          http://$managerIp:4040 (o http://simcomp.co:4040)" "Green"
-    Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
-    Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
-    Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
+    Show-Links
 }
 
 # Deploy Swarm (Automatic)
@@ -356,13 +412,7 @@ function Deploy-Swarm {
     Inject-Hosts $managerIp "simcomp.local"
 
     Log-Message "[✔] CLUSTER LISTO Y MONITOREADO" "Green"
-    Log-Message "    App:               http://$managerIp (o http://simcomp.co)" "Green"
-    Log-Message "    Stats HAProxy:     http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Green"
-    Log-Message "    Spark Dashboard:   http://$managerIp:8010 (o http://simcomp.co:8010)" "Green"
-    Log-Message "    Spark UI:          http://$managerIp:4040 (o http://simcomp.co:4040)" "Green"
-    Log-Message "    Prometheus:        http://$managerIp:9090 (o http://simcomp.co:9090)" "Green"
-    Log-Message "    Grafana:           http://$managerIp:3000 (o http://simcomp.co:3000)" "Green"
-    Log-Message "    Glances RT:        http://$managerIp:61208 (o http://simcomp.co:61208)" "Green"
+    Show-Links
 }
 
 # Main Menu

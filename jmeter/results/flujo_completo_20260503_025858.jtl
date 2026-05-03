@@ -1,0 +1,121 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1777795138949,100,1. Login,200,OK,Flujo de Usuario 1-1,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,97,0,15
+1777795139063,28,2. Listar Personas,200,OK,Flujo de Usuario 1-1,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,28,0,1
+1777795139092,7,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-1,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,7,0,0
+1777795139099,11,4. Listar Comparendos,200,OK,Flujo de Usuario 1-1,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,11,0,1
+1777795139111,62,1. Login,200,OK,Flujo de Usuario 1-1,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,62,0,0
+1777795139174,13,2. Listar Personas,200,OK,Flujo de Usuario 1-1,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,13,0,0
+1777795139187,7,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-1,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,7,0,1
+1777795139194,14,4. Listar Comparendos,200,OK,Flujo de Usuario 1-1,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,14,0,1
+1777795139208,66,1. Login,200,OK,Flujo de Usuario 1-1,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,66,0,1
+1777795139274,16,2. Listar Personas,200,OK,Flujo de Usuario 1-1,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,16,0,1
+1777795139290,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-1,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795139297,10,4. Listar Comparendos,200,OK,Flujo de Usuario 1-1,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,10,0,0
+1777795139383,53,1. Login,200,OK,Flujo de Usuario 1-2,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,53,0,1
+1777795139436,12,2. Listar Personas,200,OK,Flujo de Usuario 1-2,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,12,0,1
+1777795139449,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-2,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,0
+1777795139454,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-2,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,1
+1777795139460,49,1. Login,200,OK,Flujo de Usuario 1-2,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,49,0,0
+1777795139509,11,2. Listar Personas,200,OK,Flujo de Usuario 1-2,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,11,0,1
+1777795139520,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-2,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,1
+1777795139526,10,4. Listar Comparendos,200,OK,Flujo de Usuario 1-2,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,10,0,0
+1777795139536,47,1. Login,200,OK,Flujo de Usuario 1-2,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,47,0,1
+1777795139584,14,2. Listar Personas,200,OK,Flujo de Usuario 1-2,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,14,0,0
+1777795139599,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-2,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,0
+1777795139604,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-2,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,1
+1777795139883,54,1. Login,200,OK,Flujo de Usuario 1-3,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,54,0,1
+1777795139937,18,2. Listar Personas,200,OK,Flujo de Usuario 1-3,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,18,0,1
+1777795139956,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-3,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,0
+1777795139962,9,4. Listar Comparendos,200,OK,Flujo de Usuario 1-3,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,9,0,1
+1777795139972,54,1. Login,200,OK,Flujo de Usuario 1-3,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,54,0,0
+1777795140028,9,2. Listar Personas,200,OK,Flujo de Usuario 1-3,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,9,0,1
+1777795140038,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-3,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,1
+1777795140044,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-3,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795140050,51,1. Login,200,OK,Flujo de Usuario 1-3,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,50,0,0
+1777795140101,9,2. Listar Personas,200,OK,Flujo de Usuario 1-3,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,9,0,1
+1777795140110,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-3,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,1
+1777795140115,7,4. Listar Comparendos,200,OK,Flujo de Usuario 1-3,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,7,0,1
+1777795140383,51,1. Login,200,OK,Flujo de Usuario 1-4,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,51,0,0
+1777795140435,10,2. Listar Personas,200,OK,Flujo de Usuario 1-4,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,10,0,0
+1777795140445,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-4,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795140451,9,4. Listar Comparendos,200,OK,Flujo de Usuario 1-4,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,8,0,0
+1777795140460,48,1. Login,200,OK,Flujo de Usuario 1-4,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,48,0,1
+1777795140508,8,2. Listar Personas,200,OK,Flujo de Usuario 1-4,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795140516,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-4,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795140522,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-4,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,1
+1777795140528,48,1. Login,200,OK,Flujo de Usuario 1-4,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,48,0,1
+1777795140577,8,2. Listar Personas,200,OK,Flujo de Usuario 1-4,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,0
+1777795140585,4,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-4,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,4,0,1
+1777795140590,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-4,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795140883,53,1. Login,200,OK,Flujo de Usuario 1-5,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,53,0,1
+1777795140937,6,2. Listar Personas,200,OK,Flujo de Usuario 1-5,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,6,0,0
+1777795140944,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-5,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,0
+1777795140950,11,4. Listar Comparendos,200,OK,Flujo de Usuario 1-5,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,11,0,1
+1777795140962,51,1. Login,200,OK,Flujo de Usuario 1-5,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,51,0,0
+1777795141014,6,2. Listar Personas,200,OK,Flujo de Usuario 1-5,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,6,0,0
+1777795141020,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-5,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,1
+1777795141026,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-5,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,0
+1777795141033,49,1. Login,200,OK,Flujo de Usuario 1-5,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,49,0,0
+1777795141083,11,2. Listar Personas,200,OK,Flujo de Usuario 1-5,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,11,0,0
+1777795141094,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-5,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795141101,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-5,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795141383,49,1. Login,200,OK,Flujo de Usuario 1-6,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,49,0,0
+1777795141433,6,2. Listar Personas,200,OK,Flujo de Usuario 1-6,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,6,0,0
+1777795141440,4,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-6,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,4,0,0
+1777795141445,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-6,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,0
+1777795141452,47,1. Login,200,OK,Flujo de Usuario 1-6,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,47,0,0
+1777795141500,6,2. Listar Personas,200,OK,Flujo de Usuario 1-6,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,6,0,0
+1777795141507,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-6,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,0
+1777795141514,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-6,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795141520,52,1. Login,200,OK,Flujo de Usuario 1-6,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,52,0,1
+1777795141572,8,2. Listar Personas,200,OK,Flujo de Usuario 1-6,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795141581,7,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-6,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,7,0,0
+1777795141589,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-6,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795141882,104,1. Login,200,OK,Flujo de Usuario 1-7,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,104,0,1
+1777795141986,8,2. Listar Personas,200,OK,Flujo de Usuario 1-7,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795141995,7,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-7,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,7,0,0
+1777795142002,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-7,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,1
+1777795142009,47,1. Login,200,OK,Flujo de Usuario 1-7,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,47,0,0
+1777795142057,7,2. Listar Personas,200,OK,Flujo de Usuario 1-7,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,7,0,0
+1777795142064,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-7,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795142070,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-7,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,1
+1777795142077,64,1. Login,200,OK,Flujo de Usuario 1-7,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,64,0,0
+1777795142141,8,2. Listar Personas,200,OK,Flujo de Usuario 1-7,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795142150,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-7,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,0
+1777795142156,9,4. Listar Comparendos,200,OK,Flujo de Usuario 1-7,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,9,0,1
+1777795142383,52,1. Login,200,OK,Flujo de Usuario 1-8,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,52,0,0
+1777795142435,11,2. Listar Personas,200,OK,Flujo de Usuario 1-8,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,10,0,1
+1777795142446,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-8,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,0
+1777795142452,9,4. Listar Comparendos,200,OK,Flujo de Usuario 1-8,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,8,0,0
+1777795142461,50,1. Login,200,OK,Flujo de Usuario 1-8,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,49,0,0
+1777795142511,8,2. Listar Personas,200,OK,Flujo de Usuario 1-8,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795142520,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-8,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,0
+1777795142526,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-8,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795142531,48,1. Login,200,OK,Flujo de Usuario 1-8,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,47,0,1
+1777795142579,7,2. Listar Personas,200,OK,Flujo de Usuario 1-8,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,7,0,0
+1777795142586,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-8,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795142593,5,4. Listar Comparendos,200,OK,Flujo de Usuario 1-8,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,0
+1777795142883,51,1. Login,200,OK,Flujo de Usuario 1-9,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,51,0,1
+1777795142934,8,2. Listar Personas,200,OK,Flujo de Usuario 1-9,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795142942,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-9,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795142948,10,4. Listar Comparendos,200,OK,Flujo de Usuario 1-9,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,10,0,1
+1777795142959,83,1. Login,200,OK,Flujo de Usuario 1-9,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,82,0,0
+1777795143042,9,2. Listar Personas,200,OK,Flujo de Usuario 1-9,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,9,0,1
+1777795143051,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-9,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795143058,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-9,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,0
+1777795143064,69,1. Login,200,OK,Flujo de Usuario 1-9,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,69,0,1
+1777795143133,8,2. Listar Personas,200,OK,Flujo de Usuario 1-9,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,1
+1777795143141,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-9,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,1
+1777795143146,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-9,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,6,0,1
+1777795143382,49,1. Login,200,OK,Flujo de Usuario 1-10,text,true,,1396,286,1,1,http://192.168.100.2/api/auth/login,49,0,0
+1777795143432,8,2. Listar Personas,200,OK,Flujo de Usuario 1-10,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,8,0,0
+1777795143440,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-10,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795143446,6,4. Listar Comparendos,200,OK,Flujo de Usuario 1-10,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,5,0,1
+1777795143452,48,1. Login,200,OK,Flujo de Usuario 1-10,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,48,0,1
+1777795143501,7,2. Listar Personas,200,OK,Flujo de Usuario 1-10,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,6,0,0
+1777795143508,5,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-10,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,5,0,0
+1777795143513,7,4. Listar Comparendos,200,OK,Flujo de Usuario 1-10,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,7,0,1
+1777795143521,46,1. Login,200,OK,Flujo de Usuario 1-10,text,true,,1396,683,1,1,http://192.168.100.2/api/auth/login,46,0,0
+1777795143567,10,2. Listar Personas,200,OK,Flujo de Usuario 1-10,text,true,,29216,555,1,1,http://192.168.100.2/api/personas,10,0,1
+1777795143577,6,3. Listar Vehiculos,200,OK,Flujo de Usuario 1-10,text,true,,24570,558,1,1,http://192.168.100.2/api/automotores,6,0,1
+1777795143583,18,4. Listar Comparendos,200,OK,Flujo de Usuario 1-10,text,true,,32518,558,1,1,http://192.168.100.2/api/comparendos,17,0,0

@@ -167,17 +167,27 @@ SHELL
 # --------------------------------------------------------------------------
 MANAGER_DEPLOY = <<~'SHELL'
   echo "[SIMCOMP] Esperando nodos..."
-
   until [ $(docker node ls 2>/dev/null | grep -c "Ready") -ge 3 ]; do
     sleep 5
   done
 
+  echo "[SIMCOMP] Limpiando stack previo..."
   docker stack rm simcomp 2>/dev/null || true
-  sleep 10
+  
+  echo "[SIMCOMP] Esperando remoción total de redes..."
+  for i in {1..12}; do
+    if ! docker network ls | grep -q "simcomp_"; then
+      break
+    fi
+    echo "  -> todavía hay redes activas, esperando 5s..."
+    sleep 5
+  done
 
   docker volume prune -f
+  docker system prune -f --volumes 2>/dev/null || true
 
   cd /vagrant/provisioning_docker
+  echo "[SIMCOMP] Ejecutando deploy..."
   docker stack deploy -c stack.yml simcomp
 
   echo "[SIMCOMP] Deploy completado"

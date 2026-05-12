@@ -28,7 +28,7 @@ function buildPersonasApiUrl() {
  * Antes: findAll() sin límite → traía TODOS los vehículos a memoria.
  */
 export async function getAllAutomotores({ limit = 50, page = 1, propietario, estado, search = '', order = 'DESC', userRole = '', username = '', documento = '', clase = '', servicio = '', condicion = '' } = {}) {
-  const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
+  const safeLimit = Math.min(1000000, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
   const where = {};

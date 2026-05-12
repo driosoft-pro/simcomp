@@ -1,0 +1,333 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[spanish, es-tabla]{babel} 
+\renewcommand{\thesubsection}{\Alph{subsection}}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{capt-of}
+\usepackage{booktabs}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{SIMCOMP: Sistema Integral de Gestión de Comparendos de Tránsito basado en Microservicios y Big Data\\
+{\footnotesize \textsuperscript{}}
+\thanks{}
+}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Deyton Riascos}
+\IEEEauthorblockA{\textit{Redes e Infraestructuras} \\
+\textit{Universidad Autónoma de Occidente}\\
+Cali, Colombia \\
+deyton.riascos@uao.edu.co}
+\IEEEauthorblockN{2\textsuperscript{nd} Samuel Izquierdo}
+\IEEEauthorblockA{\textit{Redes e Infraestructuras} \\
+\textit{Universidad Autónoma de Occidente}\\
+Cali, Colombia \\
+samuel.izquierdo\_b@uao.edu.co}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Mauricio Taborda}
+\IEEEauthorblockA{\textit{Redes e Infraestructuras} \\
+\textit{Universidad Autónoma de Occidente}\\
+Cali, Colombia \\
+mauricio.taborda@uao.edu.co}
+}
+
+\maketitle
+
+\begin{abstract}
+El presente documento describe el diseño, arquitectura e implementación de SIMCOMP (Sistema de Comparendos de Tránsito), una plataforma integral distribuida basada en una arquitectura de microservicios. El sistema está diseñado para ofrecer alta disponibilidad, tolerancia a fallos y balanceo de carga mediante su despliegue en un clúster de Docker Swarm. La solución integra un frontend en React, un API Gateway con Nginx, un balanceador de carga con HAProxy, múltiples microservicios backend en Node.js, bases de datos independientes en PostgreSQL y un servicio de análisis de datos masivos (Big Data) desarrollado con Apache Spark y Flask. Se presentan además los resultados de pruebas de carga con JMeter para validar la resiliencia del sistema.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Docker Swarm, Microservicios, PySpark, API Gateway, Balanceo de Carga, HAProxy, Nginx, Node.js, React, Observabilidad, Prometheus, Grafana, cAdvisor.
+\end{IEEEkeywords}
+
+\section{Introducción}
+La gestión de comparendos e infracciones de tránsito a nivel gubernamental requiere sistemas capaces de procesar grandes volúmenes de datos, atender peticiones recurrentes de usuarios y garantizar la disponibilidad de la información ante posibles fallos de infraestructura. Las arquitecturas monolíticas tradicionales suelen presentar cuellos de botella al escalar estos procesos. 
+
+Para resolver esta problemática, se desarrolló SIMCOMP, una plataforma orientada a microservicios que separa las responsabilidades lógicas del sistema (Autenticación, Personas, Automotores, Infracciones, Comparendos y Reportes) garantizando despliegues modulares e independientes. Adicionalmente, se incorporó un componente analítico basado en Apache Spark para procesar y resumir grandes volúmenes de datos (Big Data) asociados a históricos de infracciones.
+
+El despliegue de esta solución se llevó a cabo utilizando tecnologías de contenedorización y orquestación (Docker Swarm) sobre un entorno de máquinas virtuales aprovisionadas automáticamente a través de Vagrant, simulando un entorno de infraestructura en la nube.
+
+Adicionalmente, se incorporó una capa de observabilidad basada en Prometheus, Grafana y cAdvisor, permitiendo el monitoreo en tiempo real del rendimiento del sistema y la infraestructura.
+
+\section{Arquitectura del Sistema}
+
+El ecosistema de SIMCOMP está diseñado bajo el patrón de arquitectura de microservicios, lo que permite que cada componente sea desarrollado, escalado y desplegado de manera independiente.
+
+\subsection{Topología del Clúster (Docker Swarm)}
+La infraestructura virtualizada consta de tres (3) nodos operando en una red privada virtualizada:
+\begin{itemize}
+    \item \textbf{Manager (192.168.100.2):} Actúa como el orquestador del clúster Swarm. Es el encargado de gestionar el estado deseado de los servicios, realizar el balanceo de carga interno y exponer los puntos de entrada externos. Aloja el balanceador HAProxy, el Gateway Nginx y el servidor de archivos estáticos del Frontend.
+    \item \textbf{Worker 1 (192.168.100.3):} Nodo dedicado a la ejecución de los microservicios de lógica de negocio (Node.js) y el motor de procesamiento masivo Apache Spark.
+    \item \textbf{Worker 2 (192.168.100.4):} Nodo especializado en la persistencia, alojando todas las instancias de bases de datos PostgreSQL para garantizar el aislamiento de la carga de I/O de disco.
+\end{itemize}
+
+El diagrama de despliegue (Figura \ref{fig:despliegue}) detalla la asignación de contenedores por nodo, asegurando que los servicios de procesamiento intensivo (Spark Workers) se distribuyan equitativamente para no saturar un único recurso.
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{"diagram/Diagrama por capas.png"} 
+    \captionof{figure}{Diagrama de Arquitectura por Capas}
+    \label{fig:arquitectura}
+\end{center}
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{"diagram/Diagrama de despliegue.png"} 
+    \captionof{figure}{Diagrama de Despliegue en el Clúster Swarm}
+    \label{fig:despliegue}
+\end{center}
+
+\subsection{Componentes Lógicos y Microservicios}
+El backend se encuentra dividido funcionalmente en microservicios independientes, siguiendo el patrón \textit{Database-per-service}:
+\begin{enumerate}
+    \item \textbf{Auth Service:} Gestión centralizada de identidades, roles y seguridad mediante JWT.
+    \item \textbf{Personas Service:} Administración de información ciudadana y licencias.
+    \item \textbf{Automotores Service:} Control y registro del parque automotor.
+    \item \textbf{Infracciones Service:} Repositorio normativo de códigos y multas.
+    \item \textbf{Comparendos Service:} Orquestador transaccional que integra datos de personas e infracciones para generar registros de multas.
+    \item \textbf{Reportes Service:} Generación de consolidados informativos para la toma de decisiones.
+\end{enumerate}
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{"diagram/Diagrama de relación entre microservicios.png"} 
+    \captionof{figure}{Relación y Comunicación entre Microservicios}
+    \label{fig:microservicios}
+\end{center}
+
+\subsection{Capa de Presentación y Balanceo}
+La experiencia de usuario se centraliza en un Frontend desarrollado en ReactJS con Vite. Para garantizar que las peticiones lleguen al destino correcto, se implementó un flujo de doble capa:
+\begin{itemize}
+    \item \textbf{HAProxy:} Recibe el tráfico en el puerto 80 y lo distribuye usando el algoritmo \textit{round-robin} hacia las réplicas activas en el Swarm.
+    \item \textbf{Nginx (API Gateway):} Actúa como guardián de seguridad, validando tokens JWT y redirigiendo las peticiones \texttt{/api/*} a los microservicios correspondientes.
+\end{itemize}
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{img/DashboardLight.png} 
+    \captionof{figure}{Interfaz de Usuario (Frontend React)}
+    \label{fig:dashboard}
+\end{center}
+
+\subsection{Robustez y Failover Automático}
+Para elevar la resiliencia del sistema, el balanceador HAProxy ha sido configurado con un esquema de servidores de contingencia en todas sus capas. Mediante el uso de la directiva \texttt{backup}, el sistema garantiza que:
+\begin{itemize}
+    \item \textbf{Capa de Aplicación:} Ante la caída de todas las réplicas activas de un microservicio, el tráfico es redirigido a nodos de reserva.
+    \item \textbf{Capa de Persistencia:} Se implementó balanceo en modo TCP para las bases de datos PostgreSQL, permitiendo el failover automático hacia instancias de respaldo si los nodos principales de datos fallan.
+\end{itemize}
+Este mecanismo de tres capas asegura que el ecosistema SIMCOMP se mantenga operativo incluso en escenarios críticos de fallo de infraestructura.
+
+\section{Orquestación y Automatización de la Infraestructura}
+
+Uno de los pilares fundamentales de SIMCOMP es su capacidad de ser desplegado de forma determinista y reproducible mediante scripts de automatización avanzados.
+
+\subsection{El Gestor Multiplataforma (Vagrant Manager)}
+Se desarrollaron herramientas de gestión en Bash (\texttt{.sh}) y PowerShell (\texttt{.ps1}) para abstraer la complejidad operativa. Este sistema de gestión permite:
+\begin{itemize}
+    \item \textbf{Nuevos Despliegues:} Limpieza profunda de procesos huérfanos de Vagrant y regeneración total del cluster.
+    \item \textbf{Actualizaciones en Caliente:} Aplicación de cambios en el \textit{Stack} de Docker sin necesidad de reiniciar las máquinas virtuales.
+    \item \textbf{Reparación de Servicios:} Rutinas automatizadas para forzar el reinicio de los balanceadores HAProxy y Nginx ante fallos de sincronización.
+\end{itemize}
+
+\subsection{Pipeline de Provisión en Capas}
+Para asegurar la estabilidad, se automatizó el aprovisionamiento en cuatro capas secuenciales:
+1) \textbf{Base:} Configuración de red y DNS.
+2) \textbf{Motor:} Instalación de Docker con manejo de errores de repositorio.
+3) \textbf{Cluster:} Inicialización de Swarm y federación automática de nodos.
+4) \textbf{Aplicación:} Despliegue del Stack condicionado a la salud de los nodos.
+
+\section{Módulo de Analytics y Big Data (Apache Spark)}
+
+La capacidad de analizar históricos de comparendos se integró mediante Apache Spark, permitiendo procesar archivos CSV de gran tamaño que simulan el tráfico real de una ciudad. El pipeline analítico transforma datos crudos en visualizaciones estratégicas mediante consultas SQL distribuidas en memoria.
+
+\subsection{Pipeline de Procesamiento de Datos}
+El flujo de trabajo para el análisis de datos a gran escala se divide en cuatro etapas principales:
+\begin{enumerate}
+    \item \textbf{Ingesta:} Carga de datasets masivos (formato CSV) desde el almacenamiento persistente hacia el clúster de Spark.
+    \item \textbf{Procesamiento Distribuido:} Uso de un esquema \textit{Master-Worker} donde las tareas se distribuyen entre múltiples nodos ejecutores para realizar transformaciones y filtrado de datos en paralelo.
+    \item \textbf{Perfilamiento y Agregación:} Ejecución de algoritmos de agregación para generar métricas clave (ej: infracciones más comunes por zona, picos horarios de comparendos).
+    \item \textbf{Consumo de Resultados:} Los resultados procesados se exponen mediante una API REST en Flask (\texttt{ms-analytics-spark}), permitiendo que el Dashboard del sistema visualice los reportes en tiempo real.
+\end{enumerate}
+
+\section{Evolución, Optimización y Experiencias de Campo}
+
+Durante el desarrollo del proyecto, se enfrentaron múltiples desafíos técnicos que llevaron a una evolución profunda de la infraestructura y el código.
+
+\section{Observabilidad del Sistema}
+
+Con el objetivo de mejorar la visibilidad interna del clúster y garantizar la detección temprana de fallos, SIMCOMP incorpora una arquitectura de observabilidad basada en tres componentes principales: Prometheus, Grafana y cAdvisor.
+
+\subsection{Recolección de Métricas (Prometheus)}
+
+Se implementó \textbf{Prometheus} como sistema central de recolección de métricas. Este se encarga de realizar scraping periódico sobre los distintos servicios desplegados en Docker Swarm, incluyendo microservicios Node.js, HAProxy, Nginx y el motor de contenedores.
+
+Prometheus permite monitorear métricas críticas como:
+\begin{itemize}
+    \item Uso de CPU y memoria por servicio.
+    \item Latencia de respuesta de APIs.
+    \item Tasa de peticiones HTTP por segundo.
+    \item Estado de salud de los nodos del clúster.
+\end{itemize}
+
+\subsection{Monitoreo de Contenedores (cAdvisor)}
+
+Se integró \textbf{cAdvisor (Container Advisor)} en cada nodo del clúster, permitiendo la recolección en tiempo real del comportamiento de los contenedores Docker.
+
+cAdvisor proporciona visibilidad sobre:
+\begin{itemize}
+    \item Consumo de CPU por contenedor.
+    \item Uso de memoria y límites asignados.
+    \item I/O de red y disco.
+    \item Ciclo de vida de los contenedores en Swarm.
+\end{itemize}
+
+Esta capa fue clave para identificar sobrecargas en microservicios críticos durante pruebas de estrés.
+
+\subsection{Visualización y Dashboards (Grafana)}
+
+\textbf{Grafana} se implementa como la capa de visualización de métricas, conectándose directamente a Prometheus como fuente de datos.
+
+Se diseñaron dashboards para:
+\begin{itemize}
+    \item Monitoreo del clúster Docker Swarm en tiempo real.
+    \item Visualización del rendimiento de microservicios.
+    \item Análisis de latencia y errores HTTP.
+    \item Consumo de recursos por nodo (Manager y Workers).
+\end{itemize}
+
+Esto permite a los administradores del sistema identificar cuellos de botella y tomar decisiones de escalamiento horizontal de forma inmediata.
+
+\subsection{Arquitectura de Observabilidad}
+
+La integración general del sistema de monitoreo sigue el siguiente flujo:
+
+\begin{itemize}
+    \item cAdvisor recolecta métricas a nivel de contenedor.
+    \item Prometheus realiza scraping y almacena métricas en series de tiempo.
+    \item Grafana consulta Prometheus y genera visualizaciones en tiempo real.
+\end{itemize}
+
+Esta arquitectura permite una supervisión continua del sistema sin afectar el rendimiento de los microservicios productivos.
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{analytics-spark-service/dashboard/dasboard_grafana.png}
+    \captionof{figure}{Arquitectura de Observabilidad con Prometheus, Grafana y cAdvisor}
+    \label{fig:observabilidad}
+\end{center}
+
+\subsection{Optimización de Alto Rendimiento en ms-auth-service}
+Un hallazgo crítico durante las pruebas de estrés fue la degradación del servicio de autenticación bajo carga alta. Al simular la entrada de más de 300 usuarios en un intervalo de 20 segundos, el servicio presentaba latencias superiores a los 5 segundos.
+\begin{itemize}
+    \item \textbf{Problema:} El limitador de tasa (Rate Limiter) realizaba limpiezas de memoria síncronas de orden $O(N)$ en el hilo de ejecución principal, bloqueando el procesamiento de nuevas solicitudes.
+    \item \textbf{Optimización:} Se incrementó el umbral de concurrencia a 500 peticiones por minuto y se implementó un mecanismo de limpieza asíncrono mediante \textit{background timers}. Esto redujo la latencia de respuesta en un 85\% bajo carga crítica.
+\end{itemize}
+
+\subsection{Robustez en la Infraestructura como Código (IaC)}
+La automatización con Vagrant presentó retos de consistencia debido a la inestabilidad de los repositorios externos:
+\begin{itemize}
+    \item \textbf{Hash Sum Mismatch:} Se implementaron rutinas de limpieza de caché de paquetes (\textit{apt-get clean}) y mecanismos de reintento automático para garantizar la instalación de Docker sin intervención manual.
+    \item \textbf{Resolución de Deadlocks:} Se identificó un bloqueo mutuo donde el Manager esperaba a los Workers antes de que estos pudieran subir. La solución fue el uso de \textit{Vagrant Triggers}, permitiendo que el despliegue del clúster ocurra solo cuando todos los nodos están saludables.
+\end{itemize}
+
+\subsection{Persistencia e Inmutabilidad en Swarm}
+Docker Swarm trata las configuraciones como inmutables. Para permitir actualizaciones rápidas de HAProxy sin destruir el clúster, se implementó una estrategia de versionado dinámico en \texttt{stack.yml} (de \texttt{v1} a \texttt{v8}). Esto permite realizar \textit{Rolling Updates} de las configuraciones del balanceador de carga garantizando cero tiempo de inactividad (\textit{Zero Downtime}).
+
+\subsection{Análisis de Rendimiento y Carga (JMeter)}
+
+Para validar la robustez de la arquitectura, se realizaron pruebas de carga utilizando \textit{Apache JMeter} en modo no-GUI, permitiendo la generación de reportes de métricas dinámicas. Los escenarios incluyeron pruebas de estrés sobre el flujo de autenticación y transacciones masivas de comparendos.
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{analytics-spark-service/dashboard/dashboard_jmeter.png}
+    \captionof{figure}{Métricas de rendimiento generales generadas por JMeter}
+    \label{fig:jmeter_main}
+\end{center}
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{analytics-spark-service/dashboard/time_response1.png}
+    \captionof{figure}{Distribución de percentiles de tiempo de respuesta}
+    \label{fig:jmeter_percentiles}
+\end{center}
+
+\begin{center}
+    \includegraphics[width=0.45\textwidth]{analytics-spark-service/dashboard/time_response2.png}
+    \captionof{figure}{Frecuencia de respuesta y distribución de latencia}
+    \label{fig:jmeter_distribution}
+\end{center}
+
+
+El análisis de los resultados demostró que la arquitectura Swarm en conjunto con HAProxy permite mantener un índice \textit{Apdex} superior a 0.92, lo que clasifica el rendimiento del sistema como "Excelente" bajo las condiciones de carga simuladas.
+
+\subsection{Integración de Observabilidad en el Clúster}
+
+Durante la evolución del sistema se identificó la necesidad de mejorar la trazabilidad interna del comportamiento de los microservicios bajo carga.
+
+Como solución, se incorporó una arquitectura de observabilidad basada en Prometheus, Grafana y cAdvisor, lo que permitió:
+
+\begin{itemize}
+    \item Detectar picos de consumo de CPU en servicios de autenticación bajo carga.
+    \item Identificar contenedores con uso excesivo de memoria en escenarios de estrés.
+    \item Visualizar en tiempo real la saturación del clúster Swarm.
+\end{itemize}
+
+Esta implementación fue clave para ajustar estrategias de escalamiento horizontal y optimizar la configuración de réplicas en servicios críticos.
+
+\section{Auditoría y Mejoras de Arquitectura}
+
+Tras una auditoría técnica del sistema, se identificaron y aplicaron mejoras críticas para elevar el estándar de producción del clúster SIMCOMP:
+
+\begin{itemize}
+    \item \textbf{Seguridad mediante Docker Secrets:} Se migró la gestión de credenciales (bases de datos y llaves JWT) de variables de entorno en texto plano a \textit{Docker Secrets}. Esto garantiza que la información sensible viaje cifrada en el plano de control de Swarm y solo sea accesible en memoria por los servicios autorizados.
+    \item \textbf{Alta Disponibilidad Recreada:} Se eliminaron las restricciones de \textit{placement} por nombre de nodo en \texttt{stack.yml}. Se implementaron \textit{placement preferences} con algoritmos de esparcimiento (\textit{spread}) por ID de nodo, permitiendo que las réplicas de los microservicios se distribuyan automáticamente entre todos los Workers disponibles.
+    \item \textbf{Descubrimiento Dinámico de Métricas:} Se configuró Prometheus para utilizar \textit{DNS Service Discovery} (\texttt{dns\_sd\_configs}) apuntando a los registros \texttt{tasks.<service\_name>}. Esto permite que el sistema de monitoreo descubra y scrapeé métricas de todas las réplicas individuales de un servicio en lugar de solo la IP virtual balanceada.
+    \item \textbf{Métricas Nativas de Runtime:} Se integró la librería \texttt{prom-client} en el servicio de autenticación para exponer métricas detalladas del recolector de basura de Node.js, uso de memoria \textit{heap} y latencia de procesamiento de eventos.
+    \item \textbf{Mitigación de Vulnerabilidades Críticas:} Se desactivaron los endpoints de ejecución de código arbitrario (RCE) identificados en el servicio de analítica y se implementaron reglas de filtrado en HAProxy para bloquear el acceso externo a rutas internas (\texttt{/internal/*}), garantizando que la comunicación entre microservicios sea privada.
+\end{itemize}
+
+\subsection{Justificación Técnica de Algoritmos de Balanceo}
+En la arquitectura de microservicios de SIMCOMP, la elección del algoritmo de balanceo de carga en HAProxy fue fundamental para garantizar la estabilidad bajo estrés. Inicialmente se consideró el algoritmo \textit{Round Robin} (\texttt{roundrobin}), el cual distribuye las peticiones de manera secuencial. Sin embargo, este enfoque es estático y no considera la carga real de los nodos, lo que en un entorno de microservicios con latencias de I/O variables (debido a consultas a bases de datos) puede generar cuellos de botella en réplicas específicas \cite{b4}.
+
+Se optó por implementar el algoritmo \textit{Least Connections} (\texttt{leastconn}), el cual es dinámico y dirige las nuevas peticiones al servidor con menor número de conexiones activas. Esta decisión técnica se justifica en que:
+\begin{itemize}
+    \item \textbf{Gestión de Latencias Variables:} Los microservicios de Node.js manejan peticiones con tiempos de procesamiento distintos. \texttt{leastconn} favorece a los contenedores que liberan conexiones más rápido.
+    \item \textbf{Entornos Heterogéneos:} Dado que el clúster corre sobre Vagrant con recursos compartidos, el rendimiento de los Workers puede fluctuar; \texttt{leastconn} adapta la carga en tiempo real a la capacidad disponible de cada nodo \cite{b7}.
+\end{itemize}
+
+\subsection{Optimización para Alta Concurrencia (Performance Tuning)}
+Durante las fases de pruebas de carga, se identificó un cuello de botella al superar las 500 peticiones en intervalos de 10 segundos en hardware limitado. Para mitigar esto, se aplicaron mejoras estructurales:
+\begin{itemize}
+    \item \textbf{Tuning de HAProxy:} Se incrementó la capacidad de conexiones simultáneas (\texttt{maxconn}) a 20,000 y se activó el soporte multi-hilo (\texttt{nbthread 4}). Se consolidó el uso de \texttt{leastconn} para optimizar la distribución de ráfagas \cite{b4}. Asimismo, se habilitó la compresión Gzip en el borde para reducir el \textit{payload} de red.
+    \item \textbf{Estrategia de Replicación Diferencial:} Se aumentó el número de réplicas de los servicios según su criticidad: el servicio de Autenticación a 4 réplicas (por el alto costo de CPU de \textit{bcrypt}), el de Personas a 3 (núcleo de datos) y el resto a un mínimo de 2 para garantizar alta disponibilidad (\textit{HA}) básica.
+    \item \textbf{Configuración de Runtime:} Se forzó el entorno \texttt{NODE\_ENV=production} en todos los contenedores, lo que desactiva los logs detallados de Morgan y optimiza el motor V8 de Node.js, permitiendo una mayor tasa de procesamiento de I/O asíncrono.
+    \item \textbf{Recursos de Infraestructura:} Se ajustó el aprovisionamiento de Vagrant para asignar 4GB de RAM al Manager y 5GB a los Workers, optimizando el uso de swap y descriptores de archivos del kernel.
+\end{itemize}
+
+\section{Conclusiones}
+
+El proyecto SIMCOMP demuestra que la transición de arquitecturas monolíticas a microservicios no es solo un cambio tecnológico, sino una mejora estratégica en la resiliencia operativa. La implementación de Docker Swarm permitió alcanzar niveles de alta disponibilidad reales, donde el fallo de nodos individuales no comprometió la prestación del servicio.
+
+La integración de una capa de Big Data con Apache Spark dentro de un ecosistema de microservicios probó ser eficiente para la toma de decisiones basada en datos históricos, sin penalizar el rendimiento de las operaciones transaccionales diarias. Asimismo, la automatización total de la infraestructura (IaC) mediante Vagrant y scripts personalizados redujo drásticamente el error humano en el despliegue.
+
+Finalmente, la auditoría de seguridad y las pruebas de carga con JMeter confirmaron que un sistema distribuido bien configurado, protegido por secretos de Docker y balanceadores de carga robustos, puede manejar la demanda concurrente de una entidad gubernamental de tamaño medio con tiempos de respuesta óptimos y una seguridad de grado industrial.
+
+\section*{Agradecimientos}
+A la Universidad Autónoma de Occidente por proveer el entorno académico y técnico necesario para la realización de este proyecto en el marco de la asignatura Redes e Infraestructuras.
+
+\begin{thebibliography}{00}
+\bibitem{b1} M. Fowler, "Microservices," 2014. [Online]. Available: https://martinfowler.com/articles/microservices.html. [Accessed: May 2, 2026].
+\bibitem{b2} D. Jaramillo, D. V. Nguyen, and R. Smart, "Leveraging microservices architecture by using Docker technology," in \textit{SoutheastCon 2016}, 2016, pp. 1-5, doi: 10.1109/SECON.2016.7506647.
+\bibitem{b3} Docker Inc., "Docker Swarm mode overview," 2024. [Online]. Available: https://docs.docker.com/engine/swarm/. [Accessed: May 2, 2026].
+\bibitem{b4} HAProxy Technologies, "HAProxy Configuration Manual," 2024. [Online]. Available: https://docs.haproxy.org/2.9/configuration.html. [Accessed: May 2, 2026].
+\bibitem{b5} Prometheus Authors, "Prometheus Documentation," 2024. [Online]. Available: https://prometheus.io/docs/introduction/overview/. [Accessed: May 2, 2026].
+\bibitem{b6} HashiCorp, "Vagrant Documentation," 2024. [Online]. Available: https://www.vagrantup.com/docs. [Accessed: May 2, 2026].
+\bibitem{b7} M. Mai, "Scalable microservices with Docker and HAProxy," \textit{doubleSlash}, 2016. [Online]. Available: https://www.doubleslash.de/en/blog/scalable-microservices-with-docker-and-haproxy. [Accessed: May 2, 2026].
+\end{thebibliography}
+
+\end{document}

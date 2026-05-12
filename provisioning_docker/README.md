@@ -36,6 +36,7 @@ provisioning_docker/
 - **Backend**: Node.js (Express)
 - **Frontend**: React (Vite)
 - **Analytics**: PySpark & Flask
+- **Robustez**: Failover Automático en HAProxy mediante la directiva `backup` aplicado a Frontend, Microservicios y Bases de Datos (Modo TCP).
 
 ---
 

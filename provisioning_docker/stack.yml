@@ -223,17 +223,28 @@ services:
         condition: on-failure
 
   ms-analytics-spark:
-    image: docker.io/deytonro/simcomp-analytics-spark:v1.0.0
+    image: docker.io/deytonro/simcomp-analytics-spark-service:v1.0.0
     environment:
       APP_HOST: 0.0.0.0
       APP_PORT: 8010
-      SPARK_MASTER_URL: local[*]
-      SPARK_LOCAL_IP: 0.0.0.0
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_DAYS: 7
+      SPARK_MASTER_URL: spark://spark-master:7077
+    secrets:
+      - source: jwt_secret_key
+        target: jwt_secret
     ports:
       - "8010:8010"
       - "4040:4040"
+    volumes:
+      - ../analytics-spark-service/data:/app/data
+      - ../analytics-spark-service/routes:/app/routes
+      - ../analytics-spark-service/services:/app/services
+      - ../analytics-spark-service/config.py:/app/config.py
     networks:
-      - backend
+      backend:
+        aliases:
+          - ms-analytics-spark
     deploy:
       replicas: 1
       placement:
@@ -241,6 +252,39 @@ services:
           - node.role == worker
       restart_policy:
         condition: on-failure
+
+  spark-master:
+    image: docker.io/library/spark:4.1.1-java21-python3
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    volumes:
+      - ../analytics-spark-service/data:/app/data
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      backend:
+        aliases:
+          - spark-master
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  spark-worker:
+    image: docker.io/library/spark:4.1.1-java21-python3
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    volumes:
+      - ../analytics-spark-service/data:/app/data
+    networks:
+      backend:
+        aliases:
+          - spark-worker
+    deploy:
+      replicas: 2
+      placement:
+        preferences:
+          - spread: node.id
 
   db-auth:
     image: docker.io/deytonro/simcomp-auth-db:v1.0.0

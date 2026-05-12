@@ -57,7 +57,7 @@ function Show-Menu {
     switch ($choice) {
         "1" {
             Write-Host "[*] Levantando stack con $ENGINE..." -ForegroundColor Yellow
-            & $ENGINE compose up -d
+            & $ENGINE compose up -d --build
             Show-Links
         }
         "2" {

@@ -23,8 +23,11 @@ function Load-Env() {
             $name, $value = $_.Split('=', 2)
             [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim())
         }
-    } else {
-        Write-Warn "No se encontró $EnvFile, usando valores por defecto"
+    } elseif (Test-Path ".env") {
+        Get-Content ".env" | Where-Object { $_ -notmatch "^#" -and $_ -match "=" } | ForEach-Object {
+            $name, $value = $_.Split('=', 2)
+            [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim())
+        }
     }
 }
 
@@ -45,10 +48,12 @@ function Test-ValidContext($path) {
 }
 
 # ---------- Config ----------
+# ---------- Cargar Configuración ----------
+Load-Env
 $Cli = Get-Cli
 
-$DockerHubUser = if ($env:DOCKERHUB_USER) { $env:DOCKERHUB_USER } else { Read-Host "Ingrese su usuario de Docker Hub" }
-$DockerHubPass = if ($env:DOCKERHUB_PASS) { $env:DOCKERHUB_PASS } else { Read-Host "Ingrese su contraseña de Docker Hub (no se mostrará)" -AsSecureString }
+$DockerHubUser = if ($Action -ne "build") { Read-Host "Ingrese su usuario de Docker Hub" } else { "deytonro" }
+$DockerHubPass = if ($Action -ne "build") { Read-Host "Ingrese su contraseña de Docker Hub (no se mostrará)" -AsSecureString } else { "" }
 $Version = if ($env:VERSION) { $env:VERSION } else { "v1.0.0" }
 $Registry = if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" }
 
@@ -79,7 +84,7 @@ $Services = @(
     "simcomp-frontend|./frontend",
     "simcomp-gateway|./provisioning_docker/nginx",
     "simcomp-haproxy-balance|./provisioning_docker/haproxy",
-    "simcomp-analytics-spark|./analytics-spark-service"
+    "simcomp-analytics-spark-service|./analytics-spark-service"
 )
 
 $Built = @()
@@ -109,8 +114,13 @@ function Build-Images() {
         $Name = $parts[0]
         $Context = $parts[1]
 
-        $VersionTag = "$Registry/$DockerHubUser/$Name:$Version"
-        $LatestTag = "$Registry/$DockerHubUser/$Name:latest"
+        if ($DockerHubUser) {
+            $VersionTag = "$Registry/$DockerHubUser/$Name:$Version"
+            $LatestTag = "$Registry/$DockerHubUser/$Name:latest"
+        } else {
+            $VersionTag = "$Name:$Version"
+            $LatestTag = "$Name:latest"
+        }
 
         if (-not (Test-ValidContext $Context)) {
             Write-Warn "Saltando $Name (sin Dockerfile en $Context)"

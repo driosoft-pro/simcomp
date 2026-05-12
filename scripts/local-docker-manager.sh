@@ -40,7 +40,7 @@ docker_menu() {
     case $DOPT in
         1) 
             echo -e "${YELLOW}[*] Levantando stack con $ENGINE...${NC}"
-            $ENGINE compose up -d 
+            $ENGINE compose up -d --build
             show_links
             ;;
         2) 

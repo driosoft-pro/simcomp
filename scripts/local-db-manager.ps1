@@ -10,7 +10,6 @@ $DB_MAP = @{
     "ms-automotores"   = "db-ms-automotores"
     "ms-infracciones"  = "db-ms-infracciones"
     "ms-comparendos"   = "db-ms-comparendos"
-    "ms-reportes"      = "db-ms-reportes"
 }
 
 function Log-Message {

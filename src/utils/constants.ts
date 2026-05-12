@@ -11,6 +11,7 @@ export const API_URLS = {
   infracciones: import.meta.env.VITE_INFRACCIONES_API || API_BASE,
   comparendos: import.meta.env.VITE_COMPARENDOS_API || API_BASE,
   reportes: import.meta.env.VITE_REPORTES_API || API_BASE,
+  spark: import.meta.env.VITE_SPARK_API || API_BASE,
 } as const;
 
 

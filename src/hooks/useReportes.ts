@@ -21,7 +21,7 @@ export function useExport() {
       link.href = url
       const extension = variables.format === 'excel' ? 'xlsx' : variables.format
       const filename = variables.all 
-        ? `dataset_completo.${variables.format === 'zip' ? 'zip' : 'xlsx'}`
+        ? `dataset_completo.${extension}`
         : `${variables.modulo}_reporte.${extension}`
       link.setAttribute('download', filename)
       document.body.appendChild(link)

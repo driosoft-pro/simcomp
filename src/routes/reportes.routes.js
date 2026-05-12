@@ -9,6 +9,7 @@ import {
   exportPdfByModule,
   exportFullDataset,
   exportFullDatasetExcel,
+  exportConsolidatedCsvController,
   getStatistics,
   exportStatisticsPdf
 } from "../controllers/reportes.controller.js";
@@ -109,6 +110,22 @@ router.get("/export/all/zip", asyncHandler(exportFullDataset));
  *               format: binary
  */
 router.get("/export/all/excel", asyncHandler(exportFullDatasetExcel));
+
+/**
+ * @swagger
+ * /api/reportes/export/all/csv:
+ *   get:
+ *     summary: Exportar el dataset consolidado (JOIN de todos los módulos) en CSV
+ *     tags: [Exportacion]
+ *     responses:
+ *       200:
+ *         description: Archivo CSV generado correctamente
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+router.get("/export/all/csv", asyncHandler(exportConsolidatedCsvController));
 
 /**
  * @swagger

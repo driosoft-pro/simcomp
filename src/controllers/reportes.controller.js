@@ -4,6 +4,7 @@ import { buildExcelSingleSheet, buildExcelDataset } from "../services/excel.serv
 import { buildPdfReport } from "../services/pdf.service.js";
 import { buildGeneralStatistics } from "../services/statistics.service.js";
 import { buildFullDataset, buildDatasetZipBuffer } from "../services/dataset.service.js";
+import { exportConsolidatedCsv } from "../services/consolidado.service.js";
 
 export async function health(req, res) {
   res.json({
@@ -76,7 +77,7 @@ export async function exportCsvByModule(req, res) {
 
   const fetchOpts = (limit && limit !== "all" && !isNaN(parseInt(limit)))
     ? { limit: parseInt(limit) }
-    : {};
+    : { limit: 1000000 };
 
   const data = await fetchModuleData(modulo, token, fetchOpts);
   const csv = toCsv(data);
@@ -94,7 +95,7 @@ export async function exportExcelByModule(req, res) {
 
   const fetchOpts = (limit && limit !== "all" && !isNaN(parseInt(limit)))
     ? { limit: parseInt(limit) }
-    : {};
+    : { limit: 1000000 };
 
   const data = await fetchModuleData(modulo, token, fetchOpts);
   const buffer = await buildExcelSingleSheet(modulo, data);
@@ -112,7 +113,7 @@ export async function exportPdfByModule(req, res) {
 
   const fetchOpts = (limit && limit !== "all" && !isNaN(parseInt(limit)))
     ? { limit: parseInt(limit) }
-    : {};
+    : { limit: 1000000 };
 
   const data = await fetchModuleData(modulo, token, fetchOpts);
 
@@ -141,7 +142,7 @@ export async function exportPdfByModule(req, res) {
 
 export async function exportFullDataset(req, res) {
   const token = req.headers.authorization;
-  const { limit } = req.query;
+  const limit = req.query.limit || 1000000;
   const zipBuffer = await buildDatasetZipBuffer(token, limit);
 
   res.setHeader("Content-Type", "application/zip");
@@ -149,9 +150,18 @@ export async function exportFullDataset(req, res) {
   res.send(zipBuffer);
 }
 
+export async function exportConsolidatedCsvController(req, res) {
+  const token = req.headers.authorization;
+  const csv = await exportConsolidatedCsv(token);
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="dataset_simcomp.csv"');
+  res.send(csv);
+}
+
 export async function exportFullDatasetExcel(req, res) {
   const token = req.headers.authorization;
-  const { limit } = req.query;
+  const limit = req.query.limit || 1000000;
   const dataset = await buildFullDataset(token, limit);
   const buffer = await buildExcelDataset(dataset);
 
@@ -174,27 +184,32 @@ export async function getStatistics(req, res) {
 
 export async function exportStatisticsPdf(req, res) {
   const token = req.headers.authorization;
-  // buildGeneralStatistics tiene cache de 60s — no hace 5 fetches si ya corrió recientemente
   const stats = await buildGeneralStatistics(token);
 
-  const buffer = await buildPdfReport("Estadisticas generales SIMCOMP", [
-    {
-      title: "Resumen general",
-      lines: Object.entries(stats.resumen).map(([k, v]) => `${k}: ${v}`),
-    },
-    {
-      title: "Usuarios por rol",
-      lines: Object.entries(stats.usuariosPorRol).map(([k, v]) => `${k}: ${v}`),
-    },
-    {
-      title: "Comparendos por estado",
-      lines: Object.entries(stats.comparendosPorEstado).map(([k, v]) => `${k}: ${v}`),
-    },
-    {
-      title: "Generado en",
-      lines: [stats.generatedAt || new Date().toISOString()],
-    },
-  ]);
+  const buffer = await buildPdfReport("Reporte Estadístico de Infraestructura", {
+    tables: [
+      {
+        title: "Resumen de Registros Globales",
+        headers: ["Entidad", "Total Registros"],
+        rows: Object.entries(stats.resumen).map(([k, v]) => [
+          k.replace("total", "").replace(/([A-Z])/g, ' $1').trim(),
+          v
+        ])
+      },
+      {
+        title: "Distribución de Usuarios por Rol",
+        headers: ["Rol de Usuario", "Cantidad"],
+        rows: Object.entries(stats.usuariosPorRol)
+      }
+    ],
+    charts: [
+      {
+        title: "Estado de Comparendos (Muestra)",
+        color: "#10b981", // Emerald-500
+        data: Object.entries(stats.comparendosPorEstado).map(([label, value]) => ({ label, value }))
+      }
+    ]
+  });
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="estadisticas_simcomp.pdf"');

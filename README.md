@@ -171,7 +171,8 @@ El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resil
 6. **Observabilidad**: 
    - **Prometheus**: Recolección de métricas de contenedores y servicios.
    - **Grafana**: Visualización de métricas mediante dashboards preconfigurados.
-   - **cAdvisor**: Exportador de métricas de contenedores (corre como servicio global en todos los nodos).
+    - **cAdvisor**: Exportador de métricas de contenedores (corre como servicio global en todos los nodos).
+7. **Robustez Multicapa y Failover (Backup)**: HAProxy está configurado con servidores de backup en todas las capas (Frontend, Microservicios y Bases de Datos). En caso de que todos los nodos principales de un componente fallen, el tráfico se redirige automáticamente a instancias de contingencia mediante el modo TCP y HTTP.
 
 ---
 

@@ -327,8 +327,26 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_REFRESH_EXPIRES_DAYS: ${JWT_REFRESH_EXPIRES_DAYS}
-      SPARK_MASTER_URL: local[*]
-      SPARK_LOCAL_IP: 0.0.0.0
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_LOCAL_IP: ms-analytics-spark
+    volumes:
+      - ./analytics-spark-service/data:/app/data
+    networks:
+      - simcomp-net
+
+  spark-master:
+    image: docker.io/library/spark:4.1.1-java21-python3
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    volumes:
+      - ./analytics-spark-service/data:/app/data
+    networks:
+      - simcomp-net
+
+  spark-worker:
+    image: docker.io/library/spark:4.1.1-java21-python3
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
     volumes:
       - ./analytics-spark-service/data:/app/data
     networks:

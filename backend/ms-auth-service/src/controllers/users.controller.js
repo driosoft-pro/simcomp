@@ -16,7 +16,7 @@ export async function listUsers(req, res) {
 
     // Paginación desde query params (?page=1&limit=50)
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
+    const limit = Math.min(1000000, Math.max(1, parseInt(req.query.limit) || 50));
     const offset = (page - 1) * limit;
 
     // Filtros empujados a la DB según el rol (evita traer todo a memoria)

@@ -37,11 +37,11 @@ export async function buildGeneralStatistics(token) {
 
   // Fetch en paralelo — los 5 microservicios responden simultáneamente
   const [usuariosRes, personasRes, automotoresRes, infraccionesRes, comparendosRes] = await Promise.all([
-    fetchModuleData("usuarios", token, { limit: 5000 }),
-    fetchModuleData("personas", token, { limit: 5000 }),
-    fetchModuleData("automotores", token, { limit: 5000 }),
-    fetchModuleData("infracciones", token, { limit: 5000 }),
-    fetchModuleData("comparendos", token, { limit: 5000 }),
+    fetchModuleData("usuarios", token, { limit: 5000, full: true }),
+    fetchModuleData("personas", token, { limit: 5000, full: true }),
+    fetchModuleData("automotores", token, { limit: 5000, full: true }),
+    fetchModuleData("infracciones", token, { limit: 5000, full: true }),
+    fetchModuleData("comparendos", token, { limit: 5000, full: true }),
   ]);
 
   // Extraer data y total real

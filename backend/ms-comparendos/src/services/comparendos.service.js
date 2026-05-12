@@ -194,7 +194,7 @@ export async function listarComparendos({ userRole, username, email, page = 1, l
   const role = String(userRole || "").toLowerCase().trim();
 
   // Calcular paginación
-  const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
+  const safeLimit = Math.min(1000000, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
   if (role === "ciudadano") {

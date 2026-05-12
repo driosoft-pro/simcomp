@@ -50,7 +50,7 @@ function Reportes() {
     setModalOpen(true)
   }
 
-  const handleExportAll = (format: 'zip' | 'excel') => {
+  const handleExportAll = (format: 'zip' | 'excel' | 'csv') => {
     setModalConfig({ all: true, format, title: 'Dataset Completo' })
     setModalOpen(true)
   }
@@ -151,6 +151,17 @@ function Reportes() {
                 <div className="flex items-center gap-3">
                   <FileJson className="text-emerald-500" />
                   Excel Consolidado
+                </div>
+                <Download size={16} />
+              </button>
+              <button
+                onClick={() => handleExportAll('csv')}
+                disabled={exportMutation.isPending}
+                className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="text-sky-500" />
+                  CSV Consolidado
                 </div>
                 <Download size={16} />
               </button>

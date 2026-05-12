@@ -38,7 +38,7 @@ export async function exportByModule(modulo: string, format: 'csv' | 'excel' | '
   return response.data
 }
 
-export async function exportAll(format: 'zip' | 'excel', limit?: string): Promise<Blob> {
+export async function exportAll(format: 'zip' | 'excel' | 'csv', limit?: string): Promise<Blob> {
   const query = limit ? `?limit=${limit}` : ''
   const response = await apiClient.get(
     `${API_URLS.reportes}/reportes/export/all/${format}${query}`,

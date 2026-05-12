@@ -82,6 +82,12 @@ async function uploadDataset() {
     try {
         const r = await api('/api/datasets/upload', { method: 'POST', body: fd });
         showToast(r.message || 'Dataset cargado');
+        
+        // Reset file input UI
+        input.value = '';
+        document.getElementById('fileInfo').style.display = 'none';
+        document.getElementById('uploadArea').style.display = 'block';
+        
         await loadDatasets();
         if (r.dataset) { document.getElementById('datasetSelect').value = r.dataset; await loadAllDashboards(); }
     } finally { toggleLoader(false); }
@@ -519,4 +525,11 @@ function handleFileSelection() {
 document.getElementById('fileInput').addEventListener('change', handleFileSelection);
 
 /* ─── Init ──────────────────────────────────────────────────── */
-loadDatasets();
+loadDatasets().then(() => {
+    const sel = document.getElementById('datasetSelect');
+    if (sel) {
+        sel.addEventListener('change', () => {
+            loadAllDashboards();
+        });
+    }
+});

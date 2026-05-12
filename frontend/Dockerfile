@@ -1,12 +1,12 @@
 # Build
-FROM docker.io/library/node:20-alpine AS builder
+FROM docker.io/library/node:22-alpine AS builder
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+COPY package.json ./
+RUN npm install
 
 COPY . .
-RUN pnpm build
+RUN npm run build
 
 # Runtime (Nginx)
 FROM docker.io/library/nginx:alpine

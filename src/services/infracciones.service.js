@@ -6,7 +6,7 @@ import Infraccion from "../models/infracciones.model.js";
  * Evita traer todo el dataset a memoria.
  */
 export async function getAllInfracciones({ limit = 50, page = 1, estado, vigente, tipo_sancion, search = '' } = {}) {
-  const safeLimit = Math.min(200, Math.max(1, parseInt(limit) || 50));
+  const safeLimit = Math.min(1000000, Math.max(1, parseInt(limit) || 50));
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * safeLimit;
 
   const where = {};

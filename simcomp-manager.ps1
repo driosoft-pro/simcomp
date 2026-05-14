@@ -1,4 +1,4 @@
-﻿# SIMCOMP - GESTOR CENTRAL DE INFRAESTRUCTURA (WINDOWS)
+# SIMCOMP - GESTOR CENTRAL DE INFRAESTRUCTURA (WINDOWS)
 
 function Show-Menu {
     Clear-Host
@@ -16,20 +16,21 @@ function Show-Menu {
     Write-Host "  [7] Instalar Apache JMeter" -ForegroundColor Cyan
     Write-Host "  [8] Instalar HashiCorp Vagrant" -ForegroundColor Cyan
     Write-Host "  [9] Instalar Oracle VirtualBox" -ForegroundColor Cyan
+    Write-Host "  [10] Configurar Red VirtualBox (Host-Only)" -ForegroundColor Cyan
     
     Write-Host " INFRAESTRUCTURA Y DESPLIEGUE:" -ForegroundColor Yellow
-    Write-Host "  [10] Gestionar Swarm/Vagrant (Cluster)"
-    Write-Host "  [11] Gestionar Entorno Local (Docker Full)"
-    Write-Host "  [12] Gestionar Entorno Local (Nativo)"
-    Write-Host "  [13] Compilar Imagenes Docker (Build)"
+    Write-Host "  [11] Gestionar Swarm/Vagrant (Cluster)"
+    Write-Host "  [12] Gestionar Entorno Local (Docker Full)"
+    Write-Host "  [13] Gestionar Entorno Local (Nativo)"
+    Write-Host "  [14] Compilar Imagenes Docker (Build)"
 
     Write-Host " PRUEBAS Y CALIDAD:" -ForegroundColor Yellow
-    Write-Host "  [14] Ejecutar Pruebas JMeter (Load Testing)"
-    Write-Host "  [15] Sincronizar Ramas Microservicios (Git)"
+    Write-Host "  [15] Ejecutar Pruebas JMeter (Load Testing)"
+    Write-Host "  [16] Sincronizar Ramas Microservicios (Git)"
 
     Write-Host " MANTENIMIENTO:" -ForegroundColor Yellow
-    Write-Host "  [16] Reparar Permisos de Ejecucion (Unblock)"
-    Write-Host "  [17] Sanatizar Codificacion de Archivos" -ForegroundColor Cyan
+    Write-Host "  [17] Reparar Permisos de Ejecucion (Unblock)"
+    Write-Host "  [18] Sanatizar Codificacion de Archivos" -ForegroundColor Cyan
     
     Write-Host "----------------------------------------------------" -ForegroundColor Cyan
     Write-Host "  [0] Salir"
@@ -42,7 +43,7 @@ function Show-Menu {
             .\scripts\build-secrets.ps1
         }
         "2" {
-            Start-Process powershell -Verb RunAs -ArgumentList "-File .\scripts\setup-hosts.ps1"
+            .\scripts\setup-hosts.ps1
         }
         "3" {
             .\scripts\install-deps.ps1
@@ -66,21 +67,24 @@ function Show-Menu {
             .\scripts\install-virtualbox.ps1
         }
         "10" {
-            .\scripts\vagrant-manager.ps1
+            .\scripts\setup-vbox-network.ps1
         }
         "11" {
-            .\scripts\local-docker-manager.ps1
+            .\scripts\vagrant-manager.ps1
         }
         "12" {
-            .\scripts\local-manager.ps1
+            .\scripts\local-docker-manager.ps1
         }
         "13" {
-            .\scripts\build-manager.ps1
+            .\scripts\local-manager.ps1
         }
         "14" {
-            .\scripts\vagrant-manager.ps1 -Option 7
+            .\scripts\build-manager.ps1
         }
         "15" {
+            .\scripts\vagrant-manager.ps1 -Option 7
+        }
+        "16" {
             Write-Host " [!] Iniciando Sincronizacion de Ramas..." -ForegroundColor Yellow
             git checkout dev
             $branches = @("frontend", "ms-auth-service", "ms-automotores", "ms-comparendos", "ms-infracciones", "ms-personas", "ms-reportes", "analytics-spark-service")
@@ -94,15 +98,24 @@ function Show-Menu {
             git checkout dev
             Write-Host " [OK] Repositorio sincronizado." -ForegroundColor Green
         }
-        "16" {
+        "17" {
             .\scripts\fix-permissions.ps1
         }
-        "17" {
+        "18" {
             .\scripts\sanitize-scripts.ps1
         }
         "0" { exit }
         default { Write-Host " Opcion invalida." -ForegroundColor Red }
     }
+    
+    if ($choice -match '^([4-9]|10)$') {
+        Write-Host ""
+        Write-Host " [!] AVISO DE REINICIO:" -ForegroundColor Yellow
+        Write-Host " Algunos de los componentes instalados pueden requerir un reinicio para aplicarse correctamente." -ForegroundColor Cyan
+        Write-Host " Se recomienda reiniciar el sistema tras finalizar todas las instalaciones." -ForegroundColor White
+        Write-Host ""
+    }
+
     Read-Host " Presiona Enter para continuar..."
     Show-Menu
 }

@@ -29,24 +29,39 @@ function Inject-Hosts {
     $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
     $newEntry = "$ip $domain www.$domain api.$domain"
     
-    try {
-        if (-Not (Test-Path $hostsPath)) {
-            Log-Message "[!] Archivo de hosts no encontrado." "Red"
-            return
+    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    
+    if (-not $isAdmin) {
+        Log-Message "[!] Se requieren permisos para modificar hosts. Intentando elevar..." "Yellow"
+        $tempFile = "$env:TEMP\hosts.tmp"
+        try {
+            # Preparamos el contenido en un archivo temporal
+            $lines = Get-Content $hostsPath | Where-Object { $_.Trim() -notmatch "$domain" }
+            $lines += $newEntry
+            $lines | Set-Content $tempFile -Force
+            
+            # Copiamos el archivo temporal al destino usando CMD elevado (metodo mas fiable)
+            $process = Start-Process cmd -Verb RunAs -ArgumentList "/c copy /y `"$tempFile`" `"$hostsPath`"" -PassThru -Wait
+            if ($process.ExitCode -eq 0) {
+                Log-Message "[OK] Archivo de hosts actualizado exitosamente." "Green"
+            } else {
+                Log-Message "[X] El usuario cancelo o hubo un error en la elevacion." "Red"
+            }
+        } catch {
+            Log-Message "[X] Error al preparar la actualizacion de hosts." "Red"
+        } finally {
+            Remove-Item $tempFile -ErrorAction SilentlyContinue
         }
-
-        # Read content, filter out existing entries for the domain
-        $content = Get-Content $hostsPath
-        $filtered = $content | Where-Object { $_ -notmatch "\b$([regex]::Escape($domain))\b" }
-        
-        # Append new entry
-        $filtered += $newEntry
-        
-        # Write back to file
-        $filtered | Set-Content $hostsPath -ErrorAction Stop
-        Log-Message "[OK] /etc/hosts: $ip $domain (limpio)" "Green"
-    } catch {
-        Log-Message "[!] Error modificando /etc/hosts. Ejecuta como ADMINISTRADOR." "Red"
+    } else {
+        try {
+            $content = Get-Content $hostsPath
+            $filtered = $content | Where-Object { $_.Trim() -notmatch "\b$([regex]::Escape($domain))\b" }
+            $filtered += $newEntry
+            $filtered | Set-Content $hostsPath -Force
+            Log-Message "[OK] /etc/hosts: $ip $domain (actualizado)" "Green"
+        } catch {
+            Log-Message "[!] Error al modificar hosts: $($_.Exception.Message)" "Red"
+        }
     }
 }
 
@@ -200,14 +215,22 @@ function Show-Links {
 
     $connection = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
     if ($connection.TcpTestSucceeded) {
-        Log-Message "`n--- [ ENLACES DISPONIBLES ] ---" "Cyan"
-        Log-Message "    App Principal:      http://$managerIp (o http://simcomp.co)" "Green"
-        Log-Message "    [ Metricas e Infraestructura ]" "Yellow"
-        Log-Message "      Stats HAProxy:   http://$managerIp:8404/stats" "Gray"
-        Log-Message "      Spark Dashboard: http://$managerIp:8010" "Gray"
-        Log-Message "      Prometheus:      http://$managerIp:9090" "Gray"
-        Log-Message "      Grafana:         http://$managerIp:3000" "Gray"
-        Log-Message "-------------------------------" "Cyan"
+        Write-Host "`n====================================================" -ForegroundColor Cyan
+        Write-Host "         SERVICIOS Y ENLACES DEL CLUSTER" -ForegroundColor Cyan
+        Write-Host "====================================================" -ForegroundColor Cyan
+        
+        Write-Host " [ACCESO PRINCIPAL]" -ForegroundColor Yellow
+        Write-Host " -> Web App:       http://$managerIp" -ForegroundColor Green
+        Write-Host " -> Dominio:       http://simcomp.co" -ForegroundColor Green
+        
+        Write-Host "`n [INFRAESTRUCTURA Y MONITOREO]" -ForegroundColor Yellow
+        Write-Host " -> HAProxy Stats: http://$managerIp:8404/stats" -ForegroundColor Gray
+        Write-Host " -> Spark Master:  http://$managerIp:8010" -ForegroundColor Gray
+        Write-Host " -> Prometheus:    http://$managerIp:9090" -ForegroundColor Gray
+        Write-Host " -> Grafana:       http://$managerIp:3000" -ForegroundColor Gray
+        Write-Host " -> Glances (RT):  http://$managerIp:61208" -ForegroundColor Gray
+        
+        Write-Host "====================================================" -ForegroundColor Cyan
     }
 }
 
@@ -373,7 +396,15 @@ while ($true) {
         if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
 
-    if (Test-Connection -ComputerName $managerIp -Count 1 -Quiet -ErrorAction SilentlyContinue) {
+    $isOnline = Test-Connection -ComputerName $managerIp -Count 1 -Quiet -ErrorAction SilentlyContinue
+    if (-not $isOnline) {
+        # Fallback: Algunos sistemas bloquean ICMP (Ping). Probamos puerto 22 (SSH) o 80 (Web)
+        $checkSsh = Test-NetConnection -ComputerName $managerIp -Port 22 -WarningAction SilentlyContinue
+        $checkHttp = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
+        $isOnline = $checkSsh.TcpTestSucceeded -or $checkHttp.TcpTestSucceeded
+    }
+
+    if ($isOnline) {
         Log-Message "Estado: Online ($managerIp)" "Green"
         Show-Links
     } else {

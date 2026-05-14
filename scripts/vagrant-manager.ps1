@@ -18,10 +18,12 @@ function Log-Message {
 function Clear-Screen {
     # Pequeña pausa para asegurar que el buffer se vacie
     Start-Sleep -Milliseconds 50
+    # Limpieza estándar de PowerShell
+    Clear-Host
     # Limpiar usando el metodo del sistema (mas fiable que Clear-Host)
-    [System.Console]::Clear()
-    # Forzar el cursor al inicio
-    [System.Console]::SetCursorPosition(0,0)
+    try { [System.Console]::Clear() } catch {}
+    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
 }
 
 # Robust Get-EnvVar function
@@ -143,7 +145,7 @@ function Wait-For-Nodes {
 
 # Network Configuration Mode
 function Select-NetworkMode {
-    Clear-Host
+    Clear-Screen
     Log-Message "======================================" "Cyan"
     Log-Message "Seleccione modo de red:" "Cyan"
     Log-Message "1) Private Network (Lab local)" "Cyan"
@@ -177,7 +179,7 @@ function Select-NetworkMode {
 
 # Environment Selection
 function Select-Environment {
-    Clear-Host
+    Clear-Screen
     Log-Message "======================================" "Cyan"
     Log-Message "Seleccione entorno:" "Cyan"
     Log-Message "1) Native (VMs clasicas)" "Cyan"

@@ -14,6 +14,31 @@ function Log-Message {
     Add-Content -Path $LOG_FILE -Value "$timestamp - $message"
 }
 
+# Deep Clean Console function to avoid ghosting/overlapping text
+function Clear-Screen {
+    # Pequeña pausa para asegurar que el buffer se vacie
+    Start-Sleep -Milliseconds 50
+    # Limpiar usando el metodo del sistema (mas fiable que Clear-Host)
+    [System.Console]::Clear()
+    # Forzar el cursor al inicio
+    [System.Console]::SetCursorPosition(0,0)
+}
+
+# Robust Get-EnvVar function
+
+# Robust Get-EnvVar function
+function Get-EnvVar {
+    param([string]$var, [string]$default = "")
+    if (-not (Test-Path $ENV_FILE)) { return $default }
+    $content = Get-Content $ENV_FILE
+    foreach ($line in $content) {
+        if ($line -match "^\s*$var\s*=\s*(.*)") {
+            return $matches[1].Trim()
+        }
+    }
+    return $default
+}
+
 # Check if vagrant is installed
 if (-not (Get-Command vagrant -ErrorAction SilentlyContinue)) {
     Log-Message "[!] ERROR: No se encontro el comando 'vagrant' en tu sistema." "Red"
@@ -27,7 +52,8 @@ if (-not (Get-Command vagrant -ErrorAction SilentlyContinue)) {
 function Inject-Hosts {
     param([string]$ip, [string]$domain)
     $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-    $newEntry = "$ip $domain www.$domain api.$domain"
+    $subdomains = "www.$domain api.$domain stats.$domain monitor.$domain spark.$domain grafana.$domain prometheus.$domain glances.$domain"
+    $newEntry = "$ip $domain $subdomains"
     
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     
@@ -40,8 +66,8 @@ function Inject-Hosts {
             $lines += $newEntry
             $lines | Set-Content $tempFile -Force
             
-            # Copiamos el archivo temporal al destino usando CMD elevado (metodo mas fiable)
-            $process = Start-Process cmd -Verb RunAs -ArgumentList "/c copy /y `"$tempFile`" `"$hostsPath`"" -PassThru -Wait
+            # Copiamos el archivo temporal al destino usando CMD elevado y limpiamos cache DNS
+            $process = Start-Process cmd -Verb RunAs -ArgumentList "/c copy /y `"$tempFile`" `"$hostsPath`" && ipconfig /flushdns" -PassThru -Wait
             if ($process.ExitCode -eq 0) {
                 Log-Message "[OK] Archivo de hosts actualizado exitosamente." "Green"
             } else {
@@ -58,7 +84,9 @@ function Inject-Hosts {
             $filtered = $content | Where-Object { $_.Trim() -notmatch "\b$([regex]::Escape($domain))\b" }
             $filtered += $newEntry
             $filtered | Set-Content $hostsPath -Force
-            Log-Message "[OK] /etc/hosts: $ip $domain (actualizado)" "Green"
+            Log-Message "[OK] /etc/hosts: $ip $domain (actualizado con subdominios)" "Green"
+            # Flush DNS to ensure immediate effect
+            ipconfig /flushdns | Out-Null
         } catch {
             Log-Message "[!] Error al modificar hosts: $($_.Exception.Message)" "Red"
         }
@@ -207,11 +235,7 @@ function Wait-For-Docker {
 }
 
 function Show-Links {
-    $managerIp = "192.168.100.2"
-    if (Test-Path $ENV_FILE) {
-        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
-    }
+    $managerIp = Get-EnvVar "MANAGER_IP" "192.168.100.2"
 
     $connection = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
     if ($connection.TcpTestSucceeded) {
@@ -220,22 +244,36 @@ function Show-Links {
         Write-Host "====================================================" -ForegroundColor Cyan
         
         Write-Host " [ACCESO PRINCIPAL]" -ForegroundColor Yellow
-        Write-Host " -> Web App:       http://$managerIp" -ForegroundColor Green
-        Write-Host " -> Dominio:       http://simcomp.co" -ForegroundColor Green
+        Write-Host " -> Web App:       http://$managerIp (o http://simcomp.co)" -ForegroundColor Green
         
         Write-Host "`n [INFRAESTRUCTURA Y MONITOREO]" -ForegroundColor Yellow
-        Write-Host " -> HAProxy Stats: http://$managerIp:8404/stats" -ForegroundColor Gray
-        Write-Host " -> Spark Master:  http://$managerIp:8010" -ForegroundColor Gray
-        Write-Host " -> Prometheus:    http://$managerIp:9090" -ForegroundColor Gray
-        Write-Host " -> Grafana:       http://$managerIp:3000" -ForegroundColor Gray
-        Write-Host " -> Glances (RT):  http://$managerIp:61208" -ForegroundColor Gray
+        Write-Host " -> HAProxy Stats: http://$managerIp:8404/stats (o http://stats.simcomp.co:8404/stats)" -ForegroundColor Gray
+        Write-Host " -> Spark Master:  http://$managerIp:8010 (o http://spark.simcomp.co:8010)" -ForegroundColor Gray
+        Write-Host " -> Spark UI:      http://$managerIp:4040 (o http://simcomp.co:4040)" -ForegroundColor Gray
+        Write-Host " -> Prometheus:    http://$managerIp:9090 (o http://prometheus.simcomp.co:9090)" -ForegroundColor Gray
+        Write-Host " -> Grafana:       http://$managerIp:3000 (o http://grafana.simcomp.co:3000)" -ForegroundColor Gray
+        Write-Host " -> Glances (RT):  http://$managerIp:61208 (o http://glances.simcomp.co:61208)" -ForegroundColor Gray
         
         Write-Host "====================================================" -ForegroundColor Cyan
     }
 }
 
+function Optimize-Network {
+    Clear-Screen
+    Log-Message "======================================" "Cyan"
+    Log-Message "   OPTIMIZACION DE RED (WINDOWS)" "Cyan"
+    Log-Message "======================================" "Cyan"
+    Log-Message "Para alcanzar los 2000 hilos sin errores en Windows," "White"
+    Log-Message "es necesario ampliar el rango de puertos efimeros." "White"
+    Log-Message "`n1. Abre una terminal (PowerShell o CMD) como ADMINISTRADOR." "Yellow"
+    Log-Message "2. Ejecuta el siguiente comando:" "Yellow"
+    Log-Message "`n   netsh int ipv4 set dynamicport tcp start=1025 num=64511" "Green"
+    Log-Message "`nEsto evitara el error 'Connection Refused' bajo alta carga." "White"
+    Log-Message "======================================" "Cyan"
+}
+
 function Run-JMeter {
-    Clear-Host
+    Clear-Screen
     Log-Message "======================================" "Cyan"
     Log-Message "   SIMCOMP - Pruebas JMeter (CLI)" "Cyan"
     Log-Message "======================================" "Cyan"
@@ -271,6 +309,12 @@ function Run-JMeter {
     if (!(Test-Path "jmeter/reports")) { New-Item -ItemType Directory -Path "jmeter/reports" | Out-Null }
     if (Test-Path "$reportDir") { Remove-Item -Path "$reportDir" -Recurse -Force }
     
+    Log-Message "[*] Optimizando JVM para alta carga..." "Gray"
+    $env:JVM_ARGS = "-Xms2g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:G1ReservePercent=20"
+
+    Log-Message "[*] Tip: Si tienes errores con muchos hilos (500+), ejecuta en una terminal ADMIN:" "Yellow"
+    Log-Message "    netsh int ipv4 set dynamicport tcp start=1025 num=64511" "White"
+
     Log-Message "[*] Iniciando prueba JMeter ($name)..." "Yellow"
     jmeter -n -t "$test" -l "$resultFile" -e -o "$reportDir"
     
@@ -337,11 +381,7 @@ function Guided-Mode {
     Log-Message "[*] Desplegando Stack..." "Yellow"
     vagrant provision managerDocker --provision-with deploy-stack
 
-    $managerIp = "192.168.100.2"
-    if (Test-Path $ENV_FILE) {
-        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
-    }
+    $managerIp = Get-EnvVar "MANAGER_IP" "192.168.100.2"
     
     Inject-Hosts $managerIp "simcomp.co"
     Log-Message "[OK] PROCESO COMPLETADO EXITOSAMENTE" "Green"
@@ -372,11 +412,7 @@ function Deploy-Swarm {
     Log-Message "[*] Desplegando Stack..." "Yellow"
     vagrant provision managerDocker --provision-with deploy-stack
 
-    $managerIp = "192.168.100.2"
-    if (Test-Path $ENV_FILE) {
-        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
-    }
+    $managerIp = Get-EnvVar "MANAGER_IP" "192.168.100.2"
     Inject-Hosts $managerIp "simcomp.co"
 
     Log-Message "[OK] CLUSTER LISTO" "Green"
@@ -385,16 +421,12 @@ function Deploy-Swarm {
 
 # Main Menu
 while ($true) {
-    Clear-Host
+    Clear-Screen
     Log-Message "======================================" "Blue"
     Log-Message "   SIMCOMP INFRA MANAGER - WINDOWS" "Blue"
     Log-Message "======================================" "Blue"
 
-    $managerIp = "192.168.100.2"
-    if (Test-Path $ENV_FILE) {
-        $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-        if ($line) { $managerIp = $line.ToString().Split("=")[1] }
-    }
+    $managerIp = Get-EnvVar "MANAGER_IP" "192.168.100.2"
 
     $isOnline = Test-Connection -ComputerName $managerIp -Count 1 -Quiet -ErrorAction SilentlyContinue
     if (-not $isOnline) {
@@ -406,6 +438,19 @@ while ($true) {
 
     if ($isOnline) {
         Log-Message "Estado: Online ($managerIp)" "Green"
+        
+        # Check if domain resolves to correct IP
+        try {
+            $dnsCheck = [System.Net.Dns]::GetHostAddresses("simcomp.co") | Select-Object -ExpandProperty IPAddressToString
+            if ($dnsCheck -ne $managerIp) {
+                Log-Message "[!] DNS DESINCRONIZADO: simcomp.co apunta a $dnsCheck (debe ser $managerIp)" "Yellow"
+                Log-Message "    Usa la opcion [8] para reparar el archivo de hosts." "Yellow"
+            }
+        } catch {
+            Log-Message "[!] DNS SIN CONFIGURAR: simcomp.co no resuelve localmente." "Yellow"
+            Log-Message "    Usa la opcion [8] para configurar el acceso por dominio." "Yellow"
+        }
+
         Show-Links
     } else {
         Log-Message "Estado: Offline" "Red"
@@ -418,8 +463,10 @@ while ($true) {
     Log-Message "5) Apagar VMs"
     Log-Message "6) Deploy stack"
     Log-Message "7) Pruebas JMeter (CLI)"
-    Log-Message "8) Limpiar TODO"
-    Log-Message "9) Salir"
+    Log-Message "8) Configurar DNS (Hosts)"
+    Log-Message "9) Optimizar Red (Cuello de botella)"
+    Log-Message "10) Limpiar TODO"
+    Log-Message "11) Salir"
     Log-Message "======================================" "White"
 
     $opt = Read-Host "Opcion"
@@ -438,10 +485,13 @@ while ($true) {
         "5" { vagrant halt }
         "6" { vagrant provision managerDocker --provision-with deploy-stack }
         "7" { Run-JMeter }
-        "8" { Cleanup-All }
-        "9" { exit }
+        "8" { Inject-Hosts (Get-EnvVar "MANAGER_IP" "192.168.100.2") "simcomp.co" }
+        "9" { Optimize-Network }
+        "10" { Cleanup-All }
+        "11" { exit }
         Default { Log-Message "[!] Opcion invalida" "Red" }
     }
 
-    Read-Host "`nENTER para continuar..."
+    Write-Host "`n[Presiona ENTER para volver al menu...]" -ForegroundColor Gray
+    $null = Read-Host
 }

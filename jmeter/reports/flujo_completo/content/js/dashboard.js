@@ -133,7 +133,7 @@ $(document).ready(function() {
         widgets: ['zebra']
     });
 
-    var data = {"OkPercent": 100.0, "KoPercent": 0.0};
+    var data = {"OkPercent": 77.025, "KoPercent": 22.975};
     var dataset = [
         {
             "label" : "FAIL",
@@ -173,7 +173,7 @@ $(document).ready(function() {
     });
 
     // Creates APDEX table
-    createTable($("#apdexTable"), {"supportsControllersDiscrimination": true, "overall": {"data": [1.0, 500, 1500, "Total"], "isController": false}, "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"], "items": [{"data": [1.0, 500, 1500, "1. Login"], "isController": false}, {"data": [1.0, 500, 1500, "2. Listar Personas"], "isController": false}, {"data": [1.0, 500, 1500, "3. Listar Vehiculos"], "isController": false}, {"data": [1.0, 500, 1500, "4. Listar Comparendos"], "isController": false}]}, function(index, item){
+    createTable($("#apdexTable"), {"supportsControllersDiscrimination": true, "overall": {"data": [0.4905, 500, 1500, "Total"], "isController": false}, "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"], "items": [{"data": [0.006, 500, 1500, "1. Login"], "isController": false}, {"data": [0.4505, 500, 1500, "2. Listar Personas"], "isController": false}, {"data": [0.6515, 500, 1500, "3. Listar Vehiculos"], "isController": false}, {"data": [0.854, 500, 1500, "4. Listar Comparendos"], "isController": false}]}, function(index, item){
         switch(index){
             case 0:
                 item = item.toFixed(3);
@@ -187,7 +187,7 @@ $(document).ready(function() {
     }, [[0, 0]], 3);
 
     // Create statistics table
-    createTable($("#statisticsTable"), {"supportsControllersDiscrimination": true, "overall": {"data": ["Total", 120, 0, 0.0, 19.95833333333334, 4, 104, 8.0, 52.0, 63.89999999999998, 103.15999999999997, 25.795356835769564, 552.3078111564918, 13.991378036328461], "isController": false}, "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"], "items": [{"data": ["1. Login", 30, 0, 0.0, 56.50000000000001, 46, 104, 51.0, 81.60000000000002, 101.8, 104.0, 6.4963187527068, 8.856309549588566, 3.4934630792550885], "isController": false}, {"data": ["2. Listar Personas", 30, 0, 0.0, 9.933333333333334, 6, 28, 8.0, 15.800000000000004, 22.499999999999993, 28.0, 6.645990252547629, 189.61840939299955, 3.602074795081967], "isController": false}, {"data": ["3. Listar Vehiculos", 30, 0, 0.0, 5.733333333333333, 4, 7, 6.0, 7.0, 7.0, 7.0, 6.680026720106881, 160.28150050100203, 3.6400926853707416], "isController": false}, {"data": ["4. Listar Comparendos", 30, 0, 0.0, 7.666666666666665, 5, 18, 6.0, 11.0, 15.799999999999997, 18.0, 6.663705019991116, 211.61167953131942, 3.631198633940471], "isController": false}]}, function(index, item){
+    createTable($("#statisticsTable"), {"supportsControllersDiscrimination": true, "overall": {"data": ["Total", 4000, 919, 22.975, 5521.845999999996, 7, 30958, 294.5, 25149.500000000007, 29994.0, 30017.0, 61.443932411674346, 1069.819553451421, 26.42419114823349], "isController": false}, "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"], "items": [{"data": ["1. Login", 1000, 304, 30.4, 20701.754000000008, 797, 30958, 21741.0, 30002.0, 30011.95, 30062.98, 15.698340685389557, 16.250220144699455, 6.933944816407906], "isController": false}, {"data": ["2. Listar Personas", 1000, 305, 30.5, 667.6309999999999, 7, 11020, 198.5, 1787.9999999999998, 2371.2999999999993, 4357.26, 15.90988640341108, 319.28101421051167, 6.749272122697044], "isController": false}, {"data": ["3. Listar Vehiculos", 1000, 310, 31.0, 245.18499999999986, 9, 30004, 88.0, 423.4999999999999, 692.9499999999999, 1358.92, 15.643821472709353, 262.59952464781844, 6.682233898596749], "isController": false}, {"data": ["4. Listar Comparendos", 1000, 0, 0.0, 472.81399999999985, 20, 9794, 191.0, 1100.3999999999999, 1469.6999999999996, 7627.140000000014, 15.697601406505084, 498.4908227897777, 6.705205913286449], "isController": false}]}, function(index, item){
         switch(index){
             // Errors pct
             case 3:
@@ -217,7 +217,7 @@ $(document).ready(function() {
     }, [[0, 0]], 0, summaryTableHeader);
 
     // Create error table
-    createTable($("#errorsTable"), {"supportsControllersDiscrimination": false, "titles": ["Type of error", "Number of errors", "% in errors", "% in all samples"], "items": []}, function(index, item){
+    createTable($("#errorsTable"), {"supportsControllersDiscrimination": false, "titles": ["Type of error", "Number of errors", "% in errors", "% in all samples"], "items": [{"data": ["504/Gateway Time-out", 258, 28.073993471164307, 6.45], "isController": false}, {"data": ["500/Internal Server Error", 6, 0.6528835690968444, 0.15], "isController": false}, {"data": ["401/Unauthorized", 655, 71.27312295973884, 16.375], "isController": false}]}, function(index, item){
         switch(index){
             case 2:
             case 3:
@@ -228,7 +228,7 @@ $(document).ready(function() {
     }, [[1, 1]]);
 
         // Create top5 errors by sampler
-    createTable($("#top5ErrorsBySamplerTable"), {"supportsControllersDiscrimination": false, "overall": {"data": ["Total", 120, 0, "", "", "", "", "", "", "", "", "", ""], "isController": false}, "titles": ["Sample", "#Samples", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors"], "items": [{"data": [], "isController": false}, {"data": [], "isController": false}, {"data": [], "isController": false}, {"data": [], "isController": false}]}, function(index, item){
+    createTable($("#top5ErrorsBySamplerTable"), {"supportsControllersDiscrimination": false, "overall": {"data": ["Total", 4000, 919, "401/Unauthorized", 655, "504/Gateway Time-out", 258, "500/Internal Server Error", 6, "", "", "", ""], "isController": false}, "titles": ["Sample", "#Samples", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors"], "items": [{"data": ["1. Login", 1000, 304, "504/Gateway Time-out", 257, "401/Unauthorized", 47, "", "", "", "", "", ""], "isController": false}, {"data": ["2. Listar Personas", 1000, 305, "401/Unauthorized", 304, "500/Internal Server Error", 1, "", "", "", "", "", ""], "isController": false}, {"data": ["3. Listar Vehiculos", 1000, 310, "401/Unauthorized", 304, "500/Internal Server Error", 5, "504/Gateway Time-out", 1, "", "", "", ""], "isController": false}, {"data": [], "isController": false}]}, function(index, item){
         return item;
     }, [[0, 0]], 0);
 

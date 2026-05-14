@@ -1,19 +1,19 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Resetea las bases de datos de los microservicios (podman / docker).
 
 .DESCRIPTION
-    Detiene y elimina los contenedores de BD, borra sus volúmenes y
+    Detiene y elimina los contenedores de BD, borra sus vol  menes y
     reconstruye todos los microservicios desde sus archivos compose.
 
 .PARAMETER Action
-    reset  – (predeterminado) Reinicia todo.
-    status – Muestra contenedores y volúmenes activos.
+    reset      (predeterminado) Reinicia todo.
+    status     Muestra contenedores y vol  menes activos.
 
 .PARAMETER Engine
-    Fuerza el uso de un motor específico: 'podman' o 'docker'.
-    Si no se indica, el script detecta automáticamente.
+    Fuerza el uso de un motor espec  fico: 'podman' o 'docker'.
+    Si no se indica, el script detecta autom  ticamente.
 
 .EXAMPLE
     .\reset-dbs.ps1
@@ -32,7 +32,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# ─── Configuration ────────────────────────────────────────────────────────────
+#           Configuration                                                                                                                                                                                     
 
 $BaseDir    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = $BaseDir
@@ -61,14 +61,14 @@ $Microservices = @(
     "ms-comparendos"
 )
 
-# ─── Logging helpers ──────────────────────────────────────────────────────────
+#           Logging helpers                                                                                                                                                                               
 
 function Write-Log  { param([string]$Msg) Write-Host "`n[INFO]  $Msg" -ForegroundColor Cyan }
 function Write-Ok   { param([string]$Msg) Write-Host "[OK]    $Msg" -ForegroundColor Green }
 function Write-Warn { param([string]$Msg) Write-Host "[WARN]  $Msg" -ForegroundColor Yellow }
 function Write-Err  { param([string]$Msg) Write-Host "[ERROR] $Msg" -ForegroundColor Red }
 
-# ─── Engine detection ─────────────────────────────────────────────────────────
+#           Engine detection                                                                                                                                                                            
 
 $ContainerEngine = ""
 $UseDockerComposePlugin = $false
@@ -76,7 +76,7 @@ $UseDockerComposePlugin = $false
 function Detect-Engine {
     if ($Engine -ne "") {
         if (-not (Get-Command $Engine -ErrorAction SilentlyContinue)) {
-            Write-Err "El motor especificado '$Engine' no está disponible en PATH."
+            Write-Err "El motor especificado '$Engine' no esta disponible en PATH."
             exit 1
         }
 
@@ -89,7 +89,7 @@ function Detect-Engine {
         $script:ContainerEngine = "docker"
     }
     else {
-        Write-Err "No se encontró podman ni docker instalado o en el PATH."
+        Write-Err "No se encontr   podman ni docker instalado o en el PATH."
         exit 1
     }
 
@@ -104,7 +104,7 @@ function Detect-Engine {
 
         if (-not $script:UseDockerComposePlugin) {
             if (-not (Get-Command "docker-compose" -ErrorAction SilentlyContinue)) {
-                Write-Err "No se encontró 'docker compose' ni 'docker-compose'."
+                Write-Err "No se encontr   'docker compose' ni 'docker-compose'."
                 exit 1
             }
         }
@@ -134,7 +134,7 @@ function Invoke-Compose {
         }
 
         if ($LASTEXITCODE -ne 0) {
-            throw "compose falló con código $LASTEXITCODE"
+            throw "compose fall   con c  digo $LASTEXITCODE"
         }
     }
     finally {
@@ -142,7 +142,7 @@ function Invoke-Compose {
     }
 }
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+#           Helpers                                                                                                                                                                                                       
 
 function Test-ContainerExists {
     param([string]$Name)
@@ -189,7 +189,7 @@ function Find-ComposeFile {
     return $null
 }
 
-# ─── Core operations ──────────────────────────────────────────────────────────
+#           Core operations                                                                                                                                                                               
 
 function Stop-And-Remove-DbContainers {
     Write-Log "Deteniendo contenedores de bases de datos..."
@@ -228,7 +228,7 @@ function Stop-And-Remove-DbContainers {
 }
 
 function Remove-DbVolumes {
-    Write-Log "Eliminando volúmenes de PostgreSQL..."
+    Write-Log "Eliminando vol  menes de PostgreSQL..."
 
     foreach ($v in $DbVolumes) {
         if (Test-VolumeExists $v) {
@@ -259,7 +259,7 @@ function Rebuild-Microservice {
     $composeFile = Find-ComposeFile $serviceDir
 
     if (-not $composeFile) {
-        Write-Warn "No se encontró archivo compose en $serviceDir, se omite."
+        Write-Warn "No se encontr   archivo compose en $serviceDir, se omite."
         return
     }
 
@@ -277,7 +277,7 @@ function Show-Status {
     Write-Log "Contenedores activos:"
     & $ContainerEngine ps
 
-    Write-Log "Volúmenes actuales:"
+    Write-Log "Vol  menes actuales:"
     & $ContainerEngine volume ls
 }
 
@@ -292,7 +292,7 @@ function Reset-All {
     Show-Status
 }
 
-# ─── Entry point ──────────────────────────────────────────────────────────────
+#           Entry point                                                                                                                                                                                           
 
 Detect-Engine
 

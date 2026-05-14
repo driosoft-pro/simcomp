@@ -1,11 +1,22 @@
 {
-	"name": "Flot",
-	"version": "0.8.3",
-	"main": "jquery.flot.js",
-	"scripts": {
-		"test": "make test"
-	},
-	"devDependencies": {
-		"jshint": "0.9.1"
-	}
+    "name":  "Flot",
+    "version":  "0.8.3",
+    "main":  "jquery.flot.js",
+    "scripts":  {
+                    "test":  "make test"
+                },
+    "devDependencies":  {
+                            "jshint":  "0.9.1"
+                        },
+    "pnpm":  {
+                 "onlyBuiltDependencies":  [
+                                               "@scarf/scarf"
+                                           ],
+                 "overrides":  {
+                                   "lodash.get":  "^4.4.2",
+                                   "lodash.isequal":  "^4.5.0",
+                                   "glob":  "^9.0.0",
+                                   "inflight":  "1.0.6"
+                               }
+             }
 }

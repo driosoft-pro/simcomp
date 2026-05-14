@@ -1,4 +1,4 @@
-# SIMCOMP - Configurador de DNS Local (Windows)
+﻿# SIMCOMP - Configurador de DNS Local (Windows)
 # Requiere ejecutar como Administrador
 
 $HostsPath = "C:\Windows\System32\drivers\etc\hosts"
@@ -21,4 +21,4 @@ if ($Content -match "simcomp.co") {
 }
 
 Add-Content -Path $HostsPath -Value "`n$Entry" -Encoding ASCII
-Write-Host " [✔] Archivo hosts de Windows actualizado correctamente." -ForegroundColor Green
+Write-Host " [   ] Archivo hosts de Windows actualizado correctamente." -ForegroundColor Green

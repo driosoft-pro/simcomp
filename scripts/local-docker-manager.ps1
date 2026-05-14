@@ -1,4 +1,4 @@
-# local-docker-manager.ps1 - Gestión del entorno completo vía Docker Compose (Windows)
+﻿# local-docker-manager.ps1 - Gesti  n del entorno completo v  a Docker Compose (Windows)
 # =============================================================================
 
 function Detect-Engine {
@@ -22,7 +22,7 @@ function Show-Links {
     Write-Host "Prometheus:         " -NoNewline; Write-Host "http://localhost:9090" -ForegroundColor Green
     Write-Host "Glances (Monitor):  " -NoNewline; Write-Host "http://localhost:61208" -ForegroundColor Green
     Write-Host "----------------------------------------------------"
-    Write-Host "Documentación API (Swagger):" -ForegroundColor Yellow
+    Write-Host "Documentaci  n API (Swagger):" -ForegroundColor Yellow
     Write-Host "Auth Service:       " -NoNewline; Write-Host "http://localhost:8001/api-docs" -ForegroundColor Cyan
     Write-Host "Personas:           " -NoNewline; Write-Host "http://localhost:8002/api-docs" -ForegroundColor Cyan
     Write-Host "Automotores:        " -NoNewline; Write-Host "http://localhost:8003/api-docs" -ForegroundColor Cyan
@@ -39,12 +39,12 @@ function Show-Links {
 function Show-Menu {
     Clear-Host
     Write-Host "====================================================" -ForegroundColor Cyan
-    Write-Host "       SIMCOMP - GESTIÓN ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
+    Write-Host "       SIMCOMP - GESTI  N ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
     Write-Host "====================================================" -ForegroundColor Cyan
     Write-Host "  [1] Levantar todo el stack (Up -d)"
     Write-Host "  [2] Detener todo el stack (Stop)"
     Write-Host "  [3] Reiniciar stack (Restart)"
-    Write-Host "  [4] Bajar stack y borrar volúmenes (Down -v)"
+    Write-Host "  [4] Bajar stack y borrar vol  menes (Down -v)"
     Write-Host "  [5] Ver estado de contenedores (PS)"
     Write-Host "  [6] Ver logs (Tail)"
     Write-Host "  [7] Ver Enlaces/URLs de Acceso"
@@ -52,7 +52,7 @@ function Show-Menu {
     Write-Host "  [0] Salir"
     Write-Host "----------------------------------------------------" -ForegroundColor Cyan
     
-    $choice = Read-Host " Selecciona una opción"
+    $choice = Read-Host " Selecciona una opcion"
 
     switch ($choice) {
         "1" {
@@ -69,7 +69,7 @@ function Show-Menu {
             & $ENGINE compose restart
         }
         "4" {
-            Write-Host "[*] Bajando stack y limpiando volúmenes..." -ForegroundColor Yellow
+            Write-Host "[*] Bajando stack y limpiando vol  menes..." -ForegroundColor Yellow
             & $ENGINE compose down -v
         }
         "5" {
@@ -87,7 +87,7 @@ function Show-Menu {
             return
         }
         default {
-            Write-Host " Opción inválida." -ForegroundColor Red
+            Write-Host " Opci  n invalida." -ForegroundColor Red
         }
     }
     
@@ -95,5 +95,5 @@ function Show-Menu {
     Show-Menu
 }
 
-# Iniciar el menú
+# Iniciar el men  
 Show-Menu

@@ -1,10 +1,10 @@
-# local-manager.ps1 - Sub-menú para gestión local nativa (Windows)
+﻿# local-manager.ps1 - Sub-men   para gesti  n local nativa (Windows)
 # =============================================================================
 
 function Show-LocalMenu {
     Clear-Host
     Write-Host "====================================================" -ForegroundColor Blue
-    Write-Host "       SIMCOMP - GESTIÓN ENTORNO LOCAL (NATIVO)" -ForegroundColor Blue
+    Write-Host "       SIMCOMP - GESTI  N ENTORNO LOCAL (NATIVO)" -ForegroundColor Blue
     Write-Host "====================================================" -ForegroundColor Blue
     Write-Host " BASES DE DATOS (DOCKER):" -ForegroundColor Yellow
     Write-Host "  [1] Iniciar Todas las DBs"
@@ -18,9 +18,9 @@ function Show-LocalMenu {
     Write-Host "  [8] Gestionar Servicio Individual"
     Write-Host "  [9] Ver Estado Microservicios"
     Write-Host "----------------------------------------------------" -ForegroundColor Blue
-    Write-Host "  [0] Regresar al Menú Principal"
+    Write-Host "  [0] Regresar al Men   Principal"
     Write-Host "----------------------------------------------------" -ForegroundColor Blue
-    $lopt = Read-Host " Selecciona una opción"
+    $lopt = Read-Host " Selecciona una opcion"
 
     switch ($lopt) {
         "1" { .\scripts\local-db-manager.ps1 start }
@@ -33,14 +33,14 @@ function Show-LocalMenu {
         "8" { Show-IndividualMenu }
         "9" { .\scripts\local-ms-manager.ps1 status }
         "0" { return }
-        default { Write-Host " Opción inválida." -ForegroundColor Red }
+        default { Write-Host " Opci  n invalida." -ForegroundColor Red }
     }
     Read-Host " Presiona Enter para continuar..."
     Show-LocalMenu
 }
 
 function Show-IndividualMenu {
-    Write-Host "`n--- Gestión Individual ---" -ForegroundColor Yellow
+    Write-Host "`n--- Gesti  n Individual ---" -ForegroundColor Yellow
     Write-Host "Servicios: ms-auth-service, ms-personas, ms-automotores, ms-infracciones, ms-comparendos, ms-reportes"
     $sname = Read-Host "Nombre del servicio (o Enter para cancelar)"
     
@@ -52,7 +52,7 @@ function Show-IndividualMenu {
     Write-Host "  [2] Detener"
     Write-Host "  [3] Reset DB"
     Write-Host "  [0] Cancelar"
-    $sact = Read-Host "Acción"
+    $sact = Read-Host "Acci  n"
     
     switch ($sact) {
         "1" { .\scripts\local-ms-manager.ps1 start $sname }
@@ -61,7 +61,7 @@ function Show-IndividualMenu {
             $dbName = "db-" + $sname.Replace("ms-", "")
             .\scripts\local-db-manager.ps1 reset $dbName 
         }
-        Default { Write-Host "Acción cancelada." }
+        Default { Write-Host "Acci  n cancelada." }
     }
 }
 

@@ -12,6 +12,33 @@ Sistema integral de gestión de comparendos de tránsito desplegado en **Docker 
 - Dashboard dark
 ![DashboardDark.png](img/DashboardDark.png)
 
+- Dashboard light
+![DashboardLight.png](img/DashboardLight.png)
+
+- Usuarios
+![Usuarios.png](img/Usuarios.png)
+
+- Personas
+![Personas.png](img/Personas.png)
+
+- Automotores
+![Automotores.png](img/Automotores.png)
+
+- Infracciones
+![Infracciones.png](img/Infracciones.png)
+
+- Comparendos
+![Comparendos.png](img/Comparendos.png)
+
+- Comparendo
+![Comparendo.png](img/Comparendo.png)
+
+- Pagar
+![PagoComparendo.png](img/PagoComparendo.png)
+
+- Recibo
+![ReciboComparendo.png](img/ReciboComparendo.png)
+
 - Reportes
 ![Reportes.png](img/Reportes.png)
 

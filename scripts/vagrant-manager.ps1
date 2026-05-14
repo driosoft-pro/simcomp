@@ -14,6 +14,15 @@ function Log-Message {
     Add-Content -Path $LOG_FILE -Value "$timestamp - $message"
 }
 
+# Check if vagrant is installed
+if (-not (Get-Command vagrant -ErrorAction SilentlyContinue)) {
+    Log-Message "[!] ERROR: No se encontro el comando 'vagrant' en tu sistema." "Red"
+    Log-Message "    Asegurate de haberlo instalado usando la opcion [8] del menu principal." "Yellow"
+    Log-Message "    Si ya lo instalaste, debes REINICIAR la terminal para que los cambios surtan efecto." "White"
+    Read-Host "`nPresiona ENTER para salir"
+    exit
+}
+
 # Inject entry in C:\Windows\System32\drivers\etc\hosts
 function Inject-Hosts {
     param([string]$ip, [string]$domain)
@@ -35,9 +44,9 @@ function Inject-Hosts {
         
         # Write back to file
         $filtered | Set-Content $hostsPath -ErrorAction Stop
-        Log-Message "[✔] /etc/hosts: $ip $domain (limpio)" "Green"
+        Log-Message "[OK] /etc/hosts: $ip $domain (limpio)" "Green"
     } catch {
-        Log-Message "[!] Error modificando /etc/hosts. Asegúrate de ejecutar PowerShell como ADMINISTRADOR." "Red"
+        Log-Message "[!] Error modificando /etc/hosts. Ejecuta como ADMINISTRADOR." "Red"
     }
 }
 
@@ -80,7 +89,7 @@ function Wait-For-Nodes {
     for ($i = 1; $i -le 30; $i++) {
         $ready = (vagrant ssh managerDocker -c "docker node ls --format '{{.Status}}'" 2>$null | Select-String "Ready" | Measure-Object).Count
         if ($ready -ge 3) {
-            Log-Message "[✔] Nodos listos" "Green"
+            Log-Message "[OK] Nodos listos" "Green"
             return $true
         }
         Log-Message "  -> intento $i/30..." "Gray"
@@ -98,7 +107,7 @@ function Select-NetworkMode {
     Log-Message "2) Public Network (Multi-PC real)" "Cyan"
     Log-Message "======================================" "Cyan"
 
-    $net = Read-Host "Opción"
+    $net = Read-Host "Opcion"
     
     switch ($net) {
         "1" {
@@ -110,7 +119,7 @@ function Select-NetworkMode {
             $script:MANAGER_IP = Detect-HostIP
         }
         Default {
-            Log-Message "[!] Opción inválida" "Red"
+            Log-Message "[!] Opcion invalida" "Red"
             return $false
         }
     }
@@ -118,8 +127,8 @@ function Select-NetworkMode {
     Set-EnvVar "NET_MODE" $NET_MODE
     Set-EnvVar "MANAGER_IP" $MANAGER_IP
 
-    Log-Message "[✔] Red configurada: $NET_MODE" "Green"
-    Log-Message "[✔] Manager IP: $MANAGER_IP" "Green"
+    Log-Message "[OK] Red configurada: $NET_MODE" "Green"
+    Log-Message "[OK] Manager IP: $MANAGER_IP" "Green"
     return $true
 }
 
@@ -128,13 +137,13 @@ function Select-Environment {
     Clear-Host
     Log-Message "======================================" "Cyan"
     Log-Message "Seleccione entorno:" "Cyan"
-    Log-Message "1) 🖥 Native (VMs clásicas)" "Cyan"
-    Log-Message "2) 🐳 Docker Swarm" "Cyan"
-    Log-Message "3) ⚡ Swarm + Spark" "Cyan"
+    Log-Message "1) Native (VMs clasicas)" "Cyan"
+    Log-Message "2) Docker Swarm" "Cyan"
+    Log-Message "3) Swarm + Spark" "Cyan"
     Log-Message "4) Cancelar" "Cyan"
     Log-Message "======================================" "Cyan"
 
-    $envOpt = Read-Host "Opción"
+    $envOpt = Read-Host "Opcion"
 
     switch ($envOpt) {
         "1" { Copy-Item "vagrantfiles/Vagrantfile_native" "Vagrantfile" -Force }
@@ -143,33 +152,27 @@ function Select-Environment {
         Default { return $false }
     }
 
-    Log-Message "[✔] Entorno configurado" "Green"
+    Log-Message "[OK] Entorno configurado" "Green"
     return $true
 }
 
 # Cleanup
 function Cleanup-Processes {
     Log-Message "[*] Buscando procesos Vagrant colgados..." "Yellow"
-    
-    # In Windows, we usually look for ruby.exe running vagrant
-    Get-Process -Name "ruby" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match "vagrant" } | Stop-Process -Force -ErrorAction SilentlyContinue
-    
-    Log-Message "[✔] Limpieza de procesos completada." "Green"
+    Get-Process -Name "ruby" -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*Vagrant*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Log-Message "[OK] Limpieza de procesos completada." "Green"
 }
 
 function Cleanup-All {
     Cleanup-Processes
-
     Log-Message "[*] Eliminando entorno..." "Yellow"
     vagrant destroy -f 2>$null
     if (Test-Path ".vagrant/") {
         Remove-Item -Path ".vagrant/" -Recurse -Force -ErrorAction SilentlyContinue
     }
-
     if (Test-Path $TOKEN_FILE) { Remove-Item $TOKEN_FILE }
     if (Test-Path $MANAGER_IP_FILE) { Remove-Item $MANAGER_IP_FILE }
-    
-    Log-Message "[✔] Limpieza total completada." "Green"
+    Log-Message "[OK] Limpieza total completada." "Green"
 }
 
 # Wait for Docker
@@ -179,7 +182,7 @@ function Wait-For-Docker {
     for ($i = 1; $i -le 20; $i++) {
         $check = vagrant ssh "$vm" -c "docker info" 2>$null
         if ($LASTEXITCODE -eq 0) {
-            Log-Message "[✔] Docker listo en $vm" "Green"
+            Log-Message "[OK] Docker listo en $vm" "Green"
             return $true
         }
         Log-Message "  -> intento $i/20..." "Gray"
@@ -195,20 +198,16 @@ function Show-Links {
         if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
 
-    # Forma rápida de detectar si el puerto 80 está abierto (HAProxy)
     $connection = Test-NetConnection -ComputerName $managerIp -Port 80 -WarningAction SilentlyContinue
     if ($connection.TcpTestSucceeded) {
-        Log-Message "--- [ ENLACES DISPONIBLES ] ---" "Blue"
+        Log-Message "`n--- [ ENLACES DISPONIBLES ] ---" "Cyan"
         Log-Message "    App Principal:      http://$managerIp (o http://simcomp.co)" "Green"
-        
-        Log-Message "    [ Métricas e Infraestructura ]" "Yellow"
-        Log-Message "      Stats HAProxy:   http://$managerIp:8404/stats (o http://simcomp.co:8404/stats)" "Cyan"
-        Log-Message "      Spark Dashboard: http://$managerIp:8010 (o http://simcomp.co:8010)" "Cyan"
-        Log-Message "      Spark UI:        http://$managerIp:4040 (o http://simcomp.co:4040)" "Cyan"
-        Log-Message "      Prometheus:      http://$managerIp:9090 (o http://simcomp.co:9090)" "Cyan"
-        Log-Message "      Grafana:         http://$managerIp:3000 (o http://simcomp.co:3000)" "Cyan"
-        Log-Message "      Glances RT:      http://$managerIp:61208 (o http://simcomp.co:61208)" "Cyan"
-        Log-Message "-------------------------------" "Blue"
+        Log-Message "    [ Metricas e Infraestructura ]" "Yellow"
+        Log-Message "      Stats HAProxy:   http://$managerIp:8404/stats" "Gray"
+        Log-Message "      Spark Dashboard: http://$managerIp:8010" "Gray"
+        Log-Message "      Prometheus:      http://$managerIp:9090" "Gray"
+        Log-Message "      Grafana:         http://$managerIp:3000" "Gray"
+        Log-Message "-------------------------------" "Cyan"
     }
 }
 
@@ -217,15 +216,15 @@ function Run-JMeter {
     Log-Message "======================================" "Cyan"
     Log-Message "   SIMCOMP - Pruebas JMeter (CLI)" "Cyan"
     Log-Message "======================================" "Cyan"
-    Log-Message "1) Flujo Completo (Login -> Personas -> Vehiculos)"
-    Log-Message "2) Estrés Frontend (Carga Masiva)"
+    Log-Message "1) Flujo Completo"
+    Log-Message "2) Estres Frontend"
     Log-Message "3) Solo Login"
     Log-Message "4) Consulta Comparendos"
-    Log-Message "5) Test Genérico"
+    Log-Message "5) Test Generico"
     Log-Message "6) Regresar"
     Log-Message "======================================" "Cyan"
     
-    $jopt = Read-Host "Opción"
+    $jopt = Read-Host "Opcion"
     
     switch ($jopt) {
         "1" { $test = "jmeter/simcomp_workflow_completo.jmx"; $name = "flujo_completo" }
@@ -236,9 +235,8 @@ function Run-JMeter {
         Default { return }
     }
 
-    $jmeterCmd = "jmeter"
-    if (-not (Get-Command $jmeterCmd -ErrorAction SilentlyContinue)) {
-        Log-Message "[!] Error: 'jmeter' no se encuentra en las variables de entorno (PATH)." "Red"
+    if (-not (Get-Command jmeter -ErrorAction SilentlyContinue)) {
+        Log-Message "[!] Error: 'jmeter' no encontrado en el PATH." "Red"
         return
     }
 
@@ -254,87 +252,9 @@ function Run-JMeter {
     jmeter -n -t "$test" -l "$resultFile" -e -o "$reportDir"
     
     if ($LASTEXITCODE -eq 0) {
-        Log-Message "[✔] Prueba finalizada correctamente." "Green"
-        
-        # Generar o actualizar index.html general con estilo premium
-        $indexFile = "jmeter/reports/index.html"
-        $htmlContent = @"
-<html>
-<head>
-    <title>SIMCOMP - Reportes de Pruebas</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f13; color: #e0e0e0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 800px; width: 100%; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
-        h1 { color: #4caf50; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
-        ul { list-style: none; padding: 0; }
-        li { background: #252533; margin: 10px 0; border-radius: 8px; transition: transform 0.2s, background 0.2s; border: 1px solid transparent; }
-        li:hover { transform: translateX(10px); background: #2d2d3d; border-color: #4caf50; }
-        a { display: block; padding: 15px 20px; color: #fff; text-decoration: none; font-size: 1.1em; }
-        .footer { margin-top: 30px; font-size: 0.9em; color: #888; text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>SIMCOMP Performance Hub</h1>
-        <ul>
-"@
-        $folders = Get-ChildItem "jmeter/reports" -Directory
-        foreach ($f in $folders) {
-            $folderName = $f.Name
-            $displayName = (Get-Culture).TextInfo.ToTitleCase($folderName.Replace("_", " "))
-            $htmlContent += "<li><a href='./$folderName/index.html'>📊 Reporte: $displayName</a></li>`n"
-        }
-        
-        $date = Get-Date
-        $htmlContent += @"
-        </ul>
-        <div class="footer">
-            Última actualización: $date | SIMCOMP Infrastructure
-        </div>
-    </div>
-</body>
-</html>
-"@
-        $htmlContent | Set-Content $indexFile
-
-        Log-Message "[✔] Reporte generado en: $reportDir/index.html" "Green"
-        Log-Message "[✔] Menú de reportes actualizado: $indexFile" "Green"
+        Log-Message "[OK] Prueba finalizada. Reporte en: $reportDir/index.html" "Green"
     } else {
-        Log-Message "[!] Error: La prueba de JMeter falló o fue cancelada." "Red"
-    }
-}
-
-# Join Remote Worker
-function Join-RemoteWorker {
-    $remoteIp = Read-Host "IP nodo remoto"
-    $user = Read-Host "Usuario SSH"
-
-    $token = (vagrant ssh managerDocker -c "docker swarm join-token -q worker" 2>$null).Trim()
-    $managerIp = (Get-Content $ENV_FILE | Select-String "MANAGER_IP=").ToString().Split("=")[1]
-
-    Log-Message "[*] Uniendo nodo remoto $remoteIp..." "Yellow"
-    # Note: Requires SSH client installed on Windows
-    ssh "$user@$remoteIp" "docker swarm join --token $token $managerIp:2377"
-}
-
-# Auto Discovery
-function Auto-Discovery {
-    $baseIpLine = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
-    if (-not $baseIpLine) {
-        Log-Message "[!] No se encontró MANAGER_IP en .env" "Red"
-        return
-    }
-    
-    $managerIp = $baseIpLine.ToString().Split("=")[1]
-    $baseIp = $managerIp.Substring(0, $managerIp.LastIndexOf('.'))
-
-    Log-Message "[*] Escaneando red $baseIp.0/24..." "Blue"
-
-    for ($i = 2; $i -le 254; $i++) {
-        $ip = "$baseIp.$i"
-        if (Test-Connection -ComputerName $ip -Count 1 -Quiet) {
-            Log-Message "Nodo activo: $ip" "Green"
-        }
+        Log-Message "[!] Error: La prueba de JMeter fallo." "Red"
     }
 }
 
@@ -343,60 +263,55 @@ function Guided-Mode {
     if (-not (Select-Environment)) { return }
     if (-not (Select-NetworkMode)) { return }
 
-    Log-Message "--- MODO GUIADO: PASO A PASO ---" "Yellow"
+    Log-Message "`n--- MODO GUIADO: PASO A PASO ---" "Yellow"
 
     # Paso 1: Limpiar
-    Read-Host "Paso 1: Limpiar entorno previo → ENTER para continuar"
+    Write-Host "`nPaso 1: Limpiar entorno previo" -ForegroundColor Cyan
+    Read-Host "Presiona [ENTER] para comenzar la limpieza..."
     Cleanup-All
 
-    # Paso 2: Crear VMs una a una
-    Log-Message "`nPaso 2: Creación de máquinas virtuales (sin provisión)" "Yellow"
+    # Paso 2: Crear VMs
+    Write-Host "`nPaso 2: Creacion de maquinas virtuales" -ForegroundColor Cyan
     $vmsToCreate = @("managerDocker", "workerDocker1", "workerDocker2")
     $createdVms = New-Object System.Collections.Generic.List[string]
 
     while ($createdVms.Count -lt 3) {
-        Log-Message "`nSeleccione la máquina a crear:" "White"
+        Write-Host "`nSeleccione la maquina a crear:" -ForegroundColor White
         for ($i = 0; $i -lt $vmsToCreate.Count; $i++) {
             Write-Host "  $($i + 1)) $($vmsToCreate[$i])"
         }
-        Write-Host "  4) Finalizar creación de máquinas (si ya creó las necesarias)"
+        Write-Host "  4) Finalizar creacion de maquinas"
         
-        $vmOpt = Read-Host "Opción"
+        $vmOpt = Read-Host "Opcion"
         
         if ($vmOpt -eq "4") {
             break
         } elseif ($vmOpt -match "^[1-3]$") {
             $vmIndex = [int]$vmOpt - 1
             $vmName = $vmsToCreate[$vmIndex]
-            
             Log-Message "[*] Levantando $vmName..." "Yellow"
             vagrant up "$vmName" --no-provision
-            
-            if (-not $createdVms.Contains($vmName)) {
-                $createdVms.Add($vmName)
-            }
-            Log-Message "[✔] $vmName levantada." "Green"
-        } else {
-            Log-Message "[!] Opción inválida." "Red"
+            if (-not $createdVms.Contains($vmName)) { $createdVms.Add($vmName) }
+            Log-Message "[OK] $vmName levantada." "Green"
         }
     }
 
-    # Paso 3: Conectar entre sí (Docker Swarm)
-    Log-Message "`nPaso 3: Conectar máquinas (Docker Swarm)" "Yellow"
-    Read-Host "Presiona ENTER para inicializar el cluster y unir los nodos..."
+    # Paso 3: Swarm
+    Write-Host "`nPaso 3: Conectar maquinas (Docker Swarm)" -ForegroundColor Cyan
+    Read-Host "Presiona [ENTER] para configurar el cluster..."
     
-    Log-Message "[*] Inicializando Swarm en managerDocker..." "Yellow"
+    Log-Message "[*] Provisionando managerDocker..." "Yellow"
     vagrant provision managerDocker --provision-with fix-dns,docker-install,swarm-init
     
-    Log-Message "[*] Uniendo workers al cluster..." "Yellow"
+    Log-Message "[*] Provisionando workers..." "Yellow"
     vagrant provision workerDocker1 --provision-with fix-dns,docker-install,worker-join
     vagrant provision workerDocker2 --provision-with fix-dns,docker-install,worker-join
 
     # Paso 4: Deploy
-    Log-Message "`nPaso 4: Realizar el Deploy de la aplicación" "Yellow"
-    Read-Host "Presiona ENTER para desplegar el stack de microservicios..."
+    Write-Host "`nPaso 4: Realizar el Deploy de la aplicacion" -ForegroundColor Cyan
+    Read-Host "Presiona [ENTER] para desplegar el stack..."
     
-    Log-Message "[*] Desplegando Stack en managerDocker..." "Yellow"
+    Log-Message "[*] Desplegando Stack..." "Yellow"
     vagrant provision managerDocker --provision-with deploy-stack
 
     $managerIp = "192.168.100.2"
@@ -406,36 +321,28 @@ function Guided-Mode {
     }
     
     Inject-Hosts $managerIp "simcomp.co"
-    Inject-Hosts $managerIp "simcomp.local"
-
-    Log-Message "[✔] PROCESO COMPLETADO EXITOSAMENTE" "Green"
+    Log-Message "[OK] PROCESO COMPLETADO EXITOSAMENTE" "Green"
     Show-Links
 }
 
 # Deploy Swarm (Automatic)
 function Deploy-Swarm {
     Log-Message "========== DEPLOY AUTOMATICO ==========" "Blue"
-
     if (-not (Select-Environment)) { return }
     if (-not (Select-NetworkMode)) { return }
 
     Cleanup-All
 
-    Log-Message "[*] Levantando VMs sin provisión..." "Yellow"
-    vagrant up workerDocker1 --no-provision
-    vagrant up workerDocker2 --no-provision
-    vagrant up managerDocker --no-provision
+    Log-Message "[*] Levantando VMs..." "Yellow"
+    vagrant up --no-provision
 
-    Log-Message "[*] Provisionando manager (Docker + Swarm)..." "Yellow"
+    Log-Message "[*] Configurando Cluster..." "Yellow"
     vagrant provision managerDocker --provision-with fix-dns,docker-install,swarm-init
+    vagrant provision workerDocker1 --provision-with fix-dns,docker-install,worker-join
+    vagrant provision workerDocker2 --provision-with fix-dns,docker-install,worker-join
 
-    Log-Message "[*] Provisionando workers..." "Yellow"
-    vagrant provision workerDocker1
-    vagrant provision workerDocker2
-
-    Log-Message "[*] Esperando que el cluster esté completo..." "Yellow"
     if (-not (Wait-For-Nodes)) {
-        Log-Message "[!] Cluster no listo tras espera. Revisa 'vagrant status'." "Red"
+        Log-Message "[!] Cluster no listo." "Red"
         return
     }
 
@@ -447,12 +354,9 @@ function Deploy-Swarm {
         $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
         if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
-
-    # Inject hosts
     Inject-Hosts $managerIp "simcomp.co"
-    Inject-Hosts $managerIp "simcomp.local"
 
-    Log-Message "[✔] CLUSTER LISTO Y MONITOREADO" "Green"
+    Log-Message "[OK] CLUSTER LISTO" "Green"
     Show-Links
 }
 
@@ -463,7 +367,6 @@ while ($true) {
     Log-Message "   SIMCOMP INFRA MANAGER - WINDOWS" "Blue"
     Log-Message "======================================" "Blue"
 
-    # Solo mostramos el estado rápido
     $managerIp = "192.168.100.2"
     if (Test-Path $ENV_FILE) {
         $line = Get-Content $ENV_FILE | Select-String "MANAGER_IP="
@@ -471,28 +374,24 @@ while ($true) {
     }
 
     if (Test-Connection -ComputerName $managerIp -Count 1 -Quiet -ErrorAction SilentlyContinue) {
-        Log-Message "Estado: Online" "Green"
+        Log-Message "Estado: Online ($managerIp)" "Green"
         Show-Links
     } else {
-        Log-Message "Estado: Offline (Usa la opción 4 para iniciar)" "Red"
+        Log-Message "Estado: Offline" "Red"
     }
 
-    Log-Message "======================================" "White"
-    Log-Message "1) Paso a paso"
-    Log-Message "2) Semi automático"
-    Log-Message "3) Automático completo"
+    Log-Message "`n1) Paso a paso (Guiado)"
+    Log-Message "2) Semi automatico"
+    Log-Message "3) Automatico completo"
     Log-Message "4) Iniciar VMs"
     Log-Message "5) Apagar VMs"
     Log-Message "6) Deploy stack"
     Log-Message "7) Pruebas JMeter (CLI)"
     Log-Message "8) Limpiar TODO"
-    Log-Message "9) Auto-discovery red"
-    Log-Message "10) Unir nodo remoto"
-    Log-Message "11) Ver Logs"
-    Log-Message "12) Salir"
+    Log-Message "9) Salir"
     Log-Message "======================================" "White"
 
-    $opt = Read-Host "Opción"
+    $opt = Read-Host "Opcion"
 
     switch ($opt) {
         "1" { Guided-Mode }
@@ -509,12 +408,9 @@ while ($true) {
         "6" { vagrant provision managerDocker --provision-with deploy-stack }
         "7" { Run-JMeter }
         "8" { Cleanup-All }
-        "9" { Auto-Discovery }
-        "10" { Join-RemoteWorker }
-        "11" { Get-Content $LOG_FILE -Wait -Tail 20 }
-        "12" { exit }
-        Default { Log-Message "[!] Opción inválida" "Red" }
+        "9" { exit }
+        Default { Log-Message "[!] Opcion invalida" "Red" }
     }
 
-    Read-Host "ENTER para continuar..."
+    Read-Host "`nENTER para continuar..."
 }

@@ -1,4 +1,4 @@
-# local-ms-manager.ps1 - Gestión de microservicios locales (Windows)
+﻿# local-ms-manager.ps1 - Gesti  n de microservicios locales (Windows)
 # =============================================================================
 
 $BASE_DIR = "$PSScriptRoot\.."
@@ -34,9 +34,9 @@ function Stop-ServiceProcess {
     if ($process) {
         Log-Message "Deteniendo $service en puerto $port (PID: $($process.OwningProcess))..." "Yellow"
         Stop-Process -Id $process.OwningProcess -Force
-        Write-Host "[✔] $service detenido." -ForegroundColor Green
+        Write-Host "[   ] $service detenido." -ForegroundColor Green
     } else {
-        Log-Message "$service no parece estar ejecutándose." "Gray"
+        Log-Message "$service no parece estar ejecut  ndose." "Gray"
     }
 }
 

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
@@ -10,7 +11,7 @@ set -Eeuo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 # ---------- Configuración por defecto ----------
-DEFAULT_DOCKERHUB_USER=""
+DEFAULT_DOCKERHUB_USER="deytonro"
 DEFAULT_VERSION="v1.0.0"
 DEFAULT_REGISTRY="docker.io"
 DEFAULT_ENV_FILE=".env.docker-push"
@@ -79,7 +80,10 @@ load_env_file() {
   local env_file="$1"
 
   if [[ ! -f "$env_file" ]]; then
-    warn "No se encontró $env_file. Usando variables por defecto."
+    if [[ -f ".env" ]]; then
+      load_env_file ".env"
+      return
+    fi
     return
   fi
 
@@ -125,14 +129,9 @@ DOCKERHUB_PASS="${DOCKERHUB_PASS:-}"
 
 # Solicitar credenciales si faltan y se va a hacer push
 if [[ "$ACTION" != "build" ]]; then
-  if [[ "$DOCKERHUB_USER" == "tu_usuario" || -z "$DOCKERHUB_USER" ]]; then
     read -p "Ingrese su usuario de Docker Hub: " DOCKERHUB_USER
-  fi
-
-  if [[ -z "$DOCKERHUB_PASS" ]]; then
     read -sp "Ingrese su contraseña/token de Docker Hub: " DOCKERHUB_PASS
     echo "" # Nueva línea tras el input oculto
-  fi
 fi
 
 VERSION="${VERSION:-$DEFAULT_VERSION}"
@@ -158,7 +157,7 @@ SERVICES=(
   "simcomp-frontend|./frontend"
   "simcomp-gateway|./provisioning_docker/nginx"
   "simcomp-haproxy-balance|./provisioning_docker/haproxy"
-  "simcomp-analytics-spark|./analytics-spark-service"
+  "simcomp-analytics-spark-service|./analytics-spark-service"
 )
 
 # Filtrar servicios si se especificó uno
@@ -205,8 +204,13 @@ build_images() {
       continue
     fi
 
-    version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
-    latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+    if [[ -z "$DOCKERHUB_USER" ]]; then
+      version_tag="$image_name:$VERSION"
+      latest_tag="$image_name:latest"
+    else
+      version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
+      latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+    fi
 
     log "Construyendo $image_name ..."
     if "$CLI" build -t "$version_tag" "$context_dir"; then
@@ -233,8 +237,13 @@ push_images() {
   for item in "${items_to_push[@]}"; do
     IFS='|' read -r image_name context_dir <<< "$item"
 
-    version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
-    latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+    if [[ -z "$DOCKERHUB_USER" ]]; then
+      version_tag="$image_name:$VERSION"
+      latest_tag="$image_name:latest"
+    else
+      version_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:$VERSION"
+      latest_tag="$REGISTRY/$DOCKERHUB_USER/$image_name:latest"
+    fi
 
     log "Subiendo $image_name ..."
     "$CLI" push "$version_tag"

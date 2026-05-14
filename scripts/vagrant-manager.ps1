@@ -343,22 +343,60 @@ function Guided-Mode {
     if (-not (Select-Environment)) { return }
     if (-not (Select-NetworkMode)) { return }
 
-    Read-Host "Paso 1: Limpiar entorno → ENTER para continuar"
+    Log-Message "--- MODO GUIADO: PASO A PASO ---" "Yellow"
+
+    # Paso 1: Limpiar
+    Read-Host "Paso 1: Limpiar entorno previo → ENTER para continuar"
     Cleanup-All
 
-    Read-Host "Paso 2: Levantar VMs sin provisión → ENTER para continuar"
-    vagrant up workerDocker1 --no-provision
-    vagrant up workerDocker2 --no-provision
-    vagrant up managerDocker --no-provision
+    # Paso 2: Crear VMs una a una
+    Log-Message "`nPaso 2: Creación de máquinas virtuales (sin provisión)" "Yellow"
+    $vmsToCreate = @("managerDocker", "workerDocker1", "workerDocker2")
+    $createdVms = New-Object System.Collections.Generic.List[string]
 
-    Read-Host "Paso 3: Instalar Docker e inicializar Swarm en manager → ENTER"
+    while ($createdVms.Count -lt 3) {
+        Log-Message "`nSeleccione la máquina a crear:" "White"
+        for ($i = 0; $i -lt $vmsToCreate.Count; $i++) {
+            Write-Host "  $($i + 1)) $($vmsToCreate[$i])"
+        }
+        Write-Host "  4) Finalizar creación de máquinas (si ya creó las necesarias)"
+        
+        $vmOpt = Read-Host "Opción"
+        
+        if ($vmOpt -eq "4") {
+            break
+        } elseif ($vmOpt -match "^[1-3]$") {
+            $vmIndex = [int]$vmOpt - 1
+            $vmName = $vmsToCreate[$vmIndex]
+            
+            Log-Message "[*] Levantando $vmName..." "Yellow"
+            vagrant up "$vmName" --no-provision
+            
+            if (-not $createdVms.Contains($vmName)) {
+                $createdVms.Add($vmName)
+            }
+            Log-Message "[✔] $vmName levantada." "Green"
+        } else {
+            Log-Message "[!] Opción inválida." "Red"
+        }
+    }
+
+    # Paso 3: Conectar entre sí (Docker Swarm)
+    Log-Message "`nPaso 3: Conectar máquinas (Docker Swarm)" "Yellow"
+    Read-Host "Presiona ENTER para inicializar el cluster y unir los nodos..."
+    
+    Log-Message "[*] Inicializando Swarm en managerDocker..." "Yellow"
     vagrant provision managerDocker --provision-with fix-dns,docker-install,swarm-init
+    
+    Log-Message "[*] Uniendo workers al cluster..." "Yellow"
+    vagrant provision workerDocker1 --provision-with fix-dns,docker-install,worker-join
+    vagrant provision workerDocker2 --provision-with fix-dns,docker-install,worker-join
 
-    Read-Host "Paso 4: Unir workers al Swarm → ENTER"
-    vagrant provision workerDocker1
-    vagrant provision workerDocker2
-
-    Read-Host "Paso 5: Desplegar Stack → ENTER"
+    # Paso 4: Deploy
+    Log-Message "`nPaso 4: Realizar el Deploy de la aplicación" "Yellow"
+    Read-Host "Presiona ENTER para desplegar el stack de microservicios..."
+    
+    Log-Message "[*] Desplegando Stack en managerDocker..." "Yellow"
     vagrant provision managerDocker --provision-with deploy-stack
 
     $managerIp = "192.168.100.2"
@@ -367,7 +405,10 @@ function Guided-Mode {
         if ($line) { $managerIp = $line.ToString().Split("=")[1] }
     }
     
-    Log-Message "[✔] PROCESO COMPLETADO" "Green"
+    Inject-Hosts $managerIp "simcomp.co"
+    Inject-Hosts $managerIp "simcomp.local"
+
+    Log-Message "[✔] PROCESO COMPLETADO EXITOSAMENTE" "Green"
     Show-Links
 }
 

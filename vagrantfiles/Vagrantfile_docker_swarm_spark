@@ -12,7 +12,7 @@
 #   Frontend:       deytonro/simcomp-frontend:latest
 #   Microservicios: deytonro/simcomp-*:latest
 #   Haproxy:        deytonro/simcomp-haproxy-balance
-#   Spark:          deytonro/simcomp-analytics-spark  
+#   Spark:          deytonro/simcomp-analytics-spark-service  
 #
 # Uso:
 #   vagrant up

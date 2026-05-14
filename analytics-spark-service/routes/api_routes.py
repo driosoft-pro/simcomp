@@ -29,6 +29,31 @@ from services.profiling_service import (
 api_bp = Blueprint("api", __name__)
 
 
+@api_bp.errorhandler(FileNotFoundError)
+def handle_file_not_found(e):
+    return jsonify({"error": str(e)}), 404
+
+
+import traceback
+from datetime import datetime
+
+@api_bp.errorhandler(Exception)
+def handle_exception(e):
+    tb = traceback.format_exc()
+    try:
+        with open("/app/data/error.log", "a") as f:
+            f.write(f"\n--- ERROR {datetime.now()} ---\n")
+            f.write(tb)
+    except:
+        pass
+    # Devolvemos el traceback en el campo 'error' para que se vea en el log del navegador
+    return jsonify({
+        "error": f"Error interno: {str(e)}",
+        "details": str(e),
+        "traceback": tb
+    }), 500
+
+
 @api_bp.route("/datasets", methods=["GET"])
 def datasets():
     return jsonify(list_datasets())

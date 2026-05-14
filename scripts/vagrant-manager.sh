@@ -301,36 +301,72 @@ auto_discovery() {
 # MODO EDUCATIVO (PASO A PASO)
 # =============================
 guided_mode() {
-
     select_environment || return
     select_network_mode || return
 
-    read -p "Paso 1: Limpiar entorno → ENTER para continuar"
+    echo -e "${YELLOW}--- MODO GUIADO: PASO A PASO ---${NC}"
+    
+    # Paso 1: Limpiar
+    read -p "Paso 1: Limpiar entorno previo → ENTER para continuar"
     cleanup_all
 
-    read -p "Paso 2: Levantar VMs sin provisión → ENTER para continuar"
-    vagrant up workerDocker1 --no-provision
-    vagrant up workerDocker2 --no-provision
-    vagrant up managerDocker --no-provision
+    # Paso 2: Crear VMs una a una
+    echo -e "\n${YELLOW}Paso 2: Creación de máquinas virtuales (sin provisión)${NC}"
+    vms_to_create=("managerDocker" "workerDocker1" "workerDocker2")
+    created_vms=()
+    
+    while [ ${#created_vms[@]} -lt 3 ]; do
+        echo -e "\nSeleccione la máquina a crear:"
+        for i in "${!vms_to_create[@]}"; do
+            echo "  $((i+1))) ${vms_to_create[$i]}"
+        done
+        echo "  4) Finalizar creación de máquinas (si ya creó las necesarias)"
+        
+        read -p "Opción: " vm_opt
+        
+        if [[ "$vm_opt" == "4" ]]; then
+            break
+        elif [[ "$vm_opt" =~ ^[1-3]$ ]]; then
+            vm_index=$((vm_opt-1))
+            vm_name=${vms_to_create[$vm_index]}
+            
+            log "${YELLOW}[*] Levantando $vm_name...${NC}"
+            vagrant up "$vm_name" --no-provision
+            
+            # Mover de disponibles a creadas si no estaba ya
+            if [[ ! " ${created_vms[@]} " =~ " ${vm_name} " ]]; then
+                created_vms+=("$vm_name")
+            fi
+            log "${GREEN}[✔] $vm_name levantada.${NC}"
+        else
+            echo -e "${RED}Opción inválida.${NC}"
+        fi
+    done
 
-    read -p "Paso 3: Instalar Docker e inicializar Swarm en manager → ENTER"
+    # Paso 3: Conectar entre sí (Docker Swarm)
+    echo -e "\n${YELLOW}Paso 3: Conectar máquinas (Docker Swarm)${NC}"
+    read -p "Presiona ENTER para inicializar el cluster y unir los nodos..."
+    
+    log "${YELLOW}[*] Inicializando Swarm en managerDocker...${NC}"
     vagrant provision managerDocker --provision-with fix-dns,docker-install,swarm-init
+    
+    log "${YELLOW}[*] Uniendo workers al cluster...${NC}"
+    vagrant provision workerDocker1 --provision-with fix-dns,docker-install,worker-join
+    vagrant provision workerDocker2 --provision-with fix-dns,docker-install,worker-join
 
-    read -p "Paso 4: Unir workers al Swarm → ENTER"
-    vagrant provision workerDocker1
-    vagrant provision workerDocker2
-
-    read -p "Paso 5: Desplegar Stack → ENTER"
+    # Paso 4: Deploy
+    echo -e "\n${YELLOW}Paso 4: Realizar el Deploy de la aplicación${NC}"
+    read -p "Presiona ENTER para desplegar el stack de microservicios..."
+    
+    log "${YELLOW}[*] Desplegando Stack en managerDocker...${NC}"
     vagrant provision managerDocker --provision-with deploy-stack
 
-    log "${GREEN}[✔] PROCESO COMPLETADO${NC}"
-    log "${GREEN}    App:               http://$MANAGER_IP (o http://simcomp.co)${NC}"
-    log "${GREEN}    Stats HAProxy:     http://$MANAGER_IP:8404/stats (o http://simcomp.co:8404/stats)${NC}"
-    log "${GREEN}    Spark Dashboard:   http://$MANAGER_IP:8010 (o http://simcomp.co:8010)${NC}"
-    log "${GREEN}    Spark UI:          http://$MANAGER_IP:4040 (o http://simcomp.co:4040)${NC}"
-    log "${GREEN}    Prometheus:        http://$MANAGER_IP:9090 (o http://simcomp.co:9090)${NC}"
-    log "${GREEN}    Grafana:           http://$MANAGER_IP:3000 (o http://simcomp.co:3000)${NC}"
-    log "${GREEN}    Glances RT:        http://$MANAGER_IP:61208 (o http://simcomp.co:61208)${NC}"
+    MANAGER_IP=$(grep MANAGER_IP .env 2>/dev/null | cut -d '=' -f2 || echo "192.168.100.2")
+    inject_hosts "$MANAGER_IP" "simcomp.co"
+    inject_hosts "$MANAGER_IP" "simcomp.local"
+
+    log "${GREEN}[✔] PROCESO COMPLETADO EXITOSAMENTE${NC}"
+    show_links
 }
 
 # =============================

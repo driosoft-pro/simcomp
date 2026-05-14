@@ -19,7 +19,6 @@ DB_MAP["ms-personas"]="db-ms-personas"
 DB_MAP["ms-automotores"]="db-ms-automotores"
 DB_MAP["ms-infracciones"]="db-ms-infracciones"
 DB_MAP["ms-comparendos"]="db-ms-comparendos"
-DB_MAP["ms-reportes"]="db-ms-reportes"
 
 log() { echo -e "${BLUE}[*] $1${NC}"; }
 ok() { echo -e "${GREEN}[✔] $1${NC}"; }

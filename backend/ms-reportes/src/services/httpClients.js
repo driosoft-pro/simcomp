@@ -51,10 +51,11 @@ export function assertModule(modulo) {
  * @param {string} modulo
  * @param {string} token
  * @param {object} [opts]
- * @param {number} [opts.limit]   - Limitar cantidad de registros
- * @param {number} [opts.page]    - Página (para paginación)
+ * @param {object} [opts.limit]   - Limitar cantidad de registros
+ * @param {object} [opts.page]    - Página (para paginación)
+ * @param {boolean} [opts.full]   - Si es true, devuelve {data, total}
  */
-export async function fetchModuleData(modulo, token, { limit, page } = {}) {
+export async function fetchModuleData(modulo, token, { limit, page, full = false } = {}) {
   assertModule(modulo);
 
   const config = moduleConfig[modulo];
@@ -78,11 +79,12 @@ export async function fetchModuleData(modulo, token, { limit, page } = {}) {
   else if (Array.isArray(response.data?.data)) data = response.data.data;
   else if (Array.isArray(response.data?.rows)) data = response.data.rows;
 
-  // Si tenemos un total explícito en la respuesta, devolvemos el objeto con metadatos
-  if (total !== null) {
+  // Si se pide el objeto completo y tenemos total, lo devolvemos
+  if (full && total !== null) {
     return { data, total: Number(total) };
   }
 
+  // Por defecto siempre devolvemos el array para compatibilidad con toCsv/forEach
   return data;
 }
 

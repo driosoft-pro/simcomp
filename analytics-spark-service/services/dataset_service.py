@@ -12,7 +12,7 @@ def save_dataset(file):
         raise ValueError("No se seleccionó ningún archivo")
 
     if not allowed_file(file.filename):
-        raise ValueError("Solo se permiten archivos CSV")
+        raise ValueError(f"Solo se permiten archivos: {', '.join(ALLOWED_EXTENSIONS)}")
 
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -35,15 +35,15 @@ def list_datasets():
     seen = set()
     datasets = []
 
-    # 1. CSVs en data/ (preempaquetados con la imagen)
+    # 1. Archivos en data/ (preempaquetados con la imagen)
     for f in os.listdir(DATA_FOLDER):
-        if f.endswith(".csv") and os.path.isfile(os.path.join(DATA_FOLDER, f)):
+        if any(f.endswith(ext) for ext in ALLOWED_EXTENSIONS) and os.path.isfile(os.path.join(DATA_FOLDER, f)):
             seen.add(f)
             datasets.append(f)
 
-    # 2. CSVs subidos por el usuario en data/uploads/
+    # 2. Archivos subidos por el usuario en data/uploads/
     for f in os.listdir(UPLOAD_FOLDER):
-        if f.endswith(".csv") and f not in seen:
+        if any(f.endswith(ext) for ext in ALLOWED_EXTENSIONS) and f not in seen:
             datasets.append(f)
 
     return datasets

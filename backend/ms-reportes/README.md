@@ -35,16 +35,16 @@ ms-reportes/
 ├── README.md
 ├── .env
 └── src
-    ├── app.js
-    ├── server.js
-    ├── config
-    │   ├── env.js
-    │   └── swagger.js
-    ├── controllers
-    ├── middlewares
-    ├── routes
-    ├── services
-    └── utils
+  ├── app.js
+  ├── server.js
+  ├── config
+  │  ├── env.js
+  │  └── swagger.js
+  ├── controllers
+  ├── middlewares
+  ├── routes
+  ├── services
+  └── utils
 ```
 
 ## Dependencias adicionales para Swagger
@@ -55,7 +55,7 @@ Este servicio requiere estas dependencias, que ya quedaron agregadas en `package
 npm install swagger-jsdoc swagger-ui-express
 ```
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -66,13 +66,13 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets** para datos sensibles. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, la llave `JWT_SECRET` se lee automáticamente desde el sistema de secretos de Docker:
 - `/run/secrets/jwt_secret`
 
 **Se han eliminado todos los valores por defecto del código fuente.** Si las URLs de los servicios o la llave secreta no están definidas, el microservicio no funcionará correctamente.
 
-### 🔗 Integración con Microservicios
+### Integración con Microservicios
 Este servicio consume datos de todos los microservicios del ecosistema. Las URLs se configuran dinámicamente según el archivo `.env` seleccionado.
 
 
@@ -139,31 +139,31 @@ GET /api/reportes/estadisticas/pdf
 
 ```bash
 curl -X POST http://localhost:8006/api/reportes/import/personas \
-  -F "file=@personas.csv"
+ -F "file=@personas.csv"
 ```
 
 ## Integracion en Docker Compose
 
 ```yaml
 ms-reportes:
-  build: ./ms-reportes
-  container_name: ms-reportes
-  ports:
-    - "8006:8006"
-  environment:
-    SERVICE_NAME: ms-reportes
-    PORT: 8006
-    AUTH_SERVICE_URL: http://ms-auth-service:8001
-    PERSONAS_SERVICE_URL: http://ms-personas:8002
-    AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
-    INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
-    COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
-  depends_on:
-    - ms-auth-service
-    - ms-personas
-    - ms-automotores
-    - ms-infracciones
-    - ms-comparendos
+ build: ./ms-reportes
+ container_name: ms-reportes
+ ports:
+  - "8006:8006"
+ environment:
+  SERVICE_NAME: ms-reportes
+  PORT: 8006
+  AUTH_SERVICE_URL: http://ms-auth-service:8001
+  PERSONAS_SERVICE_URL: http://ms-personas:8002
+  AUTOMOTORES_SERVICE_URL: http://ms-automotores:8003
+  INFRACCIONES_SERVICE_URL: http://ms-infracciones:8004
+  COMPARENDOS_SERVICE_URL: http://ms-comparendos:8005
+ depends_on:
+  - ms-auth-service
+  - ms-personas
+  - ms-automotores
+  - ms-infracciones
+  - ms-comparendos
 ```
 
 ## Recomendaciones Técnicas

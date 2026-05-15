@@ -2,7 +2,7 @@
 
 Configuración de orquestación de contenedores para garantizar alta disponibilidad, balanceo de carga y escalabilidad horizontal del sistema.
 
-## 🏗️ Arquitectura del Cluster
+## Arquitectura del Cluster
 
 El entorno se basa en un cluster de 3 nodos:
 
@@ -12,18 +12,18 @@ El entorno se basa en un cluster de 3 nodos:
 | **workerDocker1** | `192.168.100.3` | Worker | Ejecución de Microservicios y Bases de Datos. |
 | **workerDocker2** | `192.168.100.4` | Worker | Ejecución de Microservicios y Bases de Datos. |
 
-## 📂 Estructura de Directorios
+## Estructura de Directorios
 
 ```text
 provisioning_docker/
-├── db-init/          # Scritps SQL para inicialización de bases de datos.
-├── nginx/            # Configuraciones de Nginx (Gateway y Frontend).
-│   ├── gateway.conf          # Configuración del Proxy Inverso principal.
-│   └── frontend.default.conf  # Configuración del servidor web de React.
-├── scripts/          # scripts de automatización (Deploy, Swarm, Scale).
-├── .env              # Variables de entorno del cluster.
-├── stack.yml         # Definición de servicios para Docker Swarm.
-└── README.md         # Documentación del entorno (este archivo).
+├── db-init/     # Scritps SQL para inicialización de bases de datos.
+├── nginx/      # Configuraciones de Nginx (Gateway y Frontend).
+│  ├── gateway.conf     # Configuración del Proxy Inverso principal.
+│  └── frontend.default.conf # Configuración del servidor web de React.
+├── scripts/     # scripts de automatización (Deploy, Swarm, Scale).
+├── .env       # Variables de entorno del cluster.
+├── stack.yml     # Definición de servicios para Docker Swarm.
+└── README.md     # Documentación del entorno (este archivo).
 ```
 
 ## Tecnologías de Orquestación
@@ -40,7 +40,7 @@ provisioning_docker/
 
 ---
 
-## 🚀 Instrucciones de Despliegue (Swarm)
+## Instrucciones de Despliegue (Swarm)
 
 ### 1. Levantar las VMs
 Desde la raíz del proyecto:
@@ -128,7 +128,7 @@ docker service logs -f simcomp_ms-auth-service
 
 ---
 
-## 🌐 Acceso desde el Equipo Local
+## Acceso desde el Equipo Local
 
 Mapear `simcomp.co` al manager en `192.168.100.2`.
 
@@ -141,10 +141,10 @@ echo "192.168.100.2 simcomp.co" | sudo tee -a /etc/hosts
 - Web: [http://simcomp.co](http://simcomp.co)
 - API: `curl http://simcomp.co/api/health`
 - Dashboard de Estadísticas (HAProxy): [http://simcomp.co:8404/stats](http://simcomp.co:8404/stats)
-  - **Usuario:** `admin`
-  - **Clave:** `Admin123*`
+ - **Usuario:** `admin`
+ - **Clave:** `Admin123*`
 
-### 📊 Acceso y Uso de Analytics Spark
+### Acceso y Uso de Analytics Spark
 
 El servicio de análisis masivo de datos (PySpark) corre dedicado en un worker. Ofrece un panel visual propio y la consola oficial de Spark.
 
@@ -161,38 +161,38 @@ El servicio de análisis masivo de datos (PySpark) corre dedicado en un worker. 
 Puedes conectarte en vivo al contenedor del servicio para ejecutar código Python de análisis de datos:
 
 1. **Ubicar el contenedor** (desde el `managerDocker`):
-   ```bash
-   docker service ps simcomp_ms-analytics-spark
-   ```
-   *Revisa en qué worker se encuentra asignado (generalmente `workerDocker1`).*
+  ```bash
+  docker service ps simcomp_ms-analytics-spark
+  ```
+  *Revisa en qué worker se encuentra asignado (generalmente `workerDocker1`).*
 
 2. **Entrar al nodo correspondiente** (desde tu máquina anfitriona):
-   ```bash
-   vagrant ssh workerDocker1
-   ```
+  ```bash
+  vagrant ssh workerDocker1
+  ```
 
 3. **Obtener el ID del contenedor y acceder:**
-   ```bash
-   CONTAINER_ID=$(docker ps -qf "name=simcomp_ms-analytics-spark")
-   docker exec -it $CONTAINER_ID bash
-   ```
+  ```bash
+  CONTAINER_ID=$(docker ps -qf "name=simcomp_ms-analytics-spark")
+  docker exec -it $CONTAINER_ID bash
+  ```
 
 4. **Lanzar la consola de PySpark:**
-   Una vez dentro de la terminal del contenedor, escribe:
-   ```bash
-   pyspark
-   ```
-   *¡Listo! Ahora tienes un entorno interactivo conectado. Puedes probar cargar un dataset:*
-   ```python
-   df = spark.read.option("header", True).csv("/app/data/uploads/dataset_simcomp.csv")
-   df.show(5)
-   ```
+  Una vez dentro de la terminal del contenedor, escribe:
+  ```bash
+  pyspark
+  ```
+  *¡Listo! Ahora tienes un entorno interactivo conectado. Puedes probar cargar un dataset:*
+  ```python
+  df = spark.read.option("header", True).csv("/app/data/uploads/dataset_simcomp.csv")
+  df.show(5)
+  ```
 
 ---
 
-## 🛠️ Comandos de Gestión y Mantenimiento
+## Comandos de Gestión y Mantenimiento
 
-### 📈 Escalamiento (Scaling)
+### Escalamiento (Scaling)
 Aumenta la disponibilidad de tus servicios según la carga:
 ```bash
 # Escalar manualmente
@@ -202,7 +202,7 @@ docker service scale simcomp_frontend=5
 ./scripts/scale-service.sh simcomp_ms-auth-service 10
 ```
 
-### 🔍 Monitoreo y Recursos
+### Monitoreo y Recursos
 ```bash
 # Ver consumo de CPU/Memoria en tiempo real
 docker stats
@@ -212,7 +212,7 @@ docker node ps managerDocker
 docker node ps workerDocker1
 ```
 
-### 🛑 Detención y Limpieza
+### Detención y Limpieza
 ```bash
 # Detener y eliminar todos los servicios
 docker stack rm simcomp
@@ -226,7 +226,7 @@ docker system prune -a
 
 ---
 
-## 🛠️ Solución de Problemas (Troubleshooting)
+## Solución de Problemas (Troubleshooting)
 
 ### 1. El comando `docker stack deploy` falla por falta de secretos
 **Error**: `secret not found: auth_db_password`

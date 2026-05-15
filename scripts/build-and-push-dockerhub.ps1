@@ -1,4 +1,4 @@
-# =========================================================
+﻿# =========================================================
 # SIMCOMP - Build & Push to Docker Hub
 # Compatible con Docker y Podman
 # Windows / PowerShell
@@ -38,7 +38,7 @@ function Get-Cli() {
     } elseif (Get-Command docker -ErrorAction SilentlyContinue) {
         return "docker"
     } else {
-        Write-Fail "No se encontró docker ni podman"
+        Write-Fail "No se encontr   docker ni podman"
     }
 }
 
@@ -48,12 +48,12 @@ function Test-ValidContext($path) {
 }
 
 # ---------- Config ----------
-# ---------- Cargar Configuración ----------
+# ---------- Cargar Configuraci  n ----------
 Load-Env
 $Cli = Get-Cli
 
 $DockerHubUser = if ($Action -ne "build") { Read-Host "Ingrese su usuario de Docker Hub" } else { "deytonro" }
-$DockerHubPass = if ($Action -ne "build") { Read-Host "Ingrese su contraseña de Docker Hub (no se mostrará)" -AsSecureString } else { "" }
+$DockerHubPass = if ($Action -ne "build") { Read-Host "Ingrese su contrase  a de Docker Hub (no se mostrar  )" -AsSecureString } else { "" }
 $Version = if ($env:VERSION) { $env:VERSION } else { "v1.0.0" }
 $Registry = if ($env:REGISTRY) { $env:REGISTRY } else { "docker.io" }
 
@@ -99,7 +99,7 @@ if ($TargetService) {
 # ---------- Login ----------
 function Login-Registry() {
     if (-not $DockerHubPass) {
-        Write-Warn "Sin DOCKERHUB_PASS → usa docker login manual"
+        Write-Warn "Sin DOCKERHUB_PASS     usa docker login manual"
         return
     }
 
@@ -134,7 +134,7 @@ function Build-Images() {
             $script:Built += $svc
             Write-Ok "$Name construido"
         } else {
-            Write-Warn "Error construyendo $Name. Se saltará este servicio."
+            Write-Warn "Error construyendo $Name. Se saltar   este servicio."
         }
     }
 }
@@ -160,25 +160,25 @@ function Push-Images() {
 
 # ---------- Limpieza ----------
 function Remove-DanglingImages() {
-    Write-Info "Buscando y limpiando imágenes sin etiqueta (<none>) ..."
+    Write-Info "Buscando y limpiando im  genes sin etiqueta (<none>) ..."
     $dangling = & $Cli images -f "dangling=true" -q
     if ($dangling) {
-        Write-Info "Se encontraron imágenes huérfanas. Procediendo a eliminar..."
+        Write-Info "Se encontraron im  genes hu  rfanas. Procediendo a eliminar..."
         & $Cli rmi -f $dangling
-        Write-Ok "Imágenes huérfanas eliminadas."
+        Write-Ok "Im  genes hu  rfanas eliminadas."
     } else {
-        Write-Info "No se encontraron imágenes huérfanas."
+        Write-Info "No se encontraron im  genes hu  rfanas."
     }
 }
 
-# ---------- Ejecución ----------
-Write-Info "CLI: $Cli | Usuario: $DockerHubUser | Versión: $Version | Acción: $Action"
+# ---------- Ejecuci  n ----------
+Write-Info "CLI: $Cli | Usuario: $DockerHubUser | Versi  n: $Version | Acci  n: $Action"
 
 switch ($Action) {
     "build" { Build-Images }
     "push" { Login-Registry; Push-Images }
     "all" { Login-Registry; Build-Images; Push-Images; Remove-DanglingImages }
-    Default { Write-Fail "Acción inválida: build | push | all" }
+    Default { Write-Fail "Acci  n invalida: build | push | all" }
 }
 
 Write-Host ""

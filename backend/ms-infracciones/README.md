@@ -29,22 +29,22 @@ Este servicio se encarga de:
 ```text
 ms-infracciones/
 ├── db/
-│   └── infracciones_db.sql
+│  └── infracciones_db.sql
 ├── src/
-│   ├── config/
-│   │   └── database.js
-│   ├── controllers/
-│   │   └── infracciones.controller.js
-│   ├── models/
-│   │   └── infraccion.model.js
-│   ├── routes/
-│   │   └── infracciones.routes.js
-│   ├── services/
-│   │   └── infracciones.service.js
-│   ├── swagger/
-│   │   └── swagger.js
-│   ├── app.js
-│   └── server.js
+│  ├── config/
+│  │  └── database.js
+│  ├── controllers/
+│  │  └── infracciones.controller.js
+│  ├── models/
+│  │  └── infraccion.model.js
+│  ├── routes/
+│  │  └── infracciones.routes.js
+│  ├── services/
+│  │  └── infracciones.service.js
+│  ├── swagger/
+│  │  └── swagger.js
+│  ├── app.js
+│  └── server.js
 ├── .env
 ├── docker-compose.yml
 ├── package.json
@@ -101,7 +101,7 @@ http://localhost:8004/api/docs/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -112,7 +112,7 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
 
 Secretos requeridos:
@@ -251,17 +251,17 @@ curl http://localhost:8004/api/health
 
 ```bash
 curl -X POST http://localhost:8004/api/infracciones \
-  -H "Content-Type: application/json" \
-  -d '{
-    "codigo":"C001",
-    "descripcion":"Conducir sin portar licencia",
-    "articulo_codigo":"Ley 769/2002 Art. 131",
-    "tipo_sancion":"MONETARIA",
-    "valor_multa":650000,
-    "dias_suspension":null,
-    "aplica_descuento":true,
-    "vigente":true
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+  "codigo":"C001",
+  "descripcion":"Conducir sin portar licencia",
+  "articulo_codigo":"Ley 769/2002 Art. 131",
+  "tipo_sancion":"MONETARIA",
+  "valor_multa":650000,
+  "dias_suspension":null,
+  "aplica_descuento":true,
+  "vigente":true
+ }'
 ```
 
 ---
@@ -280,7 +280,7 @@ Ejemplo usando Axios:
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8004/api"
+ baseURL: "http://localhost:8004/api"
 });
 
 export default api;

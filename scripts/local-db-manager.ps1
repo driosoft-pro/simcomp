@@ -1,4 +1,4 @@
-# local-db-manager.ps1 - Gestión de bases de datos locales (Corregido para multi-compose)
+﻿# local-db-manager.ps1 - Gesti  n de bases de datos locales (Corregido para multi-compose)
 # =============================================================================
 
 $BASE_DIR = "$PSScriptRoot\.."

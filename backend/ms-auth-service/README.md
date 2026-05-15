@@ -31,29 +31,29 @@ Este servicio se encarga de:
 ```text
 ms-auth-service/
 ├── db/
-│   └── init.sql
+│  └── init.sql
 ├── src/
-│   ├── config/
-│   │   └── database.js
-│   ├── controllers/
-│   │   ├── auth.controller.js
-│   │   └── users.controller.js
-│   ├── middlewares/
-│   │   ├── auth.middleware.js
-│   │   └── role.middleware.js
-│   ├── models/
-│   │   ├── user.model.js
-│   │   └── refreshToken.model.js
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   └── users.routes.js
-│   ├── services/
-│   │   ├── auth.service.js
-│   │   └── users.service.js
-│   ├── swagger/
-│   │   └── swagger.js
-│   ├── app.js
-│   └── server.js
+│  ├── config/
+│  │  └── database.js
+│  ├── controllers/
+│  │  ├── auth.controller.js
+│  │  └── users.controller.js
+│  ├── middlewares/
+│  │  ├── auth.middleware.js
+│  │  └── role.middleware.js
+│  ├── models/
+│  │  ├── user.model.js
+│  │  └── refreshToken.model.js
+│  ├── routes/
+│  │  ├── auth.routes.js
+│  │  └── users.routes.js
+│  ├── services/
+│  │  ├── auth.service.js
+│  │  └── users.service.js
+│  ├── swagger/
+│  │  └── swagger.js
+│  ├── app.js
+│  └── server.js
 ├── .env
 ├── docker-compose.yml
 ├── package.json
@@ -134,7 +134,7 @@ http://localhost:8001/api/docs/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -145,7 +145,7 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
 
 Secretos requeridos:
@@ -263,8 +263,8 @@ Body:
 
 ```json
 {
-  "identifier": "admin@simcomp.co",
-  "password": "Admin123*"
+ "identifier": "admin@simcomp.co",
+ "password": "Admin123*"
 }
 ```
 
@@ -272,8 +272,8 @@ También funciona con username:
 
 ```json
 {
-  "identifier": "admin",
-  "password": "Admin123*"
+ "identifier": "admin",
+ "password": "Admin123*"
 }
 ```
 
@@ -287,7 +287,7 @@ Body:
 
 ```json
 {
-  "refreshToken": "token_generado"
+ "refreshToken": "token_generado"
 }
 ```
 
@@ -301,7 +301,7 @@ Body:
 
 ```json
 {
-  "refreshToken": "token_generado"
+ "refreshToken": "token_generado"
 }
 ```
 
@@ -359,23 +359,23 @@ curl http://localhost:8001/api/health
 
 ```bash
 curl -X POST http://localhost:8001/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"identifier":"admin@simcomp.co","password":"Admin123*"}'
+ -H "Content-Type: application/json" \
+ -d '{"identifier":"admin@simcomp.co","password":"Admin123*"}'
 ```
 
 ### Login con username
 
 ```bash
 curl -X POST http://localhost:8001/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"identifier":"admin","password":"Admin123*"}'
+ -H "Content-Type: application/json" \
+ -d '{"identifier":"admin","password":"Admin123*"}'
 ```
 
 ### Listar usuarios con token
 
 ```bash
 curl http://localhost:8001/api/usuarios \
-  -H "Authorization: Bearer TU_ACCESS_TOKEN"
+ -H "Authorization: Bearer TU_ACCESS_TOKEN"
 ```
 
 ---
@@ -394,7 +394,7 @@ Ejemplo usando Axios:
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8001/api"
+ baseURL: "http://localhost:8001/api"
 });
 
 export default api;
@@ -404,8 +404,8 @@ export default api;
 
 ```js
 const response = await api.post("/auth/login", {
-  identifier: values.identifier,
-  password: values.password,
+ identifier: values.identifier,
+ password: values.password,
 });
 ```
 
@@ -441,7 +441,7 @@ Actualizar en PostgreSQL:
 ```sql
 UPDATE usuarios
 SET password_hash = 'NUEVO_HASH',
-    updated_at = CURRENT_TIMESTAMP
+  updated_at = CURRENT_TIMESTAMP
 WHERE username IN ('admin', 'agente', 'supervisor', 'ciudadano');
 ```
 
@@ -457,7 +457,7 @@ Si usas `import/export`, en `package.json` debe existir:
 
 ```json
 {
-  "type": "module"
+ "type": "module"
 }
 ```
 
@@ -516,13 +516,13 @@ podman volume rm auth-db-data
 Levantar el contenedor otra vez con Podman
 ```bash
 podman run -d \
-  --name auth-db \
-  -e POSTGRES_DB=auth_db \
-  -e POSTGRES_USER=auth_user \
-  -e POSTGRES_PASSWORD=auth_pass \
-  -p 5432:5432 \
-  -v auth-db-data:/var/lib/postgresql/data \
-  docker.io/library/postgres:16
+ --name auth-db \
+ -e POSTGRES_DB=auth_db \
+ -e POSTGRES_USER=auth_user \
+ -e POSTGRES_PASSWORD=auth_pass \
+ -p 5432:5432 \
+ -v auth-db-data:/var/lib/postgresql/data \
+ docker.io/library/postgres:16
 ```
 
 ---

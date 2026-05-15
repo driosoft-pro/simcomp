@@ -54,96 +54,96 @@ sistema-comparendos/
 ├── README.md
 │
 ├── ms-auth-service/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── models/
-│   │   │   ├── Usuario.js
-│   │   │   └── RefreshToken.js
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   ├── middlewares/
-│   │   └── swagger/
-│   └── .env
+│  ├── Dockerfile
+│  ├── package.json
+│  ├── src/
+│  │  ├── app.js
+│  │  ├── server.js
+│  │  ├── config/
+│  │  │  └── database.js
+│  │  ├── models/
+│  │  │  ├── Usuario.js
+│  │  │  └── RefreshToken.js
+│  │  ├── routes/
+│  │  ├── controllers/
+│  │  ├── middlewares/
+│  │  └── swagger/
+│  └── .env
 │
 ├── ms-personas/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── models/
-│   │   │   ├── Persona.js
-│   │   │   └── LicenciaConduccion.js
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   └── swagger/
-│   └── .env
+│  ├── Dockerfile
+│  ├── package.json
+│  ├── src/
+│  │  ├── app.js
+│  │  ├── server.js
+│  │  ├── config/
+│  │  │  └── database.js
+│  │  ├── models/
+│  │  │  ├── Persona.js
+│  │  │  └── LicenciaConduccion.js
+│  │  ├── routes/
+│  │  ├── controllers/
+│  │  └── swagger/
+│  └── .env
 │
 ├── ms-automotores/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── models/
-│   │   │   └── Automotor.js
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   └── swagger/
-│   └── .env
+│  ├── Dockerfile
+│  ├── package.json
+│  ├── src/
+│  │  ├── app.js
+│  │  ├── server.js
+│  │  ├── config/
+│  │  │  └── database.js
+│  │  ├── models/
+│  │  │  └── Automotor.js
+│  │  ├── routes/
+│  │  ├── controllers/
+│  │  └── swagger/
+│  └── .env
 │
 ├── ms-infracciones/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── models/
-│   │   │   └── Infraccion.js
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   └── swagger/
-│   └── .env
+│  ├── Dockerfile
+│  ├── package.json
+│  ├── src/
+│  │  ├── app.js
+│  │  ├── server.js
+│  │  ├── config/
+│  │  │  └── database.js
+│  │  ├── models/
+│  │  │  └── Infraccion.js
+│  │  ├── routes/
+│  │  ├── controllers/
+│  │  └── swagger/
+│  └── .env
 │
 ├── ms-reportes/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   ├── config/
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   └── swagger/
-│   └── .env
+│  ├── Dockerfile
+│  ├── package.json
+│  ├── src/
+│  │  ├── app.js
+│  │  ├── server.js
+│  │  ├── config/
+│  │  ├── routes/
+│  │  ├── controllers/
+│  │  ├── services/
+│  │  └── swagger/
+│  └── .env
 └── ms-comparendos/
-    ├── Dockerfile
-    ├── package.json
-    ├── src/
-    │   ├── app.js
-    │   ├── server.js
-    │   ├── config/
-    │   │   └── database.js
-    │   ├── models/
-    │   │   └── Comparendo.js
-    │   ├── routes/
-    │   ├── controllers/
-    │   ├── services/
-    │   │   └── external.service.js
-    │   └── swagger/
-    └── .env
+  ├── Dockerfile
+  ├── package.json
+  ├── src/
+  │  ├── app.js
+  │  ├── server.js
+  │  ├── config/
+  │  │  └── database.js
+  │  ├── models/
+  │  │  └── Comparendo.js
+  │  ├── routes/
+  │  ├── controllers/
+  │  ├── services/
+  │  │  └── external.service.js
+  │  └── swagger/
+  └── .env
 ```
 
 ---
@@ -155,23 +155,23 @@ según la responsabilidad del servicio, pero una base mínima del proyecto puede
 
 ```json
 {
-  "dependencies": {
-    "express": "^4.18.2",
-    "sequelize": "^6.35.2",
-    "pg": "^8.11.3",
-    "pg-hstore": "^2.3.4",
-    "dotenv": "^16.3.1",
-    "axios": "^1.6.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-validator": "^7.0.1",
-    "swagger-ui-express": "^5.0.0",
-    "swagger-jsdoc": "^6.2.8",
-    "morgan": "^1.10.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  }
+ "dependencies": {
+  "express": "^4.18.2",
+  "sequelize": "^6.35.2",
+  "pg": "^8.11.3",
+  "pg-hstore": "^2.3.4",
+  "dotenv": "^16.3.1",
+  "axios": "^1.6.2",
+  "cors": "^2.8.5",
+  "helmet": "^7.1.0",
+  "express-validator": "^7.0.1",
+  "swagger-ui-express": "^5.0.0",
+  "swagger-jsdoc": "^6.2.8",
+  "morgan": "^1.10.0"
+ },
+ "devDependencies": {
+  "nodemon": "^3.0.2"
+ }
 }
 ```
 
@@ -179,10 +179,10 @@ según la responsabilidad del servicio, pero una base mínima del proyecto puede
 
 ```bash
 # Recomendado: Usar el gestor central en la raíz del proyecto
-./simcomp-manager.sh  # Opción 7
+./simcomp-manager.sh # Opción 7
 
 # Manual (en cada directorio de microservicio)
-pnpm install  # o npm install
+pnpm install # o npm install
 ```
 
 > En `ms-auth-service` normalmente se requerirán dependencias adicionales de autenticación
@@ -201,11 +201,11 @@ pnpm install  # o npm install
 | id | UUID | PK | Identificador único |
 | username | VARCHAR(50) | UNIQUE | Nombre de usuario para login |
 | email | VARCHAR(150) | UNIQUE | Correo electrónico |
-| password_hash | VARCHAR(255) |  | Contraseña hasheada con bcrypt |
-| rol | ENUM |  | `admin`, `agente`, `supervisor`, `ciudadano` |
-| estado | ENUM |  | `activo`, `inactivo` |
-| created_at | TIMESTAMP |  | Fecha de registro en el sistema |
-| updated_at | TIMESTAMP |  | Última modificación |
+| password_hash | VARCHAR(255) | | Contraseña hasheada con bcrypt |
+| rol | ENUM | | `admin`, `agente`, `supervisor`, `ciudadano` |
+| estado | ENUM | | `activo`, `inactivo` |
+| created_at | TIMESTAMP | | Fecha de registro en el sistema |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `refresh_tokens`
@@ -214,11 +214,11 @@ pnpm install  # o npm install
 |---|---|---|---|
 | id | UUID | PK | Identificador único |
 | usuario_id | UUID | FK | Propietario del token |
-| token | VARCHAR(255) |  | Refresh token (JWT o hash) |
-| expires_at | TIMESTAMP |  | Expiración del refresh token |
-| revocado | BOOLEAN |  | Estado del token |
-| created_at | TIMESTAMP |  | Fecha de creación |
-| updated_at | TIMESTAMP |  | Última modificación |
+| token | VARCHAR(255) | | Refresh token (JWT o hash) |
+| expires_at | TIMESTAMP | | Expiración del refresh token |
+| revocado | BOOLEAN | | Estado del token |
+| created_at | TIMESTAMP | | Fecha de creación |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
@@ -232,16 +232,16 @@ pnpm install  # o npm install
 | id | UUID | PK | Identificador único interno del sistema |
 | tipo_documento | VARCHAR(10) | ENUM | `CC`, `CE`, `PASAPORTE`, `TI` |
 | numero_documento | VARCHAR(20) | IDX | Número único del documento; índice único |
-| nombres | VARCHAR(100) |  | Nombres completos |
-| apellidos | VARCHAR(100) |  | Apellidos completos |
-| fecha_nacimiento | DATE |  | Fecha de nacimiento |
-| genero | ENUM |  | `M`, `F`, `O` |
-| direccion | VARCHAR(200) |  | Dirección de residencia |
-| telefono | VARCHAR(20) |  | Teléfono de contacto |
+| nombres | VARCHAR(100) | | Nombres completos |
+| apellidos | VARCHAR(100) | | Apellidos completos |
+| fecha_nacimiento | DATE | | Fecha de nacimiento |
+| genero | ENUM | | `M`, `F`, `O` |
+| direccion | VARCHAR(200) | | Dirección de residencia |
+| telefono | VARCHAR(20) | | Teléfono de contacto |
 | email | VARCHAR(150) | UNIQUE | Correo electrónico |
-| estado | ENUM |  | `activo`, `inactivo` |
-| created_at | TIMESTAMP |  | Fecha de registro |
-| updated_at | TIMESTAMP |  | Última modificación |
+| estado | ENUM | | `activo`, `inactivo` |
+| created_at | TIMESTAMP | | Fecha de registro |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `LicenciaConduccion`
@@ -251,13 +251,13 @@ pnpm install  # o npm install
 | id | UUID | PK | Identificador único de la licencia |
 | persona_id | UUID | FK | Referencia a `Persona` |
 | numero_licencia | VARCHAR(30) | IDX | Número oficial; índice único |
-| categoria | ENUM |  | `A1`, `A2`, `B1`, `B2`, `B3`, `C1`, `C2`, `C3` |
-| fecha_expedicion | DATE |  | Fecha de expedición |
-| fecha_vencimiento | DATE |  | Fecha de vencimiento |
-| estado | ENUM |  | `vigente`, `suspendida`, `vencida`, `cancelada` |
-| observaciones | TEXT |  | Notas adicionales |
-| created_at | TIMESTAMP |  | Fecha de registro |
-| updated_at | TIMESTAMP |  | Última modificación |
+| categoria | ENUM | | `A1`, `A2`, `B1`, `B2`, `B3`, `C1`, `C2`, `C3` |
+| fecha_expedicion | DATE | | Fecha de expedición |
+| fecha_vencimiento | DATE | | Fecha de vencimiento |
+| estado | ENUM | | `vigente`, `suspendida`, `vencida`, `cancelada` |
+| observaciones | TEXT | | Notas adicionales |
+| created_at | TIMESTAMP | | Fecha de registro |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
@@ -273,21 +273,21 @@ pnpm install  # o npm install
 | vin | VARCHAR(30) | UNIQUE | Número de identificación vehicular |
 | numero_motor | VARCHAR(30) | UNIQUE | Número de motor |
 | numero_chasis | VARCHAR(30) | UNIQUE | Número de chasis |
-| marca | VARCHAR(50) |  | Marca del vehículo |
-| linea | VARCHAR(50) |  | Línea/Referencia del vehículo |
-| modelo | INTEGER |  | Año del modelo |
-| color | VARCHAR(30) |  | Color |
-| clase | ENUM |  | `AUTOMOVIL`, `MOTOCICLETA`, `CAMIONETA`, `CAMPERO`, `BUS`, `CAMION` |
-| servicio | ENUM |  | `PARTICULAR`, `PUBLICO`, `OFICIAL` |
-| propietario_documento | VARCHAR(20) |  | Documento del propietario |
-| propietario_nombre | VARCHAR(200) |  | Nombre del propietario |
-| estado | ENUM |  | `activo`, `inactivo`, `inmovilizado` |
-| condicion | ENUM |  | `LEGAL`, `REPORTADO_ROBO`, `RECUPERADO`, `EMBARGADO` |
-| created_at | TIMESTAMP |  | Fecha de registro |
-| updated_at | TIMESTAMP |  | Última modificación |
+| marca | VARCHAR(50) | | Marca del vehículo |
+| linea | VARCHAR(50) | | Línea/Referencia del vehículo |
+| modelo | INTEGER | | Año del modelo |
+| color | VARCHAR(30) | | Color |
+| clase | ENUM | | `AUTOMOVIL`, `MOTOCICLETA`, `CAMIONETA`, `CAMPERO`, `BUS`, `CAMION` |
+| servicio | ENUM | | `PARTICULAR`, `PUBLICO`, `OFICIAL` |
+| propietario_documento | VARCHAR(20) | | Documento del propietario |
+| propietario_nombre | VARCHAR(200) | | Nombre del propietario |
+| estado | ENUM | | `activo`, `inactivo`, `inmovilizado` |
+| condicion | ENUM | | `LEGAL`, `REPORTADO_ROBO`, `RECUPERADO`, `EMBARGADO` |
+| created_at | TIMESTAMP | | Fecha de registro |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
-> `propietario_id` es una referencia lógica al microservicio de personas.  
+> `propietario_id` es una referencia lógica al microservicio de personas. 
 > No debe implementarse como clave foránea física entre bases de datos.
 
 ---
@@ -300,16 +300,16 @@ pnpm install  # o npm install
 |---|---|---|---|
 | infraccion_id | UUID | PK | Identificador único |
 | codigo | VARCHAR(10) | IDX | Código único de la infracción según CNT; ej. `C001`, `D002` |
-| descripcion | TEXT |  | Descripción oficial de la infracción |
-| articulo_codigo | VARCHAR(30) |  | Artículo del Código Nacional de Tránsito |
-| tipo_sancion | ENUM |  | `MONETARIA`, `SUSPENSION_LICENCIA`, `INMOVILIZACION`, `MIXTA` |
-| valor_multa | DECIMAL(12,2) |  | Valor de la multa |
+| descripcion | TEXT | | Descripción oficial de la infracción |
+| articulo_codigo | VARCHAR(30) | | Artículo del Código Nacional de Tránsito |
+| tipo_sancion | ENUM | | `MONETARIA`, `SUSPENSION_LICENCIA`, `INMOVILIZACION`, `MIXTA` |
+| valor_multa | DECIMAL(12,2) | | Valor de la multa |
 | dias_suspension | INTEGER | NULL | Días de suspensión si aplica |
-| estado | ENUM |  | `activo`, `inactivo` |
-| aplica_descuento | BOOLEAN |  | Si aplica descuento |
-| vigente | BOOLEAN |  | Estado de vigencia normativa |
-| created_at | TIMESTAMP |  | Fecha de registro |
-| updated_at | TIMESTAMP |  | Última modificación |
+| estado | ENUM | | `activo`, `inactivo` |
+| aplica_descuento | BOOLEAN | | Si aplica descuento |
+| vigente | BOOLEAN | | Estado de vigencia normativa |
+| created_at | TIMESTAMP | | Fecha de registro |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ---
@@ -322,21 +322,21 @@ pnpm install  # o npm install
 |---|---|---|---|
 | id | UUID | PK | Identificador único |
 | numero_comparendo | VARCHAR(30) | IDX | Número único; índice único |
-| ciudadano_documento | VARCHAR(20) |  | Documento del ciudadano infractor |
-| ciudadano_nombre | VARCHAR(200) |  | Nombre del ciudadano infractor |
-| agente_documento | VARCHAR(20) |  | Documento del agente de tránsito |
-| agente_nombre | VARCHAR(200) |  | Nombre del agente de tránsito |
-| placa_vehiculo | VARCHAR(10) |  | Placa del vehículo vinculado |
-| infraccion_codigo | VARCHAR(10) |  | Código de la infracción según CNT |
-| infraccion_descripcion | TEXT |  | Descripción de la infracción |
-| valor_multa | DECIMAL(12,2) |  | Valor total de la multa |
+| ciudadano_documento | VARCHAR(20) | | Documento del ciudadano infractor |
+| ciudadano_nombre | VARCHAR(200) | | Nombre del ciudadano infractor |
+| agente_documento | VARCHAR(20) | | Documento del agente de tránsito |
+| agente_nombre | VARCHAR(200) | | Nombre del agente de tránsito |
+| placa_vehiculo | VARCHAR(10) | | Placa del vehículo vinculado |
+| infraccion_codigo | VARCHAR(10) | | Código de la infracción según CNT |
+| infraccion_descripcion | TEXT | | Descripción de la infracción |
+| valor_multa | DECIMAL(12,2) | | Valor total de la multa |
 | fecha_comparendo | TIMESTAMP | IDX | Fecha y hora del comparendo |
-| lugar | VARCHAR(200) |  | Dirección/Lugar de la infracción |
-| ciudad | VARCHAR(100) |  | Ciudad de la infracción |
+| lugar | VARCHAR(200) | | Dirección/Lugar de la infracción |
+| ciudad | VARCHAR(100) | | Ciudad de la infracción |
 | observaciones | TEXT | NULL | Notas adicionales |
-| estado | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
-| created_at | TIMESTAMP |  | Fecha de creación |
-| updated_at | TIMESTAMP |  | Última modificación |
+| estado | ENUM | | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| created_at | TIMESTAMP | | Fecha de creación |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 ### Entidad: `ComparendoEstadoHistorial`
@@ -345,12 +345,12 @@ pnpm install  # o npm install
 |---|---|---|---|
 | id | UUID | PK | Identificador único |
 | comparendo_id | UUID | FK | Referencia al comparendo |
-| estado_anterior | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
-| estado_nuevo | ENUM |  | `PENDIENTE`, `PAGADO`, `ANULADO` |
-| observacion | TEXT |  | Razón del cambio |
-| fecha_evento | TIMESTAMP |  | Fecha del cambio |
-| created_at | TIMESTAMP |  | Fecha de registro |
-| updated_at | TIMESTAMP |  | Última modificación |
+| estado_anterior | ENUM | | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| estado_nuevo | ENUM | | `PENDIENTE`, `PAGADO`, `ANULADO` |
+| observacion | TEXT | | Razón del cambio |
+| fecha_evento | TIMESTAMP | | Fecha del cambio |
+| created_at | TIMESTAMP | | Fecha de registro |
+| updated_at | TIMESTAMP | | Última modificación |
 | deleted_at | TIMESTAMP | NULL | Fecha de borrado lógico |
 
 > Los campos `persona_id`, `automotor_id` e `infraccion_id` son referencias lógicas
@@ -458,14 +458,14 @@ Definición de rutas HTTP para la interacción con los servicios:
 
 ```text
 ms-comparendos (srv-simcomp-api:8005)
-        │
-        ├── POST /api/comparendos
-        │      └── Recibe datos denormalizados (nombres, documentos, placa)
-        │
-        ├── GET http://srv-simcomp-api:8002/api/personas/email/:email
-        │      └── (En listado) Identifica al agente/ciudadano para filtrar
-        │
-        └── persiste el comparendo en Postgres Cluster 'comparendos' (puerto 5436)
+    │
+    ├── POST /api/comparendos
+    │   └── Recibe datos denormalizados (nombres, documentos, placa)
+    │
+    ├── GET http://srv-simcomp-api:8002/api/personas/email/:email
+    │   └── (En listado) Identifica al agente/ciudadano para filtrar
+    │
+    └── persiste el comparendo en Postgres Cluster 'comparendos' (puerto 5436)
 ```
 
 ---
@@ -476,11 +476,11 @@ Para garantizar un aislamiento total de los datos en una misma VM (`srv-simcomp-
 
 | Cluster Name | Puerto | Base de Datos | Servicio Asociado |
 |--------------|--------|---------------|-------------------|
-| auth         | 5432   | auth_db       | ms-auth-service   |
-| personas     | 5433   | personas_db   | ms-personas       |
-| automotores  | 5434   | vehiculos_db  | ms-automotores    |
-| infracciones | 5435   | infracciones_db| ms-infracciones   |
-| comparendos  | 5436   | comparendos_db | ms-comparendos    |
+| auth     | 5432  | auth_db    | ms-auth-service  |
+| personas   | 5433  | personas_db  | ms-personas    |
+| automotores | 5434  | vehiculos_db | ms-automotores  |
+| infracciones | 5435  | infracciones_db| ms-infracciones  |
+| comparendos | 5436  | comparendos_db | ms-comparendos  |
 
 ### Gestión de Clusters (pg_ctlcluster)
 
@@ -592,82 +592,82 @@ Una propuesta base sería la siguiente:
 version: "3.8"
 
 services:
-  ms-auth-service:
-    build: ./ms-auth-service
-    ports:
-      - "8001:8001"
-    environment:
-      - PORT=8001
-      - AUTH_DB_HOST=auth_db
-      - AUTH_DB_PORT=5432
-      - AUTH_DB_NAME=auth_db
-      - AUTH_DB_USER=admin
-      - AUTH_DB_PASSWORD=admin123
-      - JWT_SECRET=secret123
+ ms-auth-service:
+  build: ./ms-auth-service
+  ports:
+   - "8001:8001"
+  environment:
+   - PORT=8001
+   - AUTH_DB_HOST=auth_db
+   - AUTH_DB_PORT=5432
+   - AUTH_DB_NAME=auth_db
+   - AUTH_DB_USER=admin
+   - AUTH_DB_PASSWORD=admin123
+   - JWT_SECRET=secret123
 
-  ms-personas:
-    build: ./ms-personas
-    ports:
-      - "8002:8002"
-    environment:
-      - PORT=8002
-      - PERSONAS_DB_HOST=personas_db
-      - PERSONAS_DB_PORT=5433
-      - PERSONAS_DB_NAME=personas_db
-      - PERSONAS_DB_USER=admin
-      - PERSONAS_DB_PASSWORD=admin123
-      - JWT_SECRET=secret123
+ ms-personas:
+  build: ./ms-personas
+  ports:
+   - "8002:8002"
+  environment:
+   - PORT=8002
+   - PERSONAS_DB_HOST=personas_db
+   - PERSONAS_DB_PORT=5433
+   - PERSONAS_DB_NAME=personas_db
+   - PERSONAS_DB_USER=admin
+   - PERSONAS_DB_PASSWORD=admin123
+   - JWT_SECRET=secret123
 
-  ms-automotores:
-    build: ./ms-automotores
-    ports:
-      - "8003:8003"
-    environment:
-      - PORT=8003
-      - AUTOMOTORES_DB_HOST=automotores_db
-      - AUTOMOTORES_DB_PORT=5434
-      - AUTOMOTORES_DB_NAME=vehiculos_db
-      - AUTOMOTORES_DB_USER=admin
-      - AUTOMOTORES_DB_PASSWORD=admin123
-      - JWT_SECRET=secret123
+ ms-automotores:
+  build: ./ms-automotores
+  ports:
+   - "8003:8003"
+  environment:
+   - PORT=8003
+   - AUTOMOTORES_DB_HOST=automotores_db
+   - AUTOMOTORES_DB_PORT=5434
+   - AUTOMOTORES_DB_NAME=vehiculos_db
+   - AUTOMOTORES_DB_USER=admin
+   - AUTOMOTORES_DB_PASSWORD=admin123
+   - JWT_SECRET=secret123
 
-  ms-infracciones:
-    build: ./ms-infracciones
-    ports:
-      - "8004:8004"
-    environment:
-      - PORT=8004
-      - INFRACCIONES_DB_HOST=infracciones_db
-      - INFRACCIONES_DB_PORT=5435
-      - INFRACCIONES_DB_NAME=infracciones_db
-      - INFRACCIONES_DB_USER=admin
-      - INFRACCIONES_DB_PASSWORD=admin123
-      - JWT_SECRET=secret123
+ ms-infracciones:
+  build: ./ms-infracciones
+  ports:
+   - "8004:8004"
+  environment:
+   - PORT=8004
+   - INFRACCIONES_DB_HOST=infracciones_db
+   - INFRACCIONES_DB_PORT=5435
+   - INFRACCIONES_DB_NAME=infracciones_db
+   - INFRACCIONES_DB_USER=admin
+   - INFRACCIONES_DB_PASSWORD=admin123
+   - JWT_SECRET=secret123
 
-  ms-comparendos:
-    build: ./ms-comparendos
-    ports:
-      - "8005:8005"
-    environment:
-      - PORT=8005
-      - COMPARENDOS_DB_HOST=comparendos_db
-      - COMPARENDOS_DB_PORT=5436
-      - COMPARENDOS_DB_NAME=comparendos_db
-      - COMPARENDOS_DB_USER=admin
-      - COMPARENDOS_DB_PASSWORD=admin123
-      - JWT_SECRET=secret123
+ ms-comparendos:
+  build: ./ms-comparendos
+  ports:
+   - "8005:8005"
+  environment:
+   - PORT=8005
+   - COMPARENDOS_DB_HOST=comparendos_db
+   - COMPARENDOS_DB_PORT=5436
+   - COMPARENDOS_DB_NAME=comparendos_db
+   - COMPARENDOS_DB_USER=admin
+   - COMPARENDOS_DB_PASSWORD=admin123
+   - JWT_SECRET=secret123
 
-  ms-reportes:
-    build: ./ms-reportes
-    ports:
-      - "8006:8006"
-    environment:
-      - PORT=8006
-      - AUTH_SERVICE_URL=http://ms-auth-service:8001
-      - PERSONAS_SERVICE_URL=http://ms-personas:8002
-      - AUTOMOTORES_SERVICE_URL=http://ms-automotores:8003
-      - INFRACCIONES_SERVICE_URL=http://ms-infracciones:8004
-      - COMPARENDOS_SERVICE_URL=http://ms-comparendos:8005
+ ms-reportes:
+  build: ./ms-reportes
+  ports:
+   - "8006:8006"
+  environment:
+   - PORT=8006
+   - AUTH_SERVICE_URL=http://ms-auth-service:8001
+   - PERSONAS_SERVICE_URL=http://ms-personas:8002
+   - AUTOMOTORES_SERVICE_URL=http://ms-automotores:8003
+   - INFRACCIONES_SERVICE_URL=http://ms-infracciones:8004
+   - COMPARENDOS_SERVICE_URL=http://ms-comparendos:8005
 ```
 
 > Las variables de entorno, volúmenes, redes y `depends_on` deben ajustarse a la
@@ -696,14 +696,14 @@ CMD ["node", "src/server.js"]
 
 ---
 
-| Microservicio    | Puerto | DB Port | Cluster Name |
+| Microservicio  | Puerto | DB Port | Cluster Name |
 |------------------|--------|---------|--------------|
-| ms-auth-service  | 8001   | 5432    | auth         |
-| ms-personas      | 8002   | 5433    | personas     |
-| ms-automotores   | 8003   | 5434    | automotores  |
-| ms-infracciones  | 8004   | 5435    | infracciones |
-| ms-comparendos   | 8005   | 5436    | comparendos  |
-| ms-reportes      | 8006   | -       | -            |
+| ms-auth-service | 8001  | 5432  | auth     |
+| ms-personas   | 8002  | 5433  | personas   |
+| ms-automotores  | 8003  | 5434  | automotores |
+| ms-infracciones | 8004  | 5435  | infracciones |
+| ms-comparendos  | 8005  | 5436  | comparendos |
+| ms-reportes   | 8006  | -    | -      |
 
 ---
 
@@ -727,7 +727,7 @@ curl http://localhost:8006/api/reportes/health
 
 ---
 
-## 🛠️ SOLUCIÓN DE PROBLEMAS COMUNES
+## SOLUCIÓN DE PROBLEMAS COMUNES
 
 ### 1. Error de Conectividad con la Base de Datos
 **Síntoma**: `ConnectionRefusedError` o el contenedor se reinicia constantemente.
@@ -748,7 +748,7 @@ Hemos configurado `pnpm.overrides` en el `package.json` raíz para forzar versio
 
 ---
 
-## 🔒 SEGURIDAD AVANZADA EN PRODUCCIÓN
+## SEGURIDAD AVANZADA EN PRODUCCIÓN
 
 - **Aislamiento de Red**: Todos los servicios backend operan en la red interna `simcomp-internal`. Solo el balanceador tiene acceso a la red `simcomp-public`.
 - **Protección de Endpoints Internos**: Rutas como `/internal/sync-persona` están bloqueadas a nivel de HAProxy para peticiones externas.
@@ -799,7 +799,7 @@ Usuarios y contraseñas:
 
 ## CONTEXTO DEL PROYECTO
 
-**Entidad de referencia:** Secretaría de Tránsito y Transporte — Valle del Cauca, Colombia  
+**Entidad de referencia:** Secretaría de Tránsito y Transporte — Valle del Cauca, Colombia 
 **Desarrollado por:** 
 - Deyton Riascos Ortiz
 - Samuel Izquierdo Bonilla

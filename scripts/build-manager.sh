@@ -16,7 +16,7 @@ build_menu() {
     echo "  [3] Todo (Login + Build + Push)"
     echo "  [4] Construir/Subir un servicio específico"
     echo -e "${BLUE}----------------------------------------------------${NC}"
-    echo "  [0] Regresar al Menú Principal"
+    echo "  [q] Regresar al Menú Principal"
     echo -e "${BLUE}----------------------------------------------------${NC}"
     read -p " Selecciona una opción: " BOPT
 
@@ -29,7 +29,7 @@ build_menu() {
             read -p "Acción (build/push/all): " SACT
             bash ./scripts/build-and-push-dockerhub.sh "$SACT" "$SNAME"
             ;;
-        0) return ;;
+        q|Q) return ;;
         *) echo " Opción inválida." ;;
     esac
     read -p " Presiona Enter para continuar..."

@@ -12,7 +12,7 @@
 #   Frontend:       deytonro/simcomp-frontend:latest
 #   Microservicios: deytonro/simcomp-*:latest
 #   Haproxy:        deytonro/simcomp-haproxy-balance
-#   Spark:          deytonro/simcomp-analytics-spark-service  
+#   Spark:          deytonro/simcomp-analytics-spark-service
 #
 # Uso:
 #   vagrant up
@@ -29,6 +29,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = false
   config.vm.synced_folder ".", "/vagrant"
+  config.vm.boot_timeout = 600
 
 # --------------------------------------------------------------------------
 # VARIABLES (DESDE .env)
@@ -173,7 +174,7 @@ MANAGER_DEPLOY = <<~'SHELL'
 
   echo "[SIMCOMP] Limpiando stack previo..."
   docker stack rm simcomp 2>/dev/null || true
-  
+
   echo "[SIMCOMP] Esperando remoción total de redes..."
   for i in {1..12}; do
     if ! docker network ls | grep -q "simcomp_"; then

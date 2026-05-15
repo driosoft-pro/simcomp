@@ -29,22 +29,22 @@ Este servicio se encarga de:
 ```text
 ms-automotores/
 ├── db/
-│   └── automotores_db.sql
+│  └── automotores_db.sql
 ├── src/
-│   ├── config/
-│   │   └── database.js
-│   ├── controllers/
-│   │   └── automotores.controller.js
-│   ├── models/
-│   │   └── automotor.model.js
-│   ├── routes/
-│   │   └── automotores.routes.js
-│   ├── services/
-│   │   └── automotores.service.js
-│   ├── swagger/
-│   │   └── swagger.js
-│   ├── app.js
-│   └── server.js
+│  ├── config/
+│  │  └── database.js
+│  ├── controllers/
+│  │  └── automotores.controller.js
+│  ├── models/
+│  │  └── automotor.model.js
+│  ├── routes/
+│  │  └── automotores.routes.js
+│  ├── services/
+│  │  └── automotores.service.js
+│  ├── swagger/
+│  │  └── swagger.js
+│  ├── app.js
+│  └── server.js
 ├── .env
 ├── docker-compose.yml
 ├── package.json
@@ -102,7 +102,7 @@ http://localhost:8003/api/docs/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -113,7 +113,7 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
 
 Secretos requeridos:
@@ -252,18 +252,18 @@ curl http://localhost:8003/api/health
 
 ```bash
 curl -X POST http://localhost:8003/api/automotores \
-  -H "Content-Type: application/json" \
-  -d '{
-    "placa":"ABC123",
-    "tipo":"CARRO",
-    "marca":"Mazda",
-    "modelo":"3",
-    "anio":2020,
-    "color":"Rojo",
-    "cilindraje":2000,
-    "estado":"LEGAL",
-    "propietario_id":"UUID_DEL_PROPIETARIO"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+  "placa":"ABC123",
+  "tipo":"CARRO",
+  "marca":"Mazda",
+  "modelo":"3",
+  "anio":2020,
+  "color":"Rojo",
+  "cilindraje":2000,
+  "estado":"LEGAL",
+  "propietario_id":"UUID_DEL_PROPIETARIO"
+ }'
 ```
 
 ---
@@ -282,7 +282,7 @@ Ejemplo usando Axios:
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8003/api"
+ baseURL: "http://localhost:8003/api"
 });
 
 export default api;

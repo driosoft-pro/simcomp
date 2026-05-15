@@ -29,23 +29,23 @@ Este servicio se encarga de:
 ```text
 ms-comparendos/
 ├── db/
-│   └── comparendos_db.sql
+│  └── comparendos_db.sql
 ├── src/
-│   ├── config/
-│   │   └── database.js
-│   ├── controllers/
-│   │   └── comparendos.controller.js
-│   ├── models/
-│   │   ├── comparendo.model.js
-│   │   └── comparendoEstadoHistorial.model.js
-│   ├── routes/
-│   │   └── comparendos.routes.js
-│   ├── services/
-│   │   └── comparendos.service.js
-│   ├── swagger/
-│   │   └── swagger.js
-│   ├── app.js
-│   └── server.js
+│  ├── config/
+│  │  └── database.js
+│  ├── controllers/
+│  │  └── comparendos.controller.js
+│  ├── models/
+│  │  ├── comparendo.model.js
+│  │  └── comparendoEstadoHistorial.model.js
+│  ├── routes/
+│  │  └── comparendos.routes.js
+│  ├── services/
+│  │  └── comparendos.service.js
+│  ├── swagger/
+│  │  └── swagger.js
+│  ├── app.js
+│  └── server.js
 ├── .env
 ├── docker-compose.yml
 ├── package.json
@@ -143,7 +143,7 @@ http://localhost:8005/api/docs/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -154,7 +154,7 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
 
 Secretos requeridos:
@@ -299,16 +299,16 @@ curl http://localhost:8005/api/health
 
 ```bash
 curl -X POST http://localhost:8005/api/comparendos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "numero_comparendo":"CMP-2026-0001",
-    "fecha_hora":"2026-03-14T10:30:00",
-    "automotor_id":"UUID_AUTOMOTOR",
-    "persona_id":"UUID_PERSONA",
-    "infraccion_id":"UUID_INFRACCION",
-    "direccion_exacta":"Calle 5 con Carrera 10",
-    "observaciones":"Comparendo generado en operativo de control"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+  "numero_comparendo":"CMP-2026-0001",
+  "fecha_hora":"2026-03-14T10:30:00",
+  "automotor_id":"UUID_AUTOMOTOR",
+  "persona_id":"UUID_PERSONA",
+  "infraccion_id":"UUID_INFRACCION",
+  "direccion_exacta":"Calle 5 con Carrera 10",
+  "observaciones":"Comparendo generado en operativo de control"
+ }'
 ```
 
 ---
@@ -327,7 +327,7 @@ Ejemplo usando Axios:
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8005/api"
+ baseURL: "http://localhost:8005/api"
 });
 
 export default api;

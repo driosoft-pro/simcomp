@@ -1,10 +1,10 @@
-<#
+﻿<#
 .SYNOPSIS
 Script para generar archivos .env, .env.local, .env.swarm, .env.vagrant a partir de .env.example
 
 .DESCRIPTION
 Este script lee los archivos .env.example de cada microservicio y del frontend,
-separando sus diferentes secciones para generar automáticamente todos los entornos.
+separando sus diferentes secciones para generar autom  ticamente todos los entornos.
 #>
 
 $ErrorActionPreference = "Stop"
@@ -12,21 +12,21 @@ $ErrorActionPreference = "Stop"
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host "  SIMCOMP - Generador de Entornos (.env) a partir de .env.example" -ForegroundColor Cyan
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host "Este script recreará los archivos .env, .env.local, .env.vagrant y .env.swarm"
+Write-Host "Este script recrear   los archivos .env, .env.local, .env.vagrant y .env.swarm"
 Write-Host "para todos los microservicios y el frontend."
 Write-Host ""
 
-# Obtener la ruta real donde está este script
+# Obtener la ruta real donde esta este script
 $scriptPath = $PSScriptRoot
 
 if ([string]::IsNullOrWhiteSpace($scriptPath)) {
     $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 }
 
-# Como este script está dentro de /scripts, la raíz del proyecto es un nivel arriba
+# Como este script esta dentro de /scripts, la ra  z del proyecto es un nivel arriba
 $projectRoot = Resolve-Path (Join-Path $scriptPath "..")
 
-Write-Host "[INFO] Raíz del proyecto detectada: $projectRoot" -ForegroundColor Cyan
+Write-Host "[INFO] Ra  z del proyecto detectada: $projectRoot" -ForegroundColor Cyan
 Write-Host ""
 
 $services = @(
@@ -42,7 +42,7 @@ $services = @(
     "frontend"
 )
 
-# Codificación UTF-8 sin BOM
+# Codificaci  n UTF-8 sin BOM
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 foreach ($service in $services) {
@@ -56,7 +56,7 @@ foreach ($service in $services) {
     }
 
     if (-not (Test-Path $examplePath -PathType Leaf)) {
-        Write-Host "[-] Saltando $service (No se encontró .env.example)" -ForegroundColor Yellow
+        Write-Host "[-] Saltando $service (No se encontr   .env.example)" -ForegroundColor Yellow
         continue
     }
 
@@ -94,7 +94,7 @@ foreach ($service in $services) {
             continue
         }
 
-        if ($line -match "^#\s*Configuración para desarrollo local") {
+        if ($line -match "^#\s*Configuraci  n para desarrollo local") {
             $mode = "skip"
             continue
         }
@@ -160,5 +160,5 @@ foreach ($service in $services) {
 }
 
 Write-Host ""
-Write-Host "¡Generación completada! Todos los entornos están listos para usarse." -ForegroundColor Cyan
+Write-Host "  Generaci  n completada! Todos los entornos estan listos para usarse." -ForegroundColor Cyan
 Write-Host "=========================================================" -ForegroundColor Cyan

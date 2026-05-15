@@ -1,24 +1,49 @@
-# SIMCOMP - Configurador de DNS Local (Windows)
-# Requiere ejecutar como Administrador
+# ==========================================
+# SIMCOMP - CONFIGURACION MANUAL HOSTS
+# ==========================================
 
-$HostsPath = "C:\Windows\System32\drivers\etc\hosts"
-$IpManager = "192.168.100.2"
-$Domains = "simcomp.co www.simcomp.co api.simcomp.co stats.simcomp.co monitor.simcomp.co spark.simcomp.co"
-$Entry = "$IpManager $Domains"
+Clear-Host
 
-$AdminStatus = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+Write-Host ""
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "CONFIGURACION MANUAL DEL ARCHIVO HOSTS" -ForegroundColor Yellow
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host ""
 
-if (-not $AdminStatus) {
-    Write-Host " [!] ERROR: Debes ejecutar este script como Administrador." -ForegroundColor Red
-    exit
-}
+Write-Host "1. Abre esta ruta en el Explorador de Windows:" -ForegroundColor Green
+Write-Host ""
+Write-Host "   C:\Windows\System32\drivers\etc\" -ForegroundColor White
+Write-Host ""
 
-$Content = Get-Content $HostsPath
-if ($Content -match "simcomp.co") {
-    Write-Host " [!] El dominio simcomp.co ya existe. Limpiando entrada previa..." -ForegroundColor Yellow
-    $NewContent = $Content | Where-Object { $_ -notmatch "simcomp.co" }
-    $NewContent | Set-Content $HostsPath -Encoding ASCII
-}
+Write-Host "2. Abre el archivo 'hosts' con Bloc de notas COMO ADMINISTRADOR." -ForegroundColor Green
+Write-Host ""
 
-Add-Content -Path $HostsPath -Value "`n$Entry" -Encoding ASCII
-Write-Host " [✔] Archivo hosts de Windows actualizado correctamente." -ForegroundColor Green
+Write-Host "3. Pega el contenido que se ha copiado a tu portapapeles al final del archivo." -ForegroundColor Green
+Write-Host ""
+
+$HostsContent = @"
+
+# ===== SIMCOMP INFRAESTRUCTURA =====
+192.168.100.2 simcomp.co
+192.168.100.2 www.simcomp.co
+192.168.100.2 api.simcomp.co
+192.168.100.2 stats.simcomp.co
+192.168.100.2 monitor.simcomp.co
+192.168.100.2 spark.simcomp.co
+# ===================================
+"@
+
+Write-Host "Contenido a agregar:" -ForegroundColor Gray
+Write-Host "------------------------------------------" -ForegroundColor Gray
+Write-Host $HostsContent -ForegroundColor White
+Write-Host "------------------------------------------" -ForegroundColor Gray
+
+# Copiar al portapapeles
+Set-Clipboard -Value $HostsContent
+
+Write-Host ""
+Write-Host "[OK] El contenido fue copiado al portapapeles automaticamente." -ForegroundColor Cyan
+Write-Host "[INFO] Solo tienes que pegarlo en el archivo y guardar (CTRL + S)." -ForegroundColor Yellow
+Write-Host ""
+
+Pause

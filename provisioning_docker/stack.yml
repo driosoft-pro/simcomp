@@ -28,7 +28,7 @@ secrets:
     file: ./secrets/jwt_secret.txt
 
 configs:
-  haproxy_conf_v4:
+  haproxy_conf_v5:
     file: ./haproxy/haproxy.swarm.cfg
   prometheus_conf_v3:
     file: ./prometheus.yml
@@ -54,7 +54,7 @@ services:
       - public
       - backend
     configs:
-      - source: haproxy_conf_v4
+      - source: haproxy_conf_v5
         target: /usr/local/etc/haproxy/haproxy.cfg
     deploy:
       endpoint_mode: dnsrr
@@ -64,6 +64,15 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
 
   frontend:
     image: docker.io/deytonro/simcomp-frontend:v1.0.0
@@ -107,6 +116,13 @@ services:
           - spread: node.id
       restart_policy:
         condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   ms-personas:
     image: docker.io/deytonro/simcomp-personas-service:v1.0.0
@@ -135,6 +151,13 @@ services:
           - spread: node.id
       restart_policy:
         condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   ms-automotores:
     image: docker.io/deytonro/simcomp-automotores-service:v1.0.0
@@ -154,7 +177,7 @@ services:
     networks:
       - backend
     deploy:
-      replicas: 2
+      replicas: 3
       restart_policy:
         condition: on-failure
 
@@ -198,7 +221,7 @@ services:
     networks:
       - backend
     deploy:
-      replicas: 2
+      replicas: 3
       restart_policy:
         condition: on-failure
 

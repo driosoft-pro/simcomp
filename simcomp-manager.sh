@@ -8,6 +8,10 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# ---------- Configuración de Entorno ----------
+# Asegurar que se use el Vagrantfile correcto para Linux
+cp vagrantfiles/Vagrantfile_docker_swarm_spark_linux Vagrantfile
+
 function main_menu() {
     clear
     echo -e "${BLUE}====================================================${NC}"

@@ -1,4 +1,7 @@
 # SIMCOMP - GESTOR CENTRAL DE INFRAESTRUCTURA (WINDOWS)
+# Asegurar que se use el Vagrantfile correcto para Windows
+Copy-Item -Path "vagrantfiles\Vagrantfile_docker_swarm_spark_windows" -Destination "Vagrantfile" -Force
+
 
 # Función de limpieza profunda para evitar texto sobrepuesto
 function Clear-Screen {

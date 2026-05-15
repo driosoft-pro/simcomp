@@ -1,11 +1,11 @@
-# Script para generar los archivos de secretos requeridos por Docker Swarm
-# SIMCOMP - Auditoría de Producción
+﻿# Script para generar los archivos de secretos requeridos por Docker Swarm
+# SIMCOMP - Auditor  a de Producci  n
 
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host "  SIMCOMP - Generador de Secretos (Docker Swarm)" -ForegroundColor Cyan
 Write-Host "=========================================================" -ForegroundColor Cyan
 
-# Moverse a la raíz del proyecto
+# Moverse a la ra  z del proyecto
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location "$scriptPath\.."
 
@@ -16,7 +16,7 @@ if (!(Test-Path $SECRETS_DIR)) {
 
 Write-Host "[+] Directorio de secretos: $SECRETS_DIR"
 
-# Función para obtener un valor de un .env.swarm si existe, o usar un default
+# Funci  n para obtener un valor de un .env.swarm si existe, o usar un default
 function Get-Val {
     param($file, $key, $default)
     if (Test-Path $file) {
@@ -50,6 +50,6 @@ Write-Host "    -> Creado: comparendos_db_pass.txt"
 Write-Host "    -> Creado: jwt_secret.txt"
 
 Write-Host ""
-Write-Host "¡Secretos generados con éxito!" -ForegroundColor Green
+Write-Host "  Secretos generados con   xito!" -ForegroundColor Green
 Write-Host "Ahora puedes ejecutar: vagrant provision managerDocker --provision-with deploy-stack"
 Write-Host "=========================================================" -ForegroundColor Cyan

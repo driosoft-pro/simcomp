@@ -18,8 +18,8 @@ Panel de administración del Sistema de Comparendos de Tránsito.
 
 | Herramienta | Versión mínima |
 |-------------|----------------|
-| Node.js     | 22 LTS         |
-| pnpm        | 10             |
+| Node.js   | 22 LTS     |
+| pnpm    | 10       |
 
 ---
 
@@ -28,74 +28,74 @@ Panel de administración del Sistema de Comparendos de Tránsito.
 ```
 frontend/
 ├── public/
-│   └── favicon.ico
+│  └── favicon.ico
 ├── src/
-│   ├── main.tsx
-│   ├── App.tsx                      ← Router + ProtectedRoute
-│   ├── index.css
-│   │
-│   ├── api/                         ← Clientes HTTP por microservicio
-│   │   ├── axios.config.ts          ← Interceptor JWT + refresh automático
-│   │   ├── auth.api.ts              ← login, logout, refresh, me
-│   │   ├── personas.api.ts
-│   │   ├── automotores.api.ts       ← Gestión de vehículos
-│   │   ├── infracciones.api.ts
-│   │   ├── comparendos.api.ts
-│   │   └── usuarios.api.ts          ← Gestión de usuarios internos
-│   │
-│   ├── context/
-│   │   └── AuthContext.tsx          ← Estado global de sesión + tokens
-│   │
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── Topbar.tsx           ← Muestra usuario y rol activo
-│   │   │   └── Layout.tsx
-│   │   ├── auth/
-│   │   │   └── ProtectedRoute.tsx   ← Redirige a /login si no hay sesión
-│   │   ├── ui/
-│   │   │   ├── Badge.tsx
-│   │   │   ├── Button.tsx
-│   │   │   ├── Card.tsx
-│   │   │   ├── DataTable.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   ├── StatusBadge.tsx
-│   │   │   └── Toast.tsx
-│   │   └── forms/
-│   │       ├── PersonaForm.tsx
-│   │       ├── AutomotorForm.tsx
-│   │       ├── InfraccionForm.tsx
-│   │       └── ComparendoForm.tsx
-│   │
-│   ├── pages/
-│   │   ├── Login.tsx                ← Pantalla de login
-│   │   ├── Dashboard.tsx
-│   │   ├── personas/
-│   │   │   ├── PersonasList.tsx
-│   │   │   └── PersonaDetail.tsx
-│   │   ├── automotores/             ← Gestión de vehículos
-│   │   │   ├── AutomotoresList.tsx
-│   │   │   └── AutomotorDetail.tsx
-│   │   ├── infracciones/
-│   │   │   └── InfraccionesList.tsx
-│   │   ├── comparendos/
-│   │   │   ├── ComparendosList.tsx
-│   │   │   ├── ComparendoDetail.tsx
-│   │   │   └── NuevoComparendo.tsx
-│   │   └── usuarios/                ← Gestión de usuarios
-│   │       ├── UsuariosList.tsx
-│   │       └── UsuarioDetail.tsx
-│   │
-│   ├── hooks/
-│   │   ├── useAuth.ts               ← Acceso al AuthContext
-│   │   ├── usePersonas.ts
-│   │   ├── useAutomotores.ts
-│   │   ├── useInfracciones.ts
-│   │   └── useComparendos.ts
-│   │
-│   └── utils/
-│       ├── formatters.ts
-│       └── constants.ts             ← URLs, enums, roles
+│  ├── main.tsx
+│  ├── App.tsx           ← Router + ProtectedRoute
+│  ├── index.css
+│  │
+│  ├── api/             ← Clientes HTTP por microservicio
+│  │  ├── axios.config.ts     ← Interceptor JWT + refresh automático
+│  │  ├── auth.api.ts       ← login, logout, refresh, me
+│  │  ├── personas.api.ts
+│  │  ├── automotores.api.ts    ← Gestión de vehículos
+│  │  ├── infracciones.api.ts
+│  │  ├── comparendos.api.ts
+│  │  └── usuarios.api.ts     ← Gestión de usuarios internos
+│  │
+│  ├── context/
+│  │  └── AuthContext.tsx     ← Estado global de sesión + tokens
+│  │
+│  ├── components/
+│  │  ├── layout/
+│  │  │  ├── Sidebar.tsx
+│  │  │  ├── Topbar.tsx      ← Muestra usuario y rol activo
+│  │  │  └── Layout.tsx
+│  │  ├── auth/
+│  │  │  └── ProtectedRoute.tsx  ← Redirige a /login si no hay sesión
+│  │  ├── ui/
+│  │  │  ├── Badge.tsx
+│  │  │  ├── Button.tsx
+│  │  │  ├── Card.tsx
+│  │  │  ├── DataTable.tsx
+│  │  │  ├── Modal.tsx
+│  │  │  ├── StatusBadge.tsx
+│  │  │  └── Toast.tsx
+│  │  └── forms/
+│  │    ├── PersonaForm.tsx
+│  │    ├── AutomotorForm.tsx
+│  │    ├── InfraccionForm.tsx
+│  │    └── ComparendoForm.tsx
+│  │
+│  ├── pages/
+│  │  ├── Login.tsx        ← Pantalla de login
+│  │  ├── Dashboard.tsx
+│  │  ├── personas/
+│  │  │  ├── PersonasList.tsx
+│  │  │  └── PersonaDetail.tsx
+│  │  ├── automotores/       ← Gestión de vehículos
+│  │  │  ├── AutomotoresList.tsx
+│  │  │  └── AutomotorDetail.tsx
+│  │  ├── infracciones/
+│  │  │  └── InfraccionesList.tsx
+│  │  ├── comparendos/
+│  │  │  ├── ComparendosList.tsx
+│  │  │  ├── ComparendoDetail.tsx
+│  │  │  └── NuevoComparendo.tsx
+│  │  └── usuarios/        ← Gestión de usuarios
+│  │    ├── UsuariosList.tsx
+│  │    └── UsuarioDetail.tsx
+│  │
+│  ├── hooks/
+│  │  ├── useAuth.ts        ← Acceso al AuthContext
+│  │  ├── usePersonas.ts
+│  │  ├── useAutomotores.ts
+│  │  ├── useInfracciones.ts
+│  │  └── useComparendos.ts
+│  │
+│  └── utils/
+│    ├── formatters.ts
+│    └── constants.ts       ← URLs, enums, roles
 │
 ├── index.html
 ├── vite.config.ts
@@ -110,7 +110,7 @@ frontend/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 El frontend utiliza una única variable base `VITE_API_BASE_URL` para comunicarse con el Gateway o Balanceador. Soporta 4 modos mediante archivos `.env`:
 
@@ -121,7 +121,7 @@ El frontend utiliza una única variable base `VITE_API_BASE_URL` para comunicars
 | `.env.docker` | Docker Local | Contenedores locales (`/api`). |
 | `.env.swarm` | Docker Swarm | Cluster Swarm (`/api`). |
 
-### 🔗 Comunicación Unificada
+### Comunicación Unificada
 Ya no es necesario configurar una URL por microservicio. Todas las peticiones se dirigen a la ruta relativa `/api`, la cual es gestionada por el balanceador (HAProxy) o el Gateway.
 
 
@@ -131,27 +131,27 @@ Ya no es necesario configurar una URL por microservicio. Todas las peticiones se
 
 ```json
 {
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.0.0",
-    "axios": "^1.8.0",
-    "@tanstack/react-query": "^5.0.0",
-    "react-hook-form": "^7.0.0",
-    "date-fns": "^4.0.0",
-    "lucide-react": "^0.500.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.45",
-    "tailwindcss": "^3.4.19",
-    "vite": "^7.0.0",
-    "eslint": "^9.0.0"
-  }
+ "dependencies": {
+  "react": "^19.0.0",
+  "react-dom": "^19.0.0",
+  "react-router-dom": "^7.0.0",
+  "axios": "^1.8.0",
+  "@tanstack/react-query": "^5.0.0",
+  "react-hook-form": "^7.0.0",
+  "date-fns": "^4.0.0",
+  "lucide-react": "^0.500.0"
+ },
+ "devDependencies": {
+  "typescript": "^5.0.0",
+  "@types/react": "^19.0.0",
+  "@types/react-dom": "^19.0.0",
+  "@vitejs/plugin-react": "^5.0.0",
+  "autoprefixer": "^10.4.20",
+  "postcss": "^8.4.45",
+  "tailwindcss": "^3.4.19",
+  "vite": "^7.0.0",
+  "eslint": "^9.0.0"
+ }
 }
 ```
 
@@ -173,12 +173,12 @@ pnpm preview
 2. Redirige a /login (ProtectedRoute)
 3. Login: POST /api/auth/login → { access_token, refresh_token, user }
 4. AuthContext guarda tokens:
-     - access_token  → memoria (variable JS, no localStorage)
-     - refresh_token → cookie HttpOnly (más seguro) o sessionStorage
+   - access_token → memoria (variable JS, no localStorage)
+   - refresh_token → cookie HttpOnly (más seguro) o sessionStorage
 5. Cada petición axios incluye automáticamente:
-     Authorization: Bearer <access_token>
+   Authorization: Bearer <access_token>
 6. Si access_token expira (15min) → interceptor axios hace automáticamente:
-     POST /api/auth/refresh → nuevo access_token
+   POST /api/auth/refresh → nuevo access_token
 7. Si refresh_token expira (7d) → redirige a /login
 8. Logout: POST /api/auth/logout → revoca refresh_token en DB → limpia contexto
 ```
@@ -188,8 +188,8 @@ pnpm preview
 // Provee al árbol de componentes:
 const { user, role, isAuthenticated, login, logout } = useAuth()
 
-// user   → { id, username, email, rol, deleted_at }
-// role   → 'admin' | 'agente' | 'supervisor' | 'ciudadano'
+// user  → { id, username, email, rol, deleted_at }
+// role  → 'admin' | 'agente' | 'supervisor' | 'ciudadano'
 ```
 
 ### Interceptor Axios (`api/axios.config.js`)
@@ -203,20 +203,20 @@ const { user, role, isAuthenticated, login, logout } = useAuth()
 
 ## Rutas y Control de Acceso
 
-| Ruta                    | Componente        | Roles permitidos             | Descripción                      |
+| Ruta          | Componente    | Roles permitidos       | Descripción           |
 |-------------------------|-------------------|------------------------------|----------------------------------|
-| `/login`                | Login             | público                      | Pantalla de inicio de sesión     |
-| `/`                     | Dashboard         | todos                        | Panel con estadísticas           |
-| `/personas`             | PersonasList      | todos                        | Listado de personas              |
-| `/personas/:id`         | PersonaDetail     | todos                        | Detalle y licencias              |
-| `/automotores`          | AutomotoresList   | todos                        | Listado de vehículos             |
-| `/automotores/:id`      | AutomotorDetail   | todos                        | Detalle del vehículo             |
-| `/infracciones`         | InfraccionesList  | admin, agente, supervisor    | Catálogo de infracciones         |
-| `/comparendos`          | ComparendosList   | todos                        | Listado de comparendos           |
-| `/comparendos/nuevo`    | NuevoComparendo   | admin, agente                | Formulario de nuevo comparendo   |
-| `/comparendos/:id`      | ComparendoDetail  | todos                        | Detalle y acciones               |
-| `/usuarios`             | UsuariosList      | todos                        | Listado de usuarios del sistema  |
-| `/usuarios/:id`         | UsuarioDetail     | todos                        | Detalle del usuario              |
+| `/login`        | Login       | público           | Pantalla de inicio de sesión   |
+| `/`           | Dashboard     | todos            | Panel con estadísticas      |
+| `/personas`       | PersonasList   | todos            | Listado de personas       |
+| `/personas/:id`     | PersonaDetail   | todos            | Detalle y licencias       |
+| `/automotores`     | AutomotoresList  | todos            | Listado de vehículos       |
+| `/automotores/:id`   | AutomotorDetail  | todos            | Detalle del vehículo       |
+| `/infracciones`     | InfraccionesList | admin, agente, supervisor  | Catálogo de infracciones     |
+| `/comparendos`     | ComparendosList  | todos            | Listado de comparendos      |
+| `/comparendos/nuevo`  | NuevoComparendo  | admin, agente        | Formulario de nuevo comparendo  |
+| `/comparendos/:id`   | ComparendoDetail | todos            | Detalle y acciones        |
+| `/usuarios`       | UsuariosList   | todos            | Listado de usuarios del sistema |
+| `/usuarios/:id`     | UsuarioDetail   | todos            | Detalle del usuario       |
 
 `ProtectedRoute` verifica `isAuthenticated` y el rol antes de renderizar.
 
@@ -237,7 +237,7 @@ const { user, role, isAuthenticated, login, logout } = useAuth()
 
 ```bash
 # 1. Instalar dependencias (Recomendado desde la raíz)
-./simcomp-manager.sh  # Opción 7
+./simcomp-manager.sh # Opción 7
 
 # O manual en esta carpeta
 pnpm install

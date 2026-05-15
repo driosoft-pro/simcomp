@@ -29,26 +29,26 @@ Este servicio se encarga de:
 ```text
 ms-personas/
 ├── db/
-│   └── personas_db.sql
+│  └── personas_db.sql
 ├── src/
-│   ├── config/
-│   │   └── database.js
-│   ├── controllers/
-│   │   ├── personas.controller.js
-│   │   └── licencias.controller.js
-│   ├── models/
-│   │   ├── persona.model.js
-│   │   └── licencia.model.js
-│   ├── routes/
-│   │   ├── personas.routes.js
-│   │   └── licencias.routes.js
-│   ├── services/
-│   │   ├── personas.service.js
-│   │   └── licencias.service.js
-│   ├── swagger/
-│   │   └── swagger.js
-│   ├── app.js
-│   └── server.js
+│  ├── config/
+│  │  └── database.js
+│  ├── controllers/
+│  │  ├── personas.controller.js
+│  │  └── licencias.controller.js
+│  ├── models/
+│  │  ├── persona.model.js
+│  │  └── licencia.model.js
+│  ├── routes/
+│  │  ├── personas.routes.js
+│  │  └── licencias.routes.js
+│  ├── services/
+│  │  ├── personas.service.js
+│  │  └── licencias.service.js
+│  ├── swagger/
+│  │  └── swagger.js
+│  ├── app.js
+│  └── server.js
 ├── .env
 ├── docker-compose.yml
 ├── package.json
@@ -116,7 +116,7 @@ http://localhost:8002/api/docs/
 
 ---
 
-## ⚙️ Configuración de Entorno y Despliegue
+## Configuración de Entorno y Despliegue
 
 Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 
@@ -127,7 +127,7 @@ Este microservicio soporta 4 modos de configuración mediante archivos `.env`:
 | `.env.docker` | Docker Local | Uso con `docker-compose.local.yml`. |
 | `.env.swarm` | Docker Swarm | Producción. **Usa Docker Secrets**. |
 
-### 🔐 Manejo de Secretos (Swarm)
+### Manejo de Secretos (Swarm)
 En modo Swarm, las variables críticas se leen automáticamente desde el sistema de secretos de Docker. **Se han eliminado todos los valores por defecto del código fuente.**
 
 Secretos requeridos:
@@ -284,16 +284,16 @@ curl http://localhost:8002/api/health
 
 ```bash
 curl -X POST http://localhost:8002/api/personas \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tipo_documento":"CC",
-    "numero_documento":"1234567890",
-    "primer_nombre":"Juan",
-    "primer_apellido":"Pérez",
-    "direccion":"Calle 1 # 2-3",
-    "telefono":"3001234567",
-    "email":"juan@example.com"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+  "tipo_documento":"CC",
+  "numero_documento":"1234567890",
+  "primer_nombre":"Juan",
+  "primer_apellido":"Pérez",
+  "direccion":"Calle 1 # 2-3",
+  "telefono":"3001234567",
+  "email":"juan@example.com"
+ }'
 ```
 
 ---
@@ -312,7 +312,7 @@ Ejemplo usando Axios:
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8002/api"
+ baseURL: "http://localhost:8002/api"
 });
 
 export default api;
@@ -337,7 +337,7 @@ Si usas `import/export`, en `package.json` debe existir:
 
 ```json
 {
-  "type": "module"
+ "type": "module"
 }
 ```
 

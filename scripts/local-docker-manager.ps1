@@ -1,6 +1,18 @@
 # local-docker-manager.ps1 - Gestión del entorno completo vía Docker Compose (Windows)
 # =============================================================================
 
+# Función de limpieza profunda para evitar texto sobrepuesto
+function Clear-Screen {
+    # Pequeña pausa para asegurar que el buffer de salida se complete
+    Start-Sleep -Milliseconds 50
+    # Limpieza estándar de PowerShell
+    Clear-Host
+    # Limpieza profunda del buffer del sistema (si está disponible)
+    try { [System.Console]::Clear() } catch {}
+    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
+}
+
 function Detect-Engine {
     if (Get-Command podman -ErrorAction SilentlyContinue) {
         return "podman"
@@ -37,62 +49,63 @@ function Show-Links {
 }
 
 function Show-Menu {
-    Clear-Host
-    Write-Host "====================================================" -ForegroundColor Cyan
-    Write-Host "       SIMCOMP - GESTIÓN ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
-    Write-Host "====================================================" -ForegroundColor Cyan
-    Write-Host "  [1] Levantar todo el stack (Up -d)"
-    Write-Host "  [2] Detener todo el stack (Stop)"
-    Write-Host "  [3] Reiniciar stack (Restart)"
-    Write-Host "  [4] Bajar stack y borrar volúmenes (Down -v)"
-    Write-Host "  [5] Ver estado de contenedores (PS)"
-    Write-Host "  [6] Ver logs (Tail)"
-    Write-Host "  [7] Ver Enlaces/URLs de Acceso"
-    Write-Host "----------------------------------------------------" -ForegroundColor Cyan
-    Write-Host "  [0] Salir"
-    Write-Host "----------------------------------------------------" -ForegroundColor Cyan
-    
-    $choice = Read-Host " Selecciona una opción"
+    while ($true) {
+        Clear-Screen
+        Write-Host "====================================================" -ForegroundColor Cyan
+        Write-Host "       SIMCOMP - GESTIÓN ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
+        Write-Host "====================================================" -ForegroundColor Cyan
+        Write-Host "  [1] Levantar todo el stack (Up -d)"
+        Write-Host "  [2] Detener todo el stack (Stop)"
+        Write-Host "  [3] Reiniciar stack (Restart)"
+        Write-Host "  [4] Bajar stack y borrar volúmenes (Down -v)"
+        Write-Host "  [5] Ver estado de contenedores (PS)"
+        Write-Host "  [6] Ver logs (Tail)"
+        Write-Host "  [7] Ver Enlaces/URLs de Acceso"
+        Write-Host "----------------------------------------------------" -ForegroundColor Cyan
+        Write-Host "  [q] Salir"
+        Write-Host "----------------------------------------------------" -ForegroundColor Cyan
+        
+        $choice = Read-Host " Selecciona una opcion"
 
-    switch ($choice) {
-        "1" {
-            Write-Host "[*] Levantando stack con $ENGINE..." -ForegroundColor Yellow
-            & $ENGINE compose up -d --build
-            Show-Links
+        switch ($choice) {
+            "1" {
+                Write-Host "[*] Levantando stack con $ENGINE..." -ForegroundColor Yellow
+                & $ENGINE compose up -d --build
+                Show-Links
+            }
+            "2" {
+                Write-Host "[*] Deteniendo stack..." -ForegroundColor Yellow
+                & $ENGINE compose stop
+            }
+            "3" {
+                Write-Host "[*] Reiniciando stack..." -ForegroundColor Yellow
+                & $ENGINE compose restart
+            }
+            "4" {
+                Write-Host "[*] Bajando stack y limpiando volúmenes..." -ForegroundColor Yellow
+                & $ENGINE compose down -v
+            }
+            "5" {
+                Write-Host "[*] Estado de los contenedores:" -ForegroundColor Yellow
+                & $ENGINE compose ps
+            }
+            "6" {
+                Write-Host "[*] Mostrando logs (Ctrl+C para salir)..." -ForegroundColor Yellow
+                & $ENGINE compose logs -f --tail 50
+            }
+            "7" {
+                Show-Links
+            }
+            "q" {
+                return
+            }
+            default {
+                Write-Host " Opción invalida." -ForegroundColor Red
+            }
         }
-        "2" {
-            Write-Host "[*] Deteniendo stack..." -ForegroundColor Yellow
-            & $ENGINE compose stop
-        }
-        "3" {
-            Write-Host "[*] Reiniciando stack..." -ForegroundColor Yellow
-            & $ENGINE compose restart
-        }
-        "4" {
-            Write-Host "[*] Bajando stack y limpiando volúmenes..." -ForegroundColor Yellow
-            & $ENGINE compose down -v
-        }
-        "5" {
-            Write-Host "[*] Estado de los contenedores:" -ForegroundColor Yellow
-            & $ENGINE compose ps
-        }
-        "6" {
-            Write-Host "[*] Mostrando logs (Ctrl+C para salir)..." -ForegroundColor Yellow
-            & $ENGINE compose logs -f --tail 50
-        }
-        "7" {
-            Show-Links
-        }
-        "0" {
-            return
-        }
-        default {
-            Write-Host " Opción inválida." -ForegroundColor Red
-        }
+        
+        Read-Host "`n Presiona Enter para continuar..."
     }
-    
-    Read-Host "`n Presiona Enter para continuar..."
-    Show-Menu
 }
 
 # Iniciar el menú

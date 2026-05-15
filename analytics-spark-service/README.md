@@ -4,7 +4,7 @@ Microservicio analítico para SIMCOMP usando Flask, PySpark y Chart.js.
 
 Este servicio permite analizar un archivo CSV de comparendos y visualizar la información en un dashboard web, así como proporcionar una API REST para consumir resúmenes y métricas sobre los datos.
 
-## 🛠️ Tecnologías Usadas
+## Tecnologías Usadas
 
 - **Python 3.x**: Lenguaje principal de desarrollo.
 - **Flask**: Framework ligero para construir la API REST y servir el Dashboard.
@@ -13,7 +13,7 @@ Este servicio permite analizar un archivo CSV de comparendos y visualizar la inf
 - **Chart.js**: Biblioteca de JavaScript para renderizar gráficos en el frontend.
 - **Docker / Podman**: Herramientas de contenedorización para empaquetar y ejecutar la aplicación de forma aislada.
 
-#  Imagenes
+# Imagenes
 - Dashboard
 ![df-dashboard.png](img/df-dashboard.png)
 
@@ -33,7 +33,7 @@ Este servicio permite analizar un archivo CSV de comparendos y visualizar la inf
 ![df-terminal.png](img/df-terminal.png)
 
 
-## ⚙️ Cómo Funciona
+## Cómo Funciona
 
 El servicio carga dinámicamente un dataset de comparendos en formato CSV usando PySpark, permitiendo realizar consultas de agregación a alta velocidad.
 
@@ -43,7 +43,7 @@ El servicio carga dinámicamente un dataset de comparendos en formato CSV usando
 4. **Visualización**: El dashboard (`/`) consume la API y renderiza las gráficas utilizando Chart.js para presentar información accionable.
 5. **Modificación de Registros**: La aplicación permite la edición de los datos a través de peticiones PUT. Al modificar un registro, el archivo CSV se actualiza en el disco y las visualizaciones se refrescan.
 
-## 🏗️ Diseño Propuesto
+## Diseño Propuesto
 
 ### 1. Pipeline, Componentes y Algoritmos
 
@@ -52,15 +52,15 @@ El sistema usa un pipeline de procesamiento de datos basado en Apache Spark + Py
 **Pipeline general:**
 ```text
 Dataset CSV
-   ↓
+  ↓
 API Flask
-   ↓
+  ↓
 Apache Spark / PySpark
-   ↓
+  ↓
 Procesamiento y consultas SQL
-   ↓
+  ↓
 Resultados en JSON / CSV
-   ↓
+  ↓
 Dashboard Web
 ```
 
@@ -68,11 +68,11 @@ Dashboard Web
 1. El usuario ingresa al dashboard web.
 2. El dashboard consume la API Analytics.
 3. La API recibe peticiones como:
-   - Cargar dataset
-   - Contar registros
-   - Consultar columnas
-   - Filtrar categorías
-   - Exportar resultados
+  - Cargar dataset
+  - Contar registros
+  - Consultar columnas
+  - Filtrar categorías
+  - Exportar resultados
 4. La API ejecuta operaciones usando PySpark.
 5. Spark procesa el dataset de comparendos.
 6. Los resultados se devuelven al frontend en formato JSON o se exportan como CSV.
@@ -106,63 +106,63 @@ spark.sql("SELECT ciudad, COUNT(*) FROM comparendos GROUP BY ciudad")
 
 ```text
 ┌──────────────────────────────┐
-│        Máquina Host          │
-│    Navegador del usuario     │
+│    Máquina Host     │
+│  Navegador del usuario   │
 └───────────────┬──────────────┘
-                │
-                │ HTTP :8010
-                ▼
+        │
+        │ HTTP :8010
+        ▼
 ┌──────────────────────────────┐
-│     Contenedor Docker        │
-│   simcomp-analytics-spark    │
-│                              │
-│  ┌────────────────────────┐  │
-│  │     API Analytics      │  │
-│  │        Flask           │  │
-│  └───────────┬────────────┘  │
-│              │               │
-│  ┌───────────▼────────────┐  │
-│  │    Apache Spark        │  │
-│  │    PySpark Engine      │  │
-│  └───────────┬────────────┘  │
-│              │               │
-│  ┌───────────▼────────────┐  │
-│  │ Dataset CSV / Outputs  │  │
-│  └────────────────────────┘  │
+│   Contenedor Docker    │
+│  simcomp-analytics-spark  │
+│               │
+│ ┌────────────────────────┐ │
+│ │   API Analytics   │ │
+│ │    Flask      │ │
+│ └───────────┬────────────┘ │
+│       │        │
+│ ┌───────────▼────────────┐ │
+│ │  Apache Spark    │ │
+│ │  PySpark Engine   │ │
+│ └───────────┬────────────┘ │
+│       │        │
+│ ┌───────────▼────────────┐ │
+│ │ Dataset CSV / Outputs │ │
+│ └────────────────────────┘ │
 └──────────────────────────────┘
 ```
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```bash
 analytics-spark-service/
-├── app.py                     # Punto de entrada de la aplicación Flask
-├── config.py                  # Configuraciones globales
+├── app.py           # Punto de entrada de la aplicación Flask
+├── config.py         # Configuraciones globales
 ├── data/
-│   ├── uploads/               # Directorio de subida de datasets
-│   └── dataset_simcomp.csv    # Dataset principal de comparendos
-├── Dockerfile                 # Receta de construcción de la imagen de contenedor
-├── requirements.txt           # Dependencias de Python
+│  ├── uploads/        # Directorio de subida de datasets
+│  └── dataset_simcomp.csv  # Dataset principal de comparendos
+├── Dockerfile         # Receta de construcción de la imagen de contenedor
+├── requirements.txt      # Dependencias de Python
 ├── routes/
-│   ├── api_routes.py          # Definición de endpoints de la API
-│   └── dashboard_routes.py    # Rutas del frontend web
+│  ├── api_routes.py     # Definición de endpoints de la API
+│  └── dashboard_routes.py  # Rutas del frontend web
 ├── services/
-│   ├── dataset_service.py     # Lógica de manipulación de archivos CSV
-│   ├── profiling_service.py   # Lógica de análisis estadístico
-│   └── spark_session.py       # Inicialización y configuración de Apache Spark
+│  ├── dataset_service.py   # Lógica de manipulación de archivos CSV
+│  ├── profiling_service.py  # Lógica de análisis estadístico
+│  └── spark_session.py    # Inicialización y configuración de Apache Spark
 ├── spark/
-│   ├── log4j2.properties      # Configuración de logs de Spark
-│   └── spark-defaults.conf    # Parámetros por defecto de Spark
+│  ├── log4j2.properties   # Configuración de logs de Spark
+│  └── spark-defaults.conf  # Parámetros por defecto de Spark
 ├── static/
-│   ├── css/
-│   └── js/
+│  ├── css/
+│  └── js/
 └── templates/
-    └── dashboard.html         # Interfaz visual
+  └── dashboard.html     # Interfaz visual
 ```
 
 ---
 
-## 🚀 Cómo Usarlo
+## Cómo Usarlo
 
 ### 1. Dataset y Preparación
 
@@ -182,37 +182,37 @@ mv data/comparendos.csv data/dataset_simcomp.csv
 ### 2. Ejecutar Localmente
 
 1. **Crear y activar entorno virtual**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
+  ```bash
+  python -m venv venv
+  source venv/bin/activate
+  ```
 2. **Instalar dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+  ```bash
+  pip install -r requirements.txt
+  ```
 3. **Ejecutar aplicación**:
-   ```bash
-   python app.py
-   ```
+  ```bash
+  python app.py
+  ```
 4. **Abrir en el navegador**:
-   Navega a http://localhost:8010
+  Navega a http://localhost:8010
 
 ---
 
 ### 3. Ejecutar con Podman / Docker
 
 1. **Construir imagen**:
-   ```bash
-   podman build -t simcomp-analytics-spark .
-   # O usando docker:
-   # docker build -t simcomp-analytics-spark .
-   ```
+  ```bash
+  podman build -t simcomp-analytics-spark .
+  # O usando docker:
+  # docker build -t simcomp-analytics-spark .
+  ```
 2. **Ejecutar contenedor**:
-   ```bash
-   podman run --rm -p 8010:8010 simcomp-analytics-spark
-   ```
+  ```bash
+  podman run --rm -p 8010:8010 simcomp-analytics-spark
+  ```
 3. **Abrir en el navegador**:
-   Navega a http://localhost:8010
+  Navega a http://localhost:8010
 
 ---
 
@@ -221,18 +221,18 @@ mv data/comparendos.csv data/dataset_simcomp.csv
 El servicio está integrado en el stack principal (`stack.yml`). Para desplegarlo en la infraestructura con Vagrant:
 
 1. **Desplegar el stack** desde la máquina host:
-   ```bash
-   vagrant provision managerDocker --provision-with deploy-stack
-   ```
-   *(O directamente dentro del manager con `docker stack deploy -c stack.yml simcomp`)*
+  ```bash
+  vagrant provision managerDocker --provision-with deploy-stack
+  ```
+  *(O directamente dentro del manager con `docker stack deploy -c stack.yml simcomp`)*
 2. **Ubicación**: Se despliega automáticamente en el nodo **workerDocker1** (1 réplica) para optimizar recursos.
 3. **Acceso al Dashboard**:
-   Navega a [http://simcomp.co:8010](http://simcomp.co:8010) (o la IP de cualquier nodo del cluster gracias al _routing mesh_).
-   También puedes ver la consola de monitoreo de Spark en [http://simcomp.co:4040](http://simcomp.co:4040) (mientras existan trabajos activos).
+  Navega a [http://simcomp.co:8010](http://simcomp.co:8010) (o la IP de cualquier nodo del cluster gracias al _routing mesh_).
+  También puedes ver la consola de monitoreo de Spark en [http://simcomp.co:4040](http://simcomp.co:4040) (mientras existan trabajos activos).
 
 ---
 
-## 📡 Endpoints Disponibles
+## Endpoints Disponibles
 
 ### Frontend
 - **Dashboard**: `GET /`
@@ -253,19 +253,19 @@ Actualizar un comparendo: `PUT /api/comparendos/<comparendo_id>`
 *Ejemplo:*
 ```bash
 curl -X PUT http://localhost:8010/api/comparendos/ID_DEL_COMPARENDO \
-  -H "Content-Type: application/json" \
-  -d '{
-    "estado_comparendo": "PAGADO",
-    "ciudad": "Cali",
-    "valor_multa": 580000,
-    "lugar": "Centro"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+  "estado_comparendo": "PAGADO",
+  "ciudad": "Cali",
+  "valor_multa": 580000,
+  "lugar": "Centro"
+ }'
 ```
 > **Nota importante:** Para propósitos de este taller, la edición modifica directamente el archivo CSV. Al guardarse, PySpark vuelve a procesar los cambios.
 
 ---
 
-## 🔒 Seguridad y Hardening (Auditoría)
+## Seguridad y Hardening (Auditoría)
 
 Durante la auditoría de seguridad del sistema, se detectó una vulnerabilidad crítica de **RCE (Remote Code Execution)** en este servicio.
 
@@ -276,43 +276,43 @@ Durante la auditoría de seguridad del sistema, se detectó una vulnerabilidad c
 
 ---
 
-## 💻 Validación Avanzada y Consola Spark
+## Validación Avanzada y Consola Spark
 
 ### API de Archivos y Profiling (Pruebas con cURL)
 
 - **Subir cualquier CSV**:
-  ```bash
-  curl -X POST http://localhost:8010/api/datasets/upload -F "file=@data/dataset_simcomp.csv"
-  ```
+ ```bash
+ curl -X POST http://localhost:8010/api/datasets/upload -F "file=@data/dataset_simcomp.csv"
+ ```
 - **Resumen estadístico de un dataset**:
-  ```bash
-  curl http://localhost:8010/api/datasets/dataset_simcomp.csv/summary | jq
-  ```
+ ```bash
+ curl http://localhost:8010/api/datasets/dataset_simcomp.csv/summary | jq
+ ```
 - **Graficar por categoría**:
-  ```bash
-  curl "http://localhost:8010/api/datasets/dataset_simcomp.csv/top-categories?column=ciudad" | jq
-  ```
+ ```bash
+ curl "http://localhost:8010/api/datasets/dataset_simcomp.csv/top-categories?column=ciudad" | jq
+ ```
 
 ### Consola Interactiva PySpark en Contenedor
 
 Puedes conectarte al contenedor en vivo y lanzar la consola de Spark para procesar datos:
 
 1. Ingresa al contenedor:
-   ```bash
-   podman exec -it simcomp-analytics-spark bash
-   ```
+  ```bash
+  podman exec -it simcomp-analytics-spark bash
+  ```
 2. Ejecuta el shell interactivo de Python:
-   ```bash
-   pyspark
-   ```
+  ```bash
+  pyspark
+  ```
 3. Ejecuta comandos de análisis en vivo:
-   ```python
-   # Cargar el archivo
-   df = spark.read.option("header", True).csv("/app/data/uploads/dataset_simcomp.csv")
-   
-   # Mostrar estructura
-   df.printSchema()
-   
-   # Top infracciones
-   df.groupBy("infraccion_codigo").count().orderBy("count", ascending=False).show(10)
-   ```
+  ```python
+  # Cargar el archivo
+  df = spark.read.option("header", True).csv("/app/data/uploads/dataset_simcomp.csv")
+  
+  # Mostrar estructura
+  df.printSchema()
+  
+  # Top infracciones
+  df.groupBy("infraccion_codigo").count().orderBy("count", ascending=False).show(10)
+  ```

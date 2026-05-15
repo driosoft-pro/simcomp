@@ -33,7 +33,7 @@ docker_menu() {
     echo "  [6] Ver logs (Tail)"
     echo "  [7] Ver Enlaces/URLs de Acceso"
     echo -e "${BLUE}----------------------------------------------------${NC}"
-    echo "  [0] Regresar al Menú Principal"
+    echo "  [q] Regresar al Menú Principal"
     echo -e "${BLUE}----------------------------------------------------${NC}"
     read -p " Selecciona una opción: " DOPT
 
@@ -66,7 +66,7 @@ docker_menu() {
         7)
             show_links
             ;;
-        0) return ;;
+        q|Q) return ;;
         *) echo " Opción inválida." ;;
     esac
     read -p " Presiona Enter para continuar..."

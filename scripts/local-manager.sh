@@ -28,7 +28,7 @@ local_menu() {
     echo "  [9] Ver Estado Microservicios"
     echo "  [10] Ver Enlaces/URLs de Acceso"
     echo -e "${BLUE}----------------------------------------------------${NC}"
-    echo "  [0] Regresar al Menú Principal"
+    echo "  [q] Regresar al Menú Principal"
     echo -e "${BLUE}----------------------------------------------------${NC}"
     read -p " Selecciona una opción: " LOPT
 
@@ -43,7 +43,7 @@ local_menu() {
         8) individual_menu ;;
         9) bash ./scripts/local-ms-manager.sh status ;;
         10) show_links ;;
-        0) return ;;
+        q|Q) return ;;
         *) echo " Opción inválida." ;;
     esac
     read -p " Presiona Enter para continuar..."
@@ -73,7 +73,7 @@ individual_menu() {
     echo "  [5] ms-infracciones"
     echo "  [6] ms-comparendos"
     echo "  [7] ms-reportes"
-    echo "  [0] Cancelar"
+    echo "  [q] Cancelar"
     read -p "Selecciona un servicio: " SNUM
     
     case $SNUM in
@@ -84,7 +84,7 @@ individual_menu() {
         5) SNAME="ms-infracciones" ;;
         6) SNAME="ms-comparendos" ;;
         7) SNAME="ms-reportes" ;;
-        0) return ;;
+        q|Q) return ;;
         *) echo "Opción inválida."; return ;;
     esac
 
@@ -94,7 +94,7 @@ individual_menu() {
     if [[ "$SNAME" == ms-* ]]; then
         echo "  [3] Reset DB (Docker)"
     fi
-    echo "  [0] Cancelar"
+    echo "  [q] Cancelar"
     read -p "Acción: " SACT
     
     case $SACT in
@@ -107,7 +107,7 @@ individual_menu() {
                 echo "Este servicio no tiene una base de datos asociada."
             fi
             ;;
-        0|*) echo "Acción cancelada." ;;
+        q|Q|*) echo "Acción cancelada." ;;
     esac
 }
 

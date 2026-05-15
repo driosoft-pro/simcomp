@@ -100,7 +100,7 @@ select_environment() {
     echo "1) 🖥 Native (VMs clásicas)"
     echo "2) 🐳 Docker Swarm"
     echo "3) ⚡ Swarm + Spark"
-    echo "4) Cancelar"
+    echo "q) Cancelar"
     echo "======================================"
 
     read -p "Opción: " env
@@ -109,6 +109,7 @@ select_environment() {
         1) cp vagrantfiles/Vagrantfile_native Vagrantfile ;;
         2) cp vagrantfiles/Vagrantfile_docker_swarm Vagrantfile ;;
         3) cp vagrantfiles/Vagrantfile_docker_swarm_spark Vagrantfile ;;
+        q|Q) return 1 ;;
         *) return 1 ;;
     esac
 
@@ -196,7 +197,7 @@ run_jmeter() {
     echo "3) Solo Login"
     echo "4) Consulta Comparendos"
     echo "5) Test Genérico"
-    echo "6) Regresar"
+    echo "q) Regresar"
     echo "======================================"
     read -p "Opción: " jopt
     
@@ -206,6 +207,7 @@ run_jmeter() {
         3) TEST="jmeter/simcomp_login.jmx"; NAME="solo_login" ;;
         4) TEST="jmeter/simcomp_comparendos.jmx"; NAME="consulta_comparendos" ;;
         5) TEST="jmeter/simcomp_test.jmx"; NAME="test_generico" ;;
+        q|Q) return ;;
         *) return ;;
     esac
 
@@ -320,11 +322,11 @@ guided_mode() {
         for i in "${!vms_to_create[@]}"; do
             echo "  $((i+1))) ${vms_to_create[$i]}"
         done
-        echo "  4) Finalizar creación de máquinas (si ya creó las necesarias)"
+        echo "  q) Finalizar creación de máquinas (si ya creó las necesarias)"
         
         read -p "Opción: " vm_opt
         
-        if [[ "$vm_opt" == "4" ]]; then
+        if [[ "$vm_opt" == "q" ]] || [[ "$vm_opt" == "Q" ]]; then
             break
         elif [[ "$vm_opt" =~ ^[1-3]$ ]]; then
             vm_index=$((vm_opt-1))
@@ -452,7 +454,7 @@ while true; do
     echo "9) Auto-discovery red"
     echo "10) Unir nodo remoto"
     echo "11) Logs"
-    echo "12) Salir"
+    echo "q) Salir"
     echo "======================================"
 
     read -p "Opción: " opt
@@ -469,7 +471,7 @@ while true; do
         9) auto_discovery ;;
         10) join_remote_worker ;;
         11) tail -f simcomp.log ;;
-        12) exit 0 ;;
+        q|Q) exit 0 ;;
     esac
 
     read -p "ENTER..."

@@ -25,39 +25,39 @@ bower install metisMenu
 
 1. Include Twitter Bootstrap StyleSheet
 
-    ```html
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.0/css/bootstrap.min.css">
-    ```
+  ```html
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.0/css/bootstrap.min.css">
+  ```
 
 2. Include metisMenu StyleSheet
 
-    ```html
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.metismenu/1.1.2/css/metismenu.min.css">
-    ```
+  ```html
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.metismenu/1.1.2/css/metismenu.min.css">
+  ```
 
 3. Include jQuery
 
-    ```html
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    ```
+  ```html
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  ```
 
 4. Include Twitter Bootstrap Script
 
-    ```html
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.0/js/bootstrap.min.js"></script>
-    ```
+  ```html
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.0/js/bootstrap.min.js"></script>
+  ```
 
 5. Include metisMenu plugin's code
 
-    ```html
-    <script src="//cdn.jsdelivr.net/bootstrap.metismenu/1.1.2/js/metismenu.min.js"></script>
-    ```
+  ```html
+  <script src="//cdn.jsdelivr.net/bootstrap.metismenu/1.1.2/js/metismenu.min.js"></script>
+  ```
 
 6. Call the plugin:
 
-    ```javascript
-    $("#menu").metisMenu();
-    ```
+  ```javascript
+  $("#menu").metisMenu();
+  ```
 
 ### Options
 
@@ -68,9 +68,9 @@ Default: `true`
 For auto collapse support.
 
 ```javascript
-  $("#menu").metisMenu({
-    toggle: false
-  });
+ $("#menu").metisMenu({
+  toggle: false
+ });
 ```
 
 #### doubleTapToGo
@@ -80,9 +80,9 @@ Default: `false`
 For double tap support.
 
 ```javascript
-  $("#menu").metisMenu({
-    doubleTapToGo: true
-  });
+ $("#menu").metisMenu({
+  doubleTapToGo: true
+ });
 ```
 
 
@@ -91,12 +91,12 @@ For double tap support.
 Contains a simple HTML file to demonstrate metisMenu plugin.
 
 ### Release History
-**DATE**       **VERSION**   **CHANGES**
-* 2014-11-01   v1.1.3        Bootstrap 3.3.0
-* 2014-07-07   v1.1.0	       Add double tap functionality
-* 2014-06-24   v1.0.3	       cdnjs support & rename plugin
-* 2014-06-18   v1.0.3        Create grunt task
-* 2014-06-10   v1.0.2        Fixed for IE8 & IE9
+**DATE**    **VERSION**  **CHANGES**
+* 2014-11-01  v1.1.3    Bootstrap 3.3.0
+* 2014-07-07  v1.1.0	    Add double tap functionality
+* 2014-06-24  v1.0.3	    cdnjs support & rename plugin
+* 2014-06-18  v1.0.3    Create grunt task
+* 2014-06-10  v1.0.2    Fixed for IE8 & IE9
 
 
 ## Author

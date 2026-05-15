@@ -17,7 +17,7 @@ Sistema integral de gestión de comparendos de tránsito desplegado en **Docker 
 
 ---
 
-## 🏗️ Arquitectura de Alta Disponibilidad (Docker Swarm)
+## Arquitectura de Alta Disponibilidad (Docker Swarm)
 
 El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resiliencia y balanceo de carga:
 
@@ -36,7 +36,7 @@ El sistema opera sobre un cluster de 3 nodos virtualizados para garantizar resil
 
 ---
 
-## 🚀 Guía de Despliegue (Modo Swarm)
+## Guía de Despliegue (Modo Swarm)
 
 ### 1. Preparar las VMs e Infraestructura
 ```bash
@@ -66,7 +66,7 @@ Para que los dominios funcionen en tu navegador (Host):
 
 ---
 
-## 🧪 Pruebas de Carga (JMeter)
+## Pruebas de Carga (JMeter)
 
 Se recomienda ejecutar JMeter desde tu PC local apuntando a `http://simcomp.co`. El proyecto incluye archivos `.jmx` optimizados en la carpeta `jmeter/`.
 
@@ -87,7 +87,7 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 ---
 
 
-## 🛠️ Operaciones y Gestión del Stack
+## Operaciones y Gestión del Stack
 
 - **Escalar frontend**: `docker service scale simcomp_frontend=3`
 - **Ver logs**: `docker service logs -f simcomp_ms-auth-service`
@@ -96,7 +96,7 @@ Durante la prueba, observa en **HAProxy Stats** ([http://simcomp.co:8404/stats](
 
 ---
 
-## 🔄 Modos de Despliegue y Configuración
+## Modos de Despliegue y Configuración
 
 El sistema está preparado para funcionar en 4 escenarios distintos. Cada componente (Frontend y Microservicios) incluye archivos `.env` preconfigurados para cada caso:
 
@@ -107,7 +107,7 @@ El sistema está preparado para funcionar en 4 escenarios distintos. Cada compon
 | **Docker Local** | `.env.docker` | Uso de `docker-compose.local.yml` con imágenes de Docker Hub. |
 | **Docker Swarm** | `.env.swarm` | Cluster distribuido en Vagrant. **Usa Docker Secrets** para datos sensibles. |
 
-### 🔐 Gestión de Secretos (Modo Swarm)
+### Gestión de Secretos (Modo Swarm)
 En el despliegue de Swarm, las contraseñas de base de datos y llaves JWT **no se almacenan en archivos .env**. El sistema las lee desde `/run/secrets/` inyectados por el orquestador.
 
 Para que el stack funcione en Swarm, debes crear los secretos manualmente una única vez:
@@ -129,20 +129,20 @@ echo "secret123" | docker secret create jwt_secret -
 
 ## Endpoints de Prueba (con JWT)
 
-| Endpoint                                 | Auth    | Descripción                      |
+| Endpoint                 | Auth  | Descripción           |
 |------------------------------------------|---------|----------------------------------|
-| http://api.simcomp.co:8001/api/auth/login| —       | Login de usuario                 |
-| http://api.simcomp.co:8002/api/personas  | JWT     | Personas via Gateway             |
-| http://api.simcomp.co:8003/api/vehiculos | JWT     | Automotores via Gateway          |
-| http://api.simcomp.co:8004/api/infracciones| JWT     | Infracciones via Gateway         |
-| http://api.simcomp.co:8005/api/comparendos| JWT     | Comparendos via Gateway          |
-| http://api.simcomp.co:8006/api/reportes  | JWT     | Reportes via Gateway             |
-| http://192.168.100.3:8001/api/docs       | —       | Swagger auth-service             |
-| http://192.168.100.3:8002/api/docs       | —       | Swagger personas-service         |
-| http://192.168.100.3:8003/api/docs       | —       | Swagger automotores-service      |
-| http://192.168.100.3:8004/api/docs       | —       | Swagger infracciones-service     |
-| http://192.168.100.3:8005/api/docs       | —       | Swagger comparendos-service      |
-| http://192.168.100.3:8006/api/reportes/docs| —     | Swagger reportes-service         |
+| http://api.simcomp.co:8001/api/auth/login| —    | Login de usuario         |
+| http://api.simcomp.co:8002/api/personas | JWT   | Personas via Gateway       |
+| http://api.simcomp.co:8003/api/vehiculos | JWT   | Automotores via Gateway     |
+| http://api.simcomp.co:8004/api/infracciones| JWT   | Infracciones via Gateway     |
+| http://api.simcomp.co:8005/api/comparendos| JWT   | Comparendos via Gateway     |
+| http://api.simcomp.co:8006/api/reportes | JWT   | Reportes via Gateway       |
+| http://192.168.100.3:8001/api/docs    | —    | Swagger auth-service       |
+| http://192.168.100.3:8002/api/docs    | —    | Swagger personas-service     |
+| http://192.168.100.3:8003/api/docs    | —    | Swagger automotores-service   |
+| http://192.168.100.3:8004/api/docs    | —    | Swagger infracciones-service   |
+| http://192.168.100.3:8005/api/docs    | —    | Swagger comparendos-service   |
+| http://192.168.100.3:8006/api/reportes/docs| —   | Swagger reportes-service     |
 
 ---
 
@@ -166,27 +166,27 @@ Total tablas principales (personas + usuarios + vehiculos + infracciones + compa
 Para una implementación rápida y aislada que no requiere VirtualBox o Vagrant, puedes usar Docker Compose:
 
 1. **Iniciar el ecosistema**:
-   ```bash
-   docker compose up --build -d
-   ```
+  ```bash
+  docker compose up --build -d
+  ```
 
 2. **Servicios disponibles**:
-   - **Frontend**: [http://localhost](http://localhost)
-   - **Gateway (Puertos 3001-3005)**: Simulan la red de producción.
+  - **Frontend**: [http://localhost](http://localhost)
+  - **Gateway (Puertos 3001-3005)**: Simulan la red de producción.
 
 3. **Ver logs**:
-   ```bash
-   docker compose logs -f
-   ```
+  ```bash
+  docker compose logs -f
+  ```
 
 4. **Detener**:
-   ```bash
-   docker compose down
-   ```
+  ```bash
+  docker compose down
+  ```
 
 ---
 
-## 📦 Gestión de Imágenes en Docker Hub
+## Gestión de Imágenes en Docker Hub
 
 El proyecto incluye herramientas de automatización para la construcción y distribución de imágenes de microservicios y frontend.
 
@@ -235,7 +235,7 @@ Si deseas construir solo un servicio específico, puedes pasar el nombre de la c
 Cada `Dockerfile` debe respetar su propio contexto. Asegúrate de que:
 1. El `Dockerfile` esté dentro de la carpeta del servicio.
 2. Todos los archivos usados en `COPY` o `ADD` estén dentro de esa misma carpeta. 
-   *Ejemplo: Si el frontend usa un archivo de Nginx, este debe estar en `frontend/nginx.conf` y no en una carpeta externa.*
+  *Ejemplo: Si el frontend usa un archivo de Nginx, este debe estar en `frontend/nginx.conf` y no en una carpeta externa.*
 
 ---
 
@@ -248,8 +248,8 @@ vagrant status
 vagrant ssh srv-simcomp-dns
 vagrant ssh srv-simcomp-api
 vagrant ssh srv-simcomp-web
-vagrant provision srv-simcomp-api          # re-aprovisionar tras cambios en backend
-vagrant provision srv-simcomp-web          # re-aprovisionar tras nuevo build frontend
+vagrant provision srv-simcomp-api     # re-aprovisionar tras cambios en backend
+vagrant provision srv-simcomp-web     # re-aprovisionar tras nuevo build frontend
 vagrant reload --provision srv-simcomp-api
 vagrant halt
 vagrant up --no-provision
@@ -265,7 +265,7 @@ pm2 list
 pm2 logs auth-service
 pm2 logs comparendos-service
 pm2 restart auth-service
-pm2 reload all                               # recarga sin downtime
+pm2 reload all                # recarga sin downtime
 tail -f /var/log/simcomp/auth-error.log
 tail -f /var/log/simcomp/comparendos-error.log
 ```

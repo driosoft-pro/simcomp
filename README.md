@@ -393,6 +393,24 @@ vagrant ssh managerDocker -c "docker stack services simcomp"
 - **Manual (Linux)**: `./scripts/setup-hosts.sh`
 - **Manual (Windows)**: `.\scripts\setup-hosts.ps1`
 
+## 6. Configurar las Conexiones en DBeaver
+
+En DBeaver, crea una nueva conexión seleccionando el driver de **PostgreSQL**. En la configuración general, utiliza los siguientes parámetros según la base de datos a la que desees acceder:
+
+| Base de Datos | Host / IP | Puerto | Nombre de BD | Usuario | Contraseña (por defecto en `.env`) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Auth** | `192.168.100.2` | `5432` | `auth_db` | `auth_user` | `auth_pass` |
+| **Personas** | `192.168.100.2` | `5433` | `personas_db` | `personas_user` | `personas_pass` |
+| **Automotores** | `192.168.100.2` | `5434` | `automotores_db` | `automotores_user` | `automotores_pass` |
+| **Infracciones** | `192.168.100.2` | `5435` | `infracciones_db` | `infracciones_user` | `infracciones_pass` |
+| **Comparendos** | `192.168.100.2` | `5436` | `comparendos_db` | `comparendos_user` | `comparendos_pass` |
+
+> [!NOTE]
+> Para que el acceso externo a los puertos `5432`-`5436` funcione correctamente, asegúrate de haber publicado dichos puertos en la definición de cada servicio de base de datos dentro del archivo `provisioning_docker/stack.yml`.
+
+> [!IMPORTANT]
+> **Sobre las contraseñas:** En el clúster Swarm, las contraseñas se inyectan mediante los secretos ubicados en `provisioning_docker/secrets/*.txt`. Si generaste los secretos con `./scripts/build-secrets.sh`, estos toman automáticamente los valores definidos en el archivo `.env` de la raíz de tu proyecto (mostrados en la tabla superior). Si personalizaste las claves en tu `.env`, asegúrate de usar esas mismas en DBeaver.
+
 ---
 
 # Verificación y Pruebas (Docker / Podman)

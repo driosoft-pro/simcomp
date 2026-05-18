@@ -218,7 +218,7 @@ Después de ingresar al modo paso a paso, aparecerán los entornos disponibles:
 | 2 | Docker Swarm | Cluster distribuido utilizando Docker Swarm |
 | 3 | Swarm + Spark | Igual al entorno Swarm, pero con Analytics y cluster Spark |
 
-> **Recomendación**: Para ejecutar el proyecto completo se recomienda `3) Swarm + Spark`.
+> **Recomendación**: Para ejecutar el proyecto completo se recomienda `3) Swarm + Spark`. Ademas le pedira si es usuario Linux o Windows
 
 ## Configuración de Red
 
@@ -241,6 +241,7 @@ Una vez iniciado el proceso:
 - Esperar a que cada etapa finalice completamente.
 
 El primer despliegue puede tardar entre 20 a 30 minutos dependiendo del hardware y velocidad de internet.
+Ademas cuando inicie el deploy puede tardar entre 8 a 10 minutos que todos los microservicios con sus replicas funcionen correctamente, puede revisar la pagina de haproxy para mas informacion del estado de los microservicios.
 
 ---
 
@@ -452,13 +453,12 @@ Una vez que el sistema esté arriba, puedes realizar las siguientes verificacion
 
 # Usuarios de Prueba
 
-<!-- Completar con los usuarios disponibles para demostración del sistema -->
-
 | Rol | Usuario | Contraseña | Descripción |
 | :--- | :--- | :--- | :--- |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
+| Administrador | maria.bonilla.0001@simcomp.gov.co | Admin123* | Todos los permisos |
+| Agente | ana.ruiz.0006@simcomp.gov.co | Agente123* | Creador de comparendos |
+| Supervisor | natalia.ortiz.0326@simcomp.gov.co | Super123* | Revision de comparendos |
+| Ciudadano | sebastian.gomez.0533@simcomp.gov.co | 1000000533 | Persona natural |
 
 ---
 

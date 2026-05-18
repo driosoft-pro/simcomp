@@ -1,15 +1,15 @@
-# local-docker-manager.ps1 - Gestión del entorno completo vía Docker Compose (Windows)
+﻿# local-docker-manager.ps1 - Gesti n del entorno completo v a Docker Compose (Windows)
 # =============================================================================
 
-# Función de limpieza profunda para evitar texto sobrepuesto
+# Funci n de limpieza profunda para evitar texto sobrepuesto
 function Clear-Screen {
-    # Pequeña pausa para asegurar que el buffer de salida se complete
+    # Peque a pausa para asegurar que el buffer de salida se complete
     Start-Sleep -Milliseconds 50
-    # Limpieza estándar de PowerShell
+    # Limpieza est ndar de PowerShell
     Clear-Host
-    # Limpieza profunda del buffer del sistema (si está disponible)
+    # Limpieza profunda del buffer del sistema (si est  disponible)
     try { [System.Console]::Clear() } catch {}
-    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    # C digos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
     Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
 }
 
@@ -34,7 +34,7 @@ function Show-Links {
     Write-Host "Prometheus:         " -NoNewline; Write-Host "http://localhost:9090" -ForegroundColor Green
     Write-Host "Glances (Monitor):  " -NoNewline; Write-Host "http://localhost:61208" -ForegroundColor Green
     Write-Host "----------------------------------------------------"
-    Write-Host "Documentación API (Swagger):" -ForegroundColor Yellow
+    Write-Host "Documentaci n API (Swagger):" -ForegroundColor Yellow
     Write-Host "Auth Service:       " -NoNewline; Write-Host "http://localhost:8001/api-docs" -ForegroundColor Cyan
     Write-Host "Personas:           " -NoNewline; Write-Host "http://localhost:8002/api-docs" -ForegroundColor Cyan
     Write-Host "Automotores:        " -NoNewline; Write-Host "http://localhost:8003/api-docs" -ForegroundColor Cyan
@@ -52,12 +52,12 @@ function Show-Menu {
     while ($true) {
         Clear-Screen
         Write-Host "====================================================" -ForegroundColor Cyan
-        Write-Host "       SIMCOMP - GESTIÓN ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
+        Write-Host "       SIMCOMP - GESTI N ENTORNO DOCKER (FULL)" -ForegroundColor Cyan
         Write-Host "====================================================" -ForegroundColor Cyan
         Write-Host "  [1] Levantar todo el stack (Up -d)"
         Write-Host "  [2] Detener todo el stack (Stop)"
         Write-Host "  [3] Reiniciar stack (Restart)"
-        Write-Host "  [4] Bajar stack y borrar volúmenes (Down -v)"
+        Write-Host "  [4] Bajar stack y borrar vol menes (Down -v)"
         Write-Host "  [5] Ver estado de contenedores (PS)"
         Write-Host "  [6] Ver logs (Tail)"
         Write-Host "  [7] Ver Enlaces/URLs de Acceso"
@@ -82,7 +82,7 @@ function Show-Menu {
                 & $ENGINE compose restart
             }
             "4" {
-                Write-Host "[*] Bajando stack y limpiando volúmenes..." -ForegroundColor Yellow
+                Write-Host "[*] Bajando stack y limpiando vol menes..." -ForegroundColor Yellow
                 & $ENGINE compose down -v
             }
             "5" {
@@ -100,7 +100,7 @@ function Show-Menu {
                 return
             }
             default {
-                Write-Host " Opción invalida." -ForegroundColor Red
+                Write-Host " Opci n invalida." -ForegroundColor Red
             }
         }
         
@@ -108,5 +108,5 @@ function Show-Menu {
     }
 }
 
-# Iniciar el menú
+# Iniciar el men 
 Show-Menu

@@ -1,4 +1,4 @@
-# build-manager.ps1 - Sub-men   para construcci  n y subida de im  genes (Windows)
+﻿# build-manager.ps1 - Sub-men   para construcci  n y subida de im  genes (Windows)
 # =============================================================================
 
 function Show-BuildMenu {
@@ -11,7 +11,7 @@ function Show-BuildMenu {
     Write-Host "  [3] Todo (Login + Build + Push)"
     Write-Host "  [4] Construir/Subir un servicio espec  fico"
     Write-Host "----------------------------------------------------" -ForegroundColor Blue
-    Write-Host "  [q] Regresar al Menú Principal"
+    Write-Host "  [q] Regresar al Men  Principal"
     Write-Host "----------------------------------------------------" -ForegroundColor Blue
     $bopt = Read-Host " Selecciona una opcion"
 
@@ -21,7 +21,7 @@ function Show-BuildMenu {
         "3" { .\scripts\build-and-push-dockerhub.ps1 -Action all }
         "4" {
             $sname = Read-Host "Nombre del servicio (ej: simcomp-auth-service)"
-            $sact = Read-Host "Acción (build/push/all)"
+            $sact = Read-Host "Acci n (build/push/all)"
             .\scripts\build-and-push-dockerhub.ps1 -Action $sact -Service $sname
         }
         "q" { return }

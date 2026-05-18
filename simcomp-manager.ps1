@@ -1,17 +1,17 @@
-# SIMCOMP - GESTOR CENTRAL DE INFRAESTRUCTURA (WINDOWS)
+﻿# SIMCOMP - GESTOR CENTRAL DE INFRAESTRUCTURA (WINDOWS)
 # Asegurar que se use el Vagrantfile correcto para Windows
 Copy-Item -Path "vagrantfiles\Vagrantfile_docker_swarm_spark_windows" -Destination "Vagrantfile" -Force
 
 
-# Función de limpieza profunda para evitar texto sobrepuesto
+# Funci n de limpieza profunda para evitar texto sobrepuesto
 function Clear-Screen {
-    # Pequeña pausa para asegurar que el buffer de salida se complete
+    # Peque a pausa para asegurar que el buffer de salida se complete
     Start-Sleep -Milliseconds 50
-    # Limpieza estándar de PowerShell
+    # Limpieza est ndar de PowerShell
     Clear-Host
-    # Limpieza profunda del buffer del sistema (si está disponible)
+    # Limpieza profunda del buffer del sistema (si est  disponible)
     try { [System.Console]::Clear() } catch {}
-    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    # C digos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
     Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
 }
 

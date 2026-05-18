@@ -1,15 +1,15 @@
-# local-manager.ps1 - Sub-menú para gestión local nativa (Windows)
+﻿# local-manager.ps1 - Sub-men  para gesti n local nativa (Windows)
 # =============================================================================
 
-# Función de limpieza profunda para evitar texto sobrepuesto
+# Funci n de limpieza profunda para evitar texto sobrepuesto
 function Clear-Screen {
-    # Pequeña pausa para asegurar que el buffer de salida se complete
+    # Peque a pausa para asegurar que el buffer de salida se complete
     Start-Sleep -Milliseconds 50
-    # Limpieza estándar de PowerShell
+    # Limpieza est ndar de PowerShell
     Clear-Host
-    # Limpieza profunda del buffer del sistema (si está disponible)
+    # Limpieza profunda del buffer del sistema (si est  disponible)
     try { [System.Console]::Clear() } catch {}
-    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    # C digos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
     Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
 }
 
@@ -17,7 +17,7 @@ function Show-LocalMenu {
     while ($true) {
         Clear-Screen
         Write-Host "====================================================" -ForegroundColor Blue
-        Write-Host "       SIMCOMP - GESTIÓN ENTORNO LOCAL (NATIVO)" -ForegroundColor Blue
+        Write-Host "       SIMCOMP - GESTI N ENTORNO LOCAL (NATIVO)" -ForegroundColor Blue
         Write-Host "====================================================" -ForegroundColor Blue
         Write-Host " BASES DE DATOS (DOCKER):" -ForegroundColor Yellow
         Write-Host "  [1] Iniciar Todas las DBs"
@@ -31,7 +31,7 @@ function Show-LocalMenu {
         Write-Host "  [8] Gestionar Servicio Individual"
         Write-Host "  [9] Ver Estado Microservicios"
         Write-Host "----------------------------------------------------" -ForegroundColor Blue
-        Write-Host "  [q] Regresar al Menú Principal"
+        Write-Host "  [q] Regresar al Men  Principal"
         Write-Host "----------------------------------------------------" -ForegroundColor Blue
         
         $lopt = Read-Host " Selecciona una opcion"
@@ -47,14 +47,14 @@ function Show-LocalMenu {
             "8" { Show-IndividualMenu }
             "9" { .\scripts\local-ms-manager.ps1 status }
             "q" { return }
-            default { Write-Host " Opción invalida." -ForegroundColor Red }
+            default { Write-Host " Opci n invalida." -ForegroundColor Red }
         }
         Read-Host " Presiona Enter para continuar..."
     }
 }
 
 function Show-IndividualMenu {
-    Write-Host "`n--- Gestión Individual ---" -ForegroundColor Yellow
+    Write-Host "`n--- Gesti n Individual ---" -ForegroundColor Yellow
     Write-Host "Servicios: ms-auth-service, ms-personas, ms-automotores, ms-infracciones, ms-comparendos, ms-reportes"
     $sname = Read-Host "Nombre del servicio (o Enter para cancelar)"
     
@@ -66,7 +66,7 @@ function Show-IndividualMenu {
     Write-Host "  [2] Detener"
     Write-Host "  [3] Reset DB"
     Write-Host "  [q] Cancelar"
-    $sact = Read-Host "Acción"
+    $sact = Read-Host "Acci n"
     
     switch ($sact) {
         "1" { .\scripts\local-ms-manager.ps1 start $sname }
@@ -75,8 +75,8 @@ function Show-IndividualMenu {
             $dbName = "db-" + $sname.Replace("ms-", "")
             .\scripts\local-db-manager.ps1 reset $dbName 
         }
-        "q" { Write-Host "Acción cancelada." }
-        Default { Write-Host "Acción cancelada." }
+        "q" { Write-Host "Acci n cancelada." }
+        Default { Write-Host "Acci n cancelada." }
     }
 }
 

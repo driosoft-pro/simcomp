@@ -229,30 +229,215 @@ run_jmeter() {
         
         # Generar o actualizar index.html general con estilo premium
         INDEX_FILE="jmeter/reports/index.html"
-        cat <<EOF > "$INDEX_FILE"
-<html>
+        cat <<'EOF' > "$INDEX_FILE"
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <title>SIMCOMP - Reportes de Pruebas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMCOMP - Performance Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f13; color: #e0e0e0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 800px; width: 100%; background: #1a1a24; padding: 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #333; }
-        h1 { color: #4caf50; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
-        ul { list-style: none; padding: 0; }
-        li { background: #252533; margin: 10px 0; border-radius: 8px; transition: transform 0.2s, background 0.2s; border: 1px solid transparent; }
-        li:hover { transform: translateX(10px); background: #2d2d3d; border-color: #4caf50; }
-        a { display: block; padding: 15px 20px; color: #fff; text-decoration: none; font-size: 1.1em; }
-        .footer { margin-top: 30px; font-size: 0.9em; color: #888; text-align: center; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at top, #141424 0%, #080810 100%);
+            color: #f1f1f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(22, 22, 38, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 45px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .report-list {
+            list-style: none;
+            display: grid;
+            grid-gap: 20px;
+        }
+        .report-card {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .report-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);
+        }
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #10b981, #3b82f6);
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .report-card:hover::before {
+            opacity: 1;
+        }
+        .report-card a {
+            display: flex;
+            align-items: center;
+            padding: 24px 30px;
+            color: inherit;
+            text-decoration: none;
+            width: 100%;
+        }
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        .report-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .card-details {
+            flex-grow: 1;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+            transition: color 0.2s;
+        }
+        .report-card:hover .card-title {
+            color: #10b981;
+        }
+        .card-desc {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .card-arrow {
+            font-size: 1.2rem;
+            color: #475569;
+            transition: all 0.3s;
+            margin-left: 20px;
+        }
+        .report-card:hover .card-arrow {
+            color: #10b981;
+            transform: translateX(6px);
+        }
+        .footer {
+            margin-top: 45px;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 25px;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>SIMCOMP Performance Hub</h1>
-        <ul>
+        <div class="header">
+            <h1 class="logo">SIMCOMP Performance Hub</h1>
+            <p class="subtitle">Panel de control de pruebas de carga y rendimiento</p>
+        </div>
+        <ul class="report-list">
 EOF
         for d in jmeter/reports/*/; do
+            [ -d "$d" ] || continue
             folder=$(basename "$d")
+            [ "$folder" = "sbadmin2-1.0.7" ] && continue
+            [ "$folder" = "content" ] && continue
+
             displayName=$(echo "$folder" | tr '_' ' ' | sed 's/\b\(.\)/\u\1/g')
-            echo "<li><a href='./$folder/index.html'>📊 Reporte: $displayName</a></li>" >> "$INDEX_FILE"
+            
+            desc="Reporte de rendimiento y análisis de carga."
+            icon="📈"
+            case "$folder" in
+                "consulta_comparendos")
+                    desc="Validación de carga en lecturas y escrituras del microservicio de comparendos."
+                    icon="🚗"
+                    ;;
+                "estres_frontend")
+                    desc="Simulación de concurrencia masiva accediendo al servidor web frontend (Nginx)."
+                    icon="⚡"
+                    ;;
+                "flujo_completo")
+                    desc="Simulación de flujo real de usuario: Login, Personas, Vehículos y Comparendos."
+                    icon="🔄"
+                    ;;
+                "solo_login")
+                    desc="Pruebas de estrés y autenticación sobre el microservicio de autenticación."
+                    icon="🔑"
+                    ;;
+                "test_generico")
+                    desc="Prueba de carga y rendimiento con configuraciones genéricas."
+                    icon="📊"
+                    ;;
+            esac
+
+            cat <<INNER_EOF >> "$INDEX_FILE"
+            <li class="report-card">
+                <a href="./$folder/index.html">
+                    <div class="card-icon">$icon</div>
+                    <div class="card-details">
+                        <div class="card-title">Reporte: $displayName</div>
+                        <div class="card-desc">$desc</div>
+                    </div>
+                    <div class="card-arrow">➜</div>
+                </a>
+            </li>
+INNER_EOF
         done
         cat <<EOF >> "$INDEX_FILE"
         </ul>

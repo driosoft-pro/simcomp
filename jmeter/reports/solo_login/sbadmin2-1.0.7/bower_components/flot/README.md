@@ -2,7 +2,7 @@
 
 ## About ##
 
-Flot is a Javascript plotting library for jQuery. 
+Flot is a Javascript plotting library for jQuery.  
 Read more at the website: <http://www.flotcharts.org/>
 
 Take a look at the the examples in examples/index.html; they should give a good
@@ -100,7 +100,7 @@ is pretty looks.
 In order to have a useful, functional example of time-series plots using time
 zones, date.js from [timezone-js][timezone-js] (released under the Apache 2.0
 license) and the [Olson][olson] time zone database (released to the public
-domain) have been included in the examples directory. They are used in
+domain) have been included in the examples directory.  They are used in
 examples/axes-time-zones/index.html.
 
 

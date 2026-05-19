@@ -243,6 +243,7 @@ Una vez iniciado el proceso:
 El primer despliegue puede tardar entre 20 a 30 minutos dependiendo del hardware y velocidad de internet.
 Ademas cuando inicie el deploy puede tardar entre 8 a 10 minutos que todos los microservicios con sus replicas funcionen correctamente, puede revisar la pagina de haproxy para mas informacion del estado de los microservicios.
 
+
 ---
 
 # Arquitectura del Cluster (Docker Swarm)

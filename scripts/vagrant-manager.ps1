@@ -557,7 +557,7 @@ while ($true) {
             } 
         }
         "3" { Deploy-Swarm }
-        "4" { vagrant up }
+        "4" { vagrant up --no-provision }
         "5" { vagrant halt }
         "6" { vagrant provision managerDocker --provision-with deploy-stack }
         "7" { Run-JMeter }

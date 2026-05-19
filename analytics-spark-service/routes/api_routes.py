@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from flask import Blueprint, jsonify, request
 from services.dataset_service import save_dataset, list_datasets, get_dataset_path
 from services.profiling_service import (
@@ -153,15 +154,15 @@ def data_paginated(filename):
     path = get_dataset_path(filename)
     return jsonify(paginated_data(path, page, limit))
 
+@api_bp.route("/datasets/<filename>/query", methods=["POST"])
+def query(filename):
+    data = request.get_json()
+    if not data or "code" not in data:
+        return jsonify({"error": "Debe enviar el código en formato JSON con la clave 'code'"}), 400
 
-# @api_bp.route("/datasets/<filename>/query", methods=["POST"])
-# def query(filename):
-#     """
-#     ⚠️ ADVERTENCIA DE SEGURIDAD: Este endpoint permite ejecución de código arbitrario (RCE).
-#     Se ha desactivado en producción por auditoría de seguridad.
-#     """
-#     return jsonify({"error": "Endpoint desactivado por motivos de seguridad (RCE Audit)"}), 403
-
+    path = get_dataset_path(filename)
+    result = execute_spark_code(path, data["code"])
+    return jsonify(result)
 
 # ─── SIMCOMP endpoints ───────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-# scripts\setup-vbox-network.ps1
+﻿# scripts\setup-vbox-network.ps1
 Write-Host "====================================================" -ForegroundColor Cyan
 Write-Host "   CONFIGURACION DE RED VIRTUALBOX (192.168.100.x)" -ForegroundColor Cyan
 Write-Host "====================================================" -ForegroundColor Cyan

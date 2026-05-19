@@ -12,7 +12,7 @@
 #   Frontend:       deytonro/simcomp-frontend:latest
 #   Microservicios: deytonro/simcomp-*:latest
 #   Haproxy:        deytonro/simcomp-haproxy-balance
-#   Spark:          deytonro/simcomp-analytics-spark-service  
+#   Spark:          deytonro/simcomp-analytics-spark-service
 #
 # Uso:
 #   vagrant up
@@ -25,8 +25,9 @@
 # SIMCOMP — Vagrantfile (HYBRID NETWORK READY
 # Compatible con VirtualBox y Libvirt/KVM
 # =============================================================================
+
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
+  config.vm.box = "bento/ubuntu-22.04"
   config.vm.box_check_update = false
   config.vm.synced_folder ".", "/vagrant"
   config.vm.boot_timeout = 600
@@ -167,55 +168,31 @@ SHELL
 # DEPLOY
 # --------------------------------------------------------------------------
 MANAGER_DEPLOY = <<~'SHELL'
-  echo "[SIMCOMP] Esperando que todos los nodos estén Ready..."
-  RETRIES=0
+  echo "[SIMCOMP] Esperando nodos..."
   until [ $(docker node ls 2>/dev/null | grep -c "Ready") -ge 3 ]; do
     sleep 5
-    RETRIES=$((RETRIES+1))
-    if [ $RETRIES -ge 36 ]; then
-      echo "[ERROR] Timeout: los nodos no están listos después de 3 minutos."
-      docker node ls
-      exit 1
-    fi
   done
-  echo "[SIMCOMP] ✓ Cluster listo ($(docker node ls | grep -c Ready) nodos)"
 
-  echo "[SIMCOMP] Limpiando stack previo (si existe)..."
+  echo "[SIMCOMP] Limpiando stack previo..."
   docker stack rm simcomp 2>/dev/null || true
 
-  echo "[SIMCOMP] Esperando remoción de redes overlay..."
-  for i in {1..18}; do
+  echo "[SIMCOMP] Esperando remoción total de redes..."
+  for i in {1..12}; do
     if ! docker network ls | grep -q "simcomp_"; then
-      echo "[SIMCOMP] ✓ Redes limpiadas."
       break
     fi
-    echo "  -> red simcomp_ todavía activa, esperando 5s... ($i/18)"
+    echo "  -> todavía hay redes activas, esperando 5s..."
     sleep 5
   done
 
-  # NO se hace docker system prune --volumes para no borrar datos de BD
-  docker container prune -f 2>/dev/null || true
+  docker volume prune -f
+  docker system prune -f --volumes 2>/dev/null || true
 
   cd /vagrant/provisioning_docker
-  echo "[SIMCOMP] Ejecutando deploy del stack..."
-  docker stack deploy \
-    --with-registry-auth \
-    --resolve-image always \
-    -c stack.yml \
-    simcomp
+  echo "[SIMCOMP] Ejecutando deploy..."
+  docker stack deploy -c stack.yml simcomp
 
-  echo "[SIMCOMP] Esperando convergencia inicial de servicios (60s)..."
-  sleep 60
-
-  echo ""
-  echo "[SIMCOMP] ========= ESTADO DEL CLUSTER ========="
-  docker stack services simcomp
-  echo "==========================================="
-  echo "[SIMCOMP] ✓ Deploy completado. Accede en:"
-  MANAGER_IP=$(hostname -I | tr ' ' '\n' | grep '^192\.168\.100\.' | head -1 || hostname -I | awk '{print $1}')
-  echo "  → App:          http://$MANAGER_IP"
-  echo "  → HAProxy Stats: http://$MANAGER_IP:8404/stats"
-  echo "  → Spark:        http://$MANAGER_IP:8010"
+  echo "[SIMCOMP] Deploy completado"
 SHELL
 
 # --------------------------------------------------------------------------
@@ -229,6 +206,12 @@ config.vm.define "managerDocker", primary: true do |m|
   m.vm.provider "virtualbox" do |vb|
     vb.memory = 3072
     vb.cpus   = 2
+
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+    vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+    vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+    vb.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
   end
 
   m.vm.provider "libvirt" do |lv|
@@ -258,6 +241,12 @@ end
     w.vm.provider "virtualbox" do |vb|
       vb.memory = 4096
       vb.cpus   = 2
+    
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+      vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+      vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+      vb.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
     end
 
     w.vm.provider "libvirt" do |lv|

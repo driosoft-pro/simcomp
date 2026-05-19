@@ -1,4 +1,4 @@
-# SIMCOMP INFRA MANAGER - Windows Version (PowerShell)
+﻿# SIMCOMP INFRA MANAGER - Windows Version (PowerShell)
 # --------------------------------------------------
 
 $ENV_FILE = ".env"
@@ -16,13 +16,13 @@ function Log-Message {
 
 # Deep Clean Console function to avoid ghosting/overlapping text
 function Clear-Screen {
-    # Pequeña pausa para asegurar que el buffer se vacie
+    # Peque a pausa para asegurar que el buffer se vacie
     Start-Sleep -Milliseconds 50
-    # Limpieza estándar de PowerShell
+    # Limpieza est ndar de PowerShell
     Clear-Host
     # Limpiar usando el metodo del sistema (mas fiable que Clear-Host)
     try { [System.Console]::Clear() } catch {}
-    # Códigos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
+    # C digos de escape ANSI (Fuerza limpieza en terminales modernos como VS Code/Windows Terminal)
     Write-Host -NoNewline "$([char]27)[2J$([char]27)[H"
 }
 
@@ -227,9 +227,43 @@ function Select-Environment {
     switch ($envOpt) {
         "1" { Copy-Item "vagrantfiles/Vagrantfile_native" "Vagrantfile" -Force }
         "2" { Copy-Item "vagrantfiles/Vagrantfile_docker_swarm" "Vagrantfile" -Force }
-        "3" { Copy-Item "vagrantfiles/Vagrantfile_docker_swarm_spark" "Vagrantfile" -Force }
+        "3" { 
+                        Clear-Screen
+            Log-Message "======================================" "Cyan"
+            Log-Message "Seleccione sistema operativo host:" "Cyan"
+            Log-Message "1) Windows" "Cyan"
+            Log-Message "2) Linux" "Cyan"
+            Log-Message "q) Cancelar" "Cyan"
+            Log-Message "======================================" "Cyan"
+
+            $osOpt = Read-Host "Opcion"
+
+            switch ($osOpt) {
+
+                # Windows
+                "1" {
+                    Copy-Item `
+                        "vagrantfiles/Vagrantfile_docker_swarm_spark_windows" `
+                        "Vagrantfile" `
+                        -Force
+
+                    Log-Message "[OK] Entorno Spark para Windows seleccionado." "Green"
+                }
+
+                # Linux
+                "2" {
+                    Copy-Item `
+                        "vagrantfiles/Vagrantfile_docker_swarm_spark_linux" `
+                        "Vagrantfile" `
+                        -Force
+
+                    Log-Message "[OK] Entorno Spark para Linux seleccionado." "Green"
+                }
+
         "q" { return $false }
         Default { return $false }
+    }
+    }
     }
 
     Log-Message "[OK] Entorno configurado" "Green"
@@ -523,7 +557,7 @@ while ($true) {
             } 
         }
         "3" { Deploy-Swarm }
-        "4" { vagrant up }
+        "4" { vagrant up --no-provision }
         "5" { vagrant halt }
         "6" { vagrant provision managerDocker --provision-with deploy-stack }
         "7" { Run-JMeter }

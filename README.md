@@ -14,43 +14,34 @@ Incluye balanceo de carga, monitoreo, observabilidad, despliegue automatizado, g
 
 ---
 
-# Imágenes Módulos SIMCOMP
+# Demostraciones en Video
+
+Para facilitar la comprensión del despliegue y funcionamiento del sistema, se dispone de los siguientes videos demostrativos según el sistema operativo:
+
+### 📹 Demostración en Linux
+<video src="videos/SimcompLinux.mp4" controls width="100%"></video>
+
+*Si el video no se reproduce, puedes acceder directamente a: [videos/SimcompLinux.mp4](videos/SimcompLinux.mp4)*
+
+### 📹 Demostración en Windows
+<video src="videos/SimcompWindows.mp4" controls width="100%"></video>
+
+*Si el video no se reproduce, puedes acceder directamente a: [videos/SimcompWindows.mp4](videos/SimcompWindows.mp4)*
+
+---
+
+# Capturas de Pantalla (Módulos)
+
+<details>
+<summary>📸 Haz clic aquí para ver capturas de pantalla de la interfaz</summary>
 
 - Login
 ![Login.png](img/Login.png)
 
-- Dashboard dark
+- Dashboard (Modo Oscuro)
 ![DashboardDark.png](img/DashboardDark.png)
 
-- Dashboard light
-![DashboardLight.png](img/DashboardLight.png)
-
-- Usuarios
-![Usuarios.png](img/Usuarios.png)
-
-- Personas
-![Personas.png](img/Personas.png)
-
-- Automotores
-![Automotores.png](img/Automotores.png)
-
-- Infracciones
-![Infracciones.png](img/Infracciones.png)
-
-- Comparendos
-![Comparendos.png](img/Comparendos.png)
-
-- Comparendo
-![Comparendo.png](img/Comparendo.png)
-
-- Pagar
-![PagoComparendo.png](img/PagoComparendo.png)
-
-- Recibo
-![ReciboComparendo.png](img/ReciboComparendo.png)
-
-- Reportes
-![Reportes.png](img/Reportes.png)
+</details>
 
 ---
 

@@ -20,11 +20,11 @@ Para facilitar la comprensión del despliegue y funcionamiento del sistema, se d
 
 ### Demostración en Linux
 
-<video src="videos/SimcompLinux.mp4" controls width="100%"></video>
+[![Ver demostración en Linux](https://img.youtube.com/vi/OCt3E5unfN8/0.jpg)](https://youtu.be/OCt3E5unfN8)
 
 ### Demostración en Windows
 
-<video src="videos/SimcompWindows.mp4" controls width="100%"></video>
+[![Ver demostración en Windows](https://img.youtube.com/vi/iXDbi5M9QLM/0.jpg)](https://youtu.be/iXDbi5M9QLM)
 
 ---
 

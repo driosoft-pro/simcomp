@@ -20,18 +20,15 @@ Para facilitar la comprensión del despliegue y funcionamiento del sistema, se d
 
 ### Demostración en Linux
 
-<video src="[videos](https://github.com/driosoft-pro/simcomp/tree/main/videos)/SimcompLinux.mp4" controls width="100%"></video>
+<video src="videos/SimcompLinux.mp4" controls width="100%"></video>
 
 ### Demostración en Windows
 
-<video src="vidhttps://github.com/driosoft-pro/simcomp/tree/main/videoseos/SimcompWindows.mp4" controls width="100%"></video>
+<video src="videos/SimcompWindows.mp4" controls width="100%"></video>
 
 ---
 
 # Capturas de Pantalla (Módulos)
-
-<details>
-<summary>Haz clic aquí para ver capturas de pantalla de la interfaz</summary>
 
 - Login
 ![Login.png](img/Login.png)
@@ -39,7 +36,6 @@ Para facilitar la comprensión del despliegue y funcionamiento del sistema, se d
 - Dashboard (Modo Oscuro)
 ![DashboardDark.png](img/DashboardDark.png)
 
-</details>
 
 ---
 

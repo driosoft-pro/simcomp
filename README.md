@@ -461,9 +461,10 @@ Una vez que el sistema esté arriba, puedes realizar las siguientes verificacion
 
 | Rol | Usuario | Contraseña | Descripción |
 | :--- | :--- | :--- | :--- |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
-| <!-- rol --> | <!-- usuario --> | <!-- contraseña --> | <!-- descripción del rol --> |
+| Administrador | maria.bonilla.0001@simcomp.gov.co | Admin123* | Todos los permisos |
+| Agente | ana.ruiz.0006@simcomp.gov.co | Agente123* | Creador de comparendos |
+| Supervisor | natalia.ortiz.0326@simcomp.gov.co | Super123* | Revision de comparendos |
+| Ciudadano | sebastian.gomez.0533@simcomp.gov.co | 1000000533 | Persona natural |
 
 ---
 

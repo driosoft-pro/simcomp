@@ -1,26 +1,29 @@
-node_modules
-.env
-# Environments
-.env.local
-.env.vagrant
-.env.swarm
-.env.producción
-.env.docker-push
-dist
-!jmeter/reports/**/dist
-!jmeter/reports/**/dist/**
-coverage
-*.log
-.vagrant
-Vagrantfile
+# Dependencias
+node_modules/
 
-# Secretos y datos sensibles
-provisioning_docker/secrets/
-/secrets/
-*.key
-*.pem*.aux
+# Frontend
+.vite/
+dist/
+build/
+coverage/
+*.map
+
+# Logs
 *.log
-*.out
-*.toc
-*.nav
-*.snm
+
+# Entornos
+.env
+.env.*
+!.env.example
+
+# Vagrant
+.vagrant
+
+# Secretos
+secrets/
+*.pem
+*.key
+
+# Artefactos
+*.zip
+*.tar.gz
